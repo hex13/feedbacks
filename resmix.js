@@ -7,7 +7,7 @@ const UPDATE = '@@resmix/update';
 const INIT = '@@resmix/init';
 const symbolObservable = require('symbol-observable').default;
 
-exports.reducerFor = (blueprint) => {
+const reducerFor = (blueprint) => {
     return (state = initialState, action) => {
         if (action.type == UPDATE) {
             return {
@@ -51,28 +51,14 @@ exports.match = (pairs) => {
     }
 };
 
-exports.middleware = store => next => {
-    next({type: INIT});
-    const state = store.getState();
-    const observables = state[OBSERVABLES];
-    if (observables) {
-        Object.keys(observables).forEach(k => {
-            observables[k].subscribe(value => {
-                next({type: UPDATE, payload: {
-                    name: k,
-                    value,
-                }});
-            })
-        })
-    }
-
-    return action => {
-        next(action);
+exports.Resmix = (blueprint) => {
+    const middleware = store => next => {
+        next({type: INIT});
         const state = store.getState();
-        const effects = state[EFFECTS];
-        if (effects) {
-            effects.forEach(([k, run]) => {
-                Promise.resolve(run()).then(value => {
+        const observables = state[OBSERVABLES];
+        if (observables) {
+            Object.keys(observables).forEach(k => {
+                observables[k].subscribe(value => {
                     next({type: UPDATE, payload: {
                         name: k,
                         value,
@@ -80,5 +66,27 @@ exports.middleware = store => next => {
                 })
             })
         }
-    }    
-}
+    
+        return action => {
+            next(action);
+            const state = store.getState();
+            const effects = state[EFFECTS];
+            if (effects) {
+                effects.forEach(([k, run]) => {
+                    Promise.resolve(run()).then(value => {
+                        next({type: UPDATE, payload: {
+                            name: k,
+                            value,
+                        }});
+                    })
+                })
+            }
+        }    
+    };
+    
+    return {
+        middleware,
+        reducer: reducerFor(blueprint),
+    }
+};
+

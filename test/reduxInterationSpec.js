@@ -12,7 +12,7 @@ describe('[resmix]', () => {
     it('should allow for declare pattern/reducer pairs', () => {
         const INC = 'inc';
         const DEC = 'dec';
-        const store = createStore(Resmix.reducerFor({
+        const blueprint = {
             counter: Resmix.match([
                 [INC, v => v + 1],
                 [DEC, v => v - 1],
@@ -21,7 +21,9 @@ describe('[resmix]', () => {
                 [INC, v => v + 2],
                 [DEC, v => v - 2],
             ])
-        }), {counter: 0, counterX2: 0});
+        };
+        const resmix = Resmix.Resmix(blueprint);
+        const store = createStore(resmix.reducer, {counter: 0, counterX2: 0});
         assert.deepStrictEqual(store.getState(), {counter: 0, counterX2: 0});
         store.dispatch({type: INC});
         store.dispatch({type: INC});
@@ -35,11 +37,13 @@ describe('[resmix]', () => {
 
         let promise = Promise.resolve(124);
         beforeEach(() => {
-            store = createStore(Resmix.reducerFor({
+            const blueprint = {
                 future: Resmix.match([
                     ['fetch', (state, action) => () => promise]
                 ])
-            }), {future: null}, applyMiddleware(Resmix.middleware));
+            };
+            const resmix = Resmix.Resmix(blueprint);
+            store = createStore(resmix.reducer, {future: null}, applyMiddleware(resmix.middleware));
         });
 
         it('should init to the correct state', () => {
@@ -65,13 +69,15 @@ describe('[resmix]', () => {
         let store;
         let subscriptionCount;;
         beforeEach(() => {
-            subscriptionCount = 0;
-            store = createStore(Resmix.reducerFor({
+            const blueprint = {
                 a: new Observable(observer => {
                     observer.next(100);
                     subscriptionCount++;
                 }),
-            }), {a: null}, applyMiddleware(Resmix.middleware));
+            };
+            const resmix = Resmix.Resmix(blueprint);
+            subscriptionCount = 0;
+            store = createStore(resmix.reducer, {a: null}, applyMiddleware(resmix.middleware));
         });
 
         it('should resolve observable', () => {
