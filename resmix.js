@@ -4,7 +4,6 @@ const OBSERVABLES = Symbol('observables');
 
 
 const UPDATE = '@@resmix/update';
-const INIT = '@@resmix/init';
 const symbolObservable = require('symbol-observable').default;
 
 const reducerFor = (blueprint) => {
@@ -20,12 +19,6 @@ const reducerFor = (blueprint) => {
         let observables = {};
         Object.keys(blueprint).forEach(k => {
             const value = blueprint[k];
-            const toObservable = value[symbolObservable];
-            if (action.type == INIT && toObservable) {
-                const observable = toObservable.call(value);
-                observables[k] = observable;
-                return;
-            }
             const pairs = value && value.pairs;
 
             pairs && pairs.forEach(([pattern, reducer]) => {
@@ -53,19 +46,19 @@ exports.match = (pairs) => {
 
 exports.Resmix = (blueprint) => {
     const middleware = store => next => {
-        next({type: INIT});
-        const state = store.getState();
-        const observables = state[OBSERVABLES];
-        if (observables) {
-            Object.keys(observables).forEach(k => {
-                observables[k].subscribe(value => {
-                    next({type: UPDATE, payload: {
-                        name: k,
-                        value,
-                    }});
-                })
+        Object.keys(blueprint).forEach(k => {
+            const desc = blueprint[k];
+            if (!desc) return;
+            const toObservable = desc[symbolObservable];
+            if (!toObservable) return;
+            const observable = toObservable.call(desc);
+            observable.subscribe(value => {
+                next({type: UPDATE, payload: {
+                    name: k,
+                    value,
+                }});
             })
-        }
+        });
     
         return action => {
             next(action);
