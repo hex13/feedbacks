@@ -1,7 +1,12 @@
 const assert = require('assert');
 const Resmix = require('../resmix');
 
+require('symbol-observable');
 const { createStore, applyMiddleware } = require('redux');
+const { Observable, interval, Subscription, of } = require('rxjs');
+const { take } = require('rxjs/operators');
+const testing = require('rxjs/testing');
+
 
 describe('[resmix]', () => {
     it('should allow for declare pattern/reducer pairs', () => {
@@ -56,6 +61,31 @@ describe('[resmix]', () => {
 
     });
 
+    describe('[observables]', () => {
+        let store;
+        let subscriptionCount;;
+        beforeEach(() => {
+            subscriptionCount = 0;
+            store = createStore(Resmix.reducerFor({
+                a: new Observable(observer => {
+                    observer.next(100);
+                    subscriptionCount++;
+                }),
+            }), {a: null}, applyMiddleware(Resmix.middleware));
+        });
 
+        it('should resolve observable', () => {
+            store.dispatch({type: 'foo'});
+            assert.deepStrictEqual(store.getState(), {
+                a: 100
+            });            
+        });
+
+        it('should subscribe once', () => {
+            assert.strictEqual(subscriptionCount, 1);
+            store.dispatch({type: 'foo'});
+            assert.strictEqual(subscriptionCount, 1);
+        });
+    });
 
 });
