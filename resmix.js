@@ -49,9 +49,22 @@ exports.match = (pairs) => {
 
 exports.Resmix = (blueprint) => {
     const middleware = store => next => {
+        if (!store || !store.getState) {
+            throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);
+        }
+        const update = (name, value) => {
+            next({type: UPDATE, payload: {
+                name, value
+            }});
+        };
         Object.keys(blueprint).forEach(k => {
             const desc = blueprint[k];
-            if (!desc) return;
+            const t = typeof desc;
+            const isPlainValue = !desc || t == 'number' || t == 'string' || t == 'boolean' || t == 'symbol';
+            if (isPlainValue) {
+                update(k, desc);
+                return;
+            }
             const toObservable = desc[symbolObservable];
             if (!toObservable) return;
             const observable = toObservable.call(desc);
@@ -62,6 +75,7 @@ exports.Resmix = (blueprint) => {
                 }});
             })
         });
+
     
         return action => {
             next(action);
@@ -79,7 +93,6 @@ exports.Resmix = (blueprint) => {
             }
         }    
     };
-    
     return {
         middleware,
         reducer: reducerFor(blueprint),

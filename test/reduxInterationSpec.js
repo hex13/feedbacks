@@ -9,6 +9,24 @@ const testing = require('rxjs/testing');
 
 
 describe('[resmix]', () => {
+    it('should allow for declare plain values', () => {
+        const someSymbol = Symbol();
+        const createBlueprint = () => ({
+            i: 10,
+            z: 0,
+            t: 'text',
+            ok: true,
+            notOk: false,
+            u: undefined,
+            n: null,
+            s: someSymbol,
+        });
+        const resmix = Resmix.Resmix(createBlueprint());
+        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+        assert.deepStrictEqual(store.getState(), createBlueprint());
+
+    });
+
     it('should allow for declare pattern/reducer pairs', () => {
         const INC = 'inc';
         const DEC = 'dec';
