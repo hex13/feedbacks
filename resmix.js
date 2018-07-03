@@ -7,12 +7,11 @@ const UPDATE = '@@resmix/update';
 const symbolObservable = require('symbol-observable').default;
 
 const reducerFor = (blueprint) => {
-    return (state = initialState, action) => {
+    return (state, action) => {
         if (action.type == UPDATE) {
-            return {
-                ...state,
+            return Object.assign({}, state, {
                 [action.payload.name]: action.payload.value
-            }
+            });
         }
         let updates = {};
         let effects = [];
@@ -33,7 +32,11 @@ const reducerFor = (blueprint) => {
             });
         });
 
-        return { ...state, ...updates, [EFFECTS]: effects, [OBSERVABLES]: observables};
+        return Object.assign(
+            {}, 
+            state, updates,
+            {[EFFECTS]: effects, [OBSERVABLES]: observables}
+        );
     };
 };
 
