@@ -66,14 +66,20 @@ exports.Resmix = (blueprint) => {
                 return;
             }
             const toObservable = desc[symbolObservable];
-            if (!toObservable) return;
-            const observable = toObservable.call(desc);
-            observable.subscribe(value => {
-                next({type: UPDATE, payload: {
-                    name: k,
-                    value,
-                }});
-            })
+            const isMatchObject = desc[MATCH];
+            if (!toObservable && !isMatchObject) {
+                update(k, desc);
+                return;
+            }
+            if (toObservable) {
+                const observable = toObservable.call(desc);
+                observable.subscribe(value => {
+                    next({type: UPDATE, payload: {
+                        name: k,
+                        value,
+                    }});
+                });
+            }
         });
 
     

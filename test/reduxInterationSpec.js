@@ -24,6 +24,20 @@ describe('[resmix]', () => {
         const resmix = Resmix.Resmix(createBlueprint());
         const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
         assert.deepStrictEqual(store.getState(), createBlueprint());
+    });
+
+    it('should allow for declare plain objects', () => {
+        const someSymbol = Symbol();
+        const createBlueprint = () => ({
+            o: {
+                a: {
+                    b: 2
+                }
+            }
+        });
+        const resmix = Resmix.Resmix(createBlueprint());
+        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+        assert.deepStrictEqual(store.getState(), createBlueprint());
 
     });
 
