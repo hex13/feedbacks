@@ -47,6 +47,15 @@ exports.match = (pairs) => {
     }
 };
 
+
+function Recipe() {};
+
+exports.init = (value) => {
+    const recipe = new Recipe();
+    recipe.init = value;
+    return recipe;
+};
+
 exports.Resmix = (blueprint) => {
     const middleware = store => next => {
         if (!store || !store.getState) {
@@ -61,6 +70,11 @@ exports.Resmix = (blueprint) => {
             const desc = blueprint[k];
             const t = typeof desc;
             const isPlainValue = !desc || t == 'number' || t == 'string' || t == 'boolean' || t == 'symbol';
+
+            if (desc instanceof Recipe) {
+                update(k, desc.init);
+                return;
+            }
             if (isPlainValue) {
                 update(k, desc);
                 return;

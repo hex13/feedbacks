@@ -7,6 +7,12 @@ const { Observable, interval, Subscription, of } = require('rxjs');
 const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
 
+const prepareStore = (blueprint) => {
+    const resmix = Resmix.Resmix(blueprint);
+    const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+    return store;
+};
+
 
 describe('[resmix]', () => {
     it('should allow for declare plain values', () => {
@@ -40,6 +46,20 @@ describe('[resmix]', () => {
         assert.deepStrictEqual(store.getState(), createBlueprint());
 
     });
+
+    describe('init', () => {
+        const blueprint = {
+            a: Resmix.init(2)
+        }
+
+        beforeEach(() => {
+        });
+
+        it('should allow for define initial state by using init()', () => {
+            const store = prepareStore(blueprint);
+            assert.deepStrictEqual(store.getState(), {a:2});
+        })
+    })
 
     it('should allow for declare pattern/reducer pairs', () => {
         const INC = 'inc';
