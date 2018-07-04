@@ -1,4 +1,3 @@
-const MATCH = Symbol('match');
 const EFFECTS = Symbol('effects');
 const OBSERVABLES = Symbol('observables');
 
@@ -40,21 +39,34 @@ const reducerFor = (blueprint) => {
     };
 };
 
-exports.match = (pairs) => {
-    return {
-        [MATCH]: true,
-        pairs,
+class Recipe {
+    constructor(recipe) {
+        if (recipe) {
+            Object.assign(this, recipe);
+        }
+    }
+    init(value) {
+        const recipe = new Recipe(this);
+        recipe.initialState = value;
+        recipe.hasInitialState = true;
+        return recipe;
+    }
+    match(pairs) {
+        const recipe = new Recipe(this);
+        recipe.hasMatchPairs = true;
+        recipe.pairs = pairs;
+        return recipe;
     }
 };
 
-
-function Recipe() {};
+exports.match = (pairs) => {
+    return new Recipe().match(pairs);
+};
 
 exports.init = (value) => {
-    const recipe = new Recipe();
-    recipe.init = value;
-    return recipe;
+    return new Recipe().init(value);
 };
+
 
 exports.Resmix = (blueprint) => {
     const middleware = store => next => {
@@ -71,8 +83,8 @@ exports.Resmix = (blueprint) => {
             const t = typeof desc;
             const isPlainValue = !desc || t == 'number' || t == 'string' || t == 'boolean' || t == 'symbol';
 
-            if (desc instanceof Recipe) {
-                update(k, desc.init);
+            if (desc instanceof Recipe && desc.hasInitialState) {
+                update(k, desc.initialState);
                 return;
             }
             if (isPlainValue) {
@@ -80,7 +92,7 @@ exports.Resmix = (blueprint) => {
                 return;
             }
             const toObservable = desc[symbolObservable];
-            const isMatchObject = desc[MATCH];
+            const isMatchObject = desc.hasMatchPairs;
             if (!toObservable && !isMatchObject) {
                 update(k, desc);
                 return;

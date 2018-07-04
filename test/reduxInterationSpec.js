@@ -58,7 +58,39 @@ describe('[resmix]', () => {
         it('should allow for define initial state by using init()', () => {
             const store = prepareStore(blueprint);
             assert.deepStrictEqual(store.getState(), {a:2});
-        })
+        });
+
+        it('should allow for use chaining: first init(), then match()', () => {
+            const store = prepareStore({
+                a: Resmix.init(10)
+                    .match([
+                        ['inc', a => a + 1],
+                        ['dec', a => a - 1],
+                    ])
+            });
+            assert.deepStrictEqual(store.getState(), {a:10});
+            store.dispatch({type: 'inc'});
+            assert.deepStrictEqual(store.getState(), {a:11});
+            store.dispatch({type: 'dec'});
+            assert.deepStrictEqual(store.getState(), {a:10});
+        });
+
+        it('should allow for use chaining: first match(), then init()', () => {
+            const store = prepareStore({
+                a: Resmix
+                    .match([
+                        ['inc', a => a + 1],
+                        ['dec', a => a - 1],
+                    ])
+                    .init(10)
+            });
+            assert.deepStrictEqual(store.getState(), {a:10});
+            store.dispatch({type: 'inc'});
+            assert.deepStrictEqual(store.getState(), {a:11});
+            store.dispatch({type: 'dec'});
+            assert.deepStrictEqual(store.getState(), {a:10});
+        });
+
     })
 
     it('should allow for declare pattern/reducer pairs', () => {
