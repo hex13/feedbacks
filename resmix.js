@@ -15,18 +15,41 @@ const reducerFor = (blueprint) => {
         let updates = {};
         let effects = [];
         let observables = {};
+
         Object.keys(blueprint).forEach(k => {
             const value = blueprint[k];
             const pairs = value && value.pairs;
 
+            let matched = false;
             pairs && pairs.forEach(([pattern, reducer]) => {
-                if (pattern == action.type) {
+                if (matched) return;
+                if (typeof pattern == 'string') pattern = {type: pattern};
+
+                let equal = true;
+                if (typeof pattern == 'object') {
+                    Object.keys(pattern).forEach(patternKey => {
+                        // TODO optimize. forEach is sub-optimal because it goes on even after we know that there is no match.
+                        if (action[patternKey] == undefined) {
+                            equal = false;
+                            return;
+                        }
+
+                        if (typeof pattern[patternKey] == 'function') {
+                            equal = equal && pattern[patternKey](action[patternKey]);
+                        } else {
+                            equal = equal && pattern[patternKey] == action[patternKey];
+                        }
+                    });
+                }
+
+                if (equal) {
                     const result = reducer(state[k], action);
                     if (typeof result == 'function') {
                         effects.push([k, result]);
                     } else {
                         updates[k] = result;
                     }
+                    matched = true;
                 }
             });
         });

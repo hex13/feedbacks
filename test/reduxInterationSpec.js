@@ -99,6 +99,7 @@ describe('[resmix]', () => {
         const blueprint = {
             counter: Resmix.match([
                 [INC, v => v + 1],
+                [INC, v => 'second match should have not effect'],
                 [DEC, v => v - 1],
             ]),
             counterX2: Resmix.match([
@@ -115,6 +116,32 @@ describe('[resmix]', () => {
         store.dispatch({type: DEC});
         assert.deepStrictEqual(store.getState(), {counter: 1, counterX2: 2});
     });
+
+    it('should allow for declare pattern/reducer pairs with object patterns', () => {
+        const INC = 'inc';
+        const DEC = 'dec';
+        const blueprint = {
+            counter: Resmix.match([
+                [{type: INC, double: true}, v => v + 2],
+                [{type: INC, amount: (v) => v > 100 }, (v, a) => 'too much'],
+                [{type: INC, amount: () => true}, (v, a) => v + a.amount],
+                [{type: INC}, v => v + 1],
+                [{type: DEC}, v => v - 1],
+            ]),
+        };
+        const resmix = Resmix.Resmix(blueprint);
+        const store = createStore(resmix.reducer, {counter: 0});
+        assert.deepStrictEqual(store.getState(), {counter: 0});
+        store.dispatch({type: INC});
+        assert.deepStrictEqual(store.getState(), {counter: 1});
+        store.dispatch({type: INC, double: true});
+        assert.deepStrictEqual(store.getState(), {counter: 3});
+        store.dispatch({type: INC, amount: 10});
+        assert.deepStrictEqual(store.getState(), {counter: 13});
+        store.dispatch({type: INC, amount: 101});
+        assert.deepStrictEqual(store.getState(), {counter: 'too much'});
+    });
+
 
     describe('[effects]', () => {
         let store;
