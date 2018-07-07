@@ -117,6 +117,7 @@ describe('[resmix]', () => {
         assert.deepStrictEqual(store.getState(), {counter: 1, counterX2: 2});
     });
 
+    // TODO maybe action patterns should be tested separately, without Redux
     it('should allow for declare pattern/reducer pairs with object patterns', () => {
         const INC = 'inc';
         const DEC = 'dec';
@@ -140,6 +141,61 @@ describe('[resmix]', () => {
         assert.deepStrictEqual(store.getState(), {counter: 13});
         store.dispatch({type: INC, amount: 101});
         assert.deepStrictEqual(store.getState(), {counter: 'too much'});
+    });
+
+    // TODO maybe action patterns should be tested separately, without Redux 
+    it('should match nested matching action pattern', () => {
+        const FOO = 'foo';
+        const blueprint = {
+            counter: Resmix.match([
+                [{type: FOO, a: {
+                    b: 'bear',
+                    c: {
+                        d: 123
+                    }
+                }}, (v, a) => -2],
+            ]),
+        };
+        const resmix = Resmix.Resmix(blueprint);
+        const store = createStore(resmix.reducer, {counter: 0});
+        assert.deepStrictEqual(store.getState(), {counter: 0});
+        store.dispatch({
+            type: FOO, 
+            a: {
+                b: 'bear',
+                c: {
+                    d: 123
+                }
+            }
+        });
+        assert.deepStrictEqual(store.getState(), {counter: -2});
+    });
+
+    // TODO maybe action patterns should be tested separately, without Redux 
+    it('should not match non matching nested action pattern', () => {
+        const FOO = 'foo';
+        const blueprint = {
+            counter: Resmix.match([
+                [{type: FOO, a: {
+                    b: 'bear',
+                    c: {
+                        d: 123
+                    }
+                }}, (v, a) => -2],
+            ]),
+        };
+        const resmix = Resmix.Resmix(blueprint);
+        const store = createStore(resmix.reducer, {counter: 0});
+        assert.deepStrictEqual(store.getState(), {counter: 0});
+        store.dispatch({type: FOO, a:{b: 'dog'}});
+        assert.deepStrictEqual(store.getState(), {counter: 0});
+        store.dispatch({type: FOO, a: {
+            b: 'bear',
+            c: {
+                d: 9999
+            }
+        }});
+        assert.deepStrictEqual(store.getState(), {counter: 0});
     });
 
 

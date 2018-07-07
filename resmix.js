@@ -25,22 +25,7 @@ const reducerFor = (blueprint) => {
                 if (matched) return;
                 if (typeof pattern == 'string') pattern = {type: pattern};
 
-                let equal = true;
-                if (typeof pattern == 'object') {
-                    Object.keys(pattern).forEach(patternKey => {
-                        // TODO optimize. forEach is sub-optimal because it goes on even after we know that there is no match.
-                        if (action[patternKey] == undefined) {
-                            equal = false;
-                            return;
-                        }
-
-                        if (typeof pattern[patternKey] == 'function') {
-                            equal = equal && pattern[patternKey](action[patternKey]);
-                        } else {
-                            equal = equal && pattern[patternKey] == action[patternKey];
-                        }
-                    });
-                }
+                let equal = actionMatchesPattern(pattern, action);
 
                 if (equal) {
                     const result = reducer(state[k], action);
@@ -154,3 +139,27 @@ exports.Resmix = (blueprint) => {
     }
 };
 
+
+function actionMatchesPattern(pattern, action) {
+    let equal = true;
+    if (typeof pattern == 'object' && typeof action == 'object') {
+        Object.keys(pattern).forEach(patternKey => {
+            // TODO optimize. forEach is sub-optimal because it goes on even after we know that there is no match.
+            if (action[patternKey] == undefined) {
+                equal = false;
+                return;
+            }
+            if (typeof pattern[patternKey] == 'function') {
+                equal = equal && pattern[patternKey](action[patternKey]);
+            }
+            else if (pattern[patternKey] && typeof pattern[patternKey] == 'object') {
+                equal = equal && actionMatchesPattern(pattern[patternKey], action[patternKey]);
+            }
+            else {
+                equal = equal && pattern[patternKey] == action[patternKey];
+            }
+        });
+    } else
+        return pattern === action;
+    return equal;
+}
