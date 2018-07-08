@@ -112,14 +112,10 @@ exports.Resmix = (blueprint) => {
             if (toObservable) {
                 const observable = toObservable.call(desc);
                 observable.subscribe(value => {
-                    next({type: UPDATE, payload: {
-                        name: k,
-                        value,
-                    }});
+                    update(k, value);
                 });
             }
         });
-
     
         return action => {
             next(action);
@@ -127,19 +123,12 @@ exports.Resmix = (blueprint) => {
             const effects = state[EFFECTS];
             if (effects) {
                 effects.forEach(([k, result]) => {
+                    const updateProperty = update.bind(null, k);
                     if (typeof result[symbolObservable] == 'function') {
-                        result[symbolObservable]().subscribe(value => {
-                            next({type: UPDATE, payload: {
-                                name: k,
-                                value,
-                            }});
-                        });
-                    } else Promise.resolve(result()).then(value => {
-                        next({type: UPDATE, payload: {
-                            name: k,
-                            value,
-                        }});
-                    })
+                        result[symbolObservable]().subscribe(updateProperty);
+                    } else {
+                        Promise.resolve(result()).then(updateProperty);
+                    }
                 })
             }
         }    
