@@ -5,6 +5,7 @@ const OBSERVABLES = Symbol('observables');
 const UPDATE = '@@resmix/update';
 const symbolObservable = require('symbol-observable').default;
 
+
 const reducerFor = (blueprint) => {
     return (state, action) => {
         if (action.type == UPDATE) {
@@ -29,7 +30,10 @@ const reducerFor = (blueprint) => {
 
                 if (equal) {
                     const result = reducer(state[k], action);
-                    if (typeof result == 'function') {
+                    if (
+                        typeof result == 'function'
+                        || (result && typeof result[symbolObservable] == 'function')
+                    ) {
                         effects.push([k, result]);
                     } else {
                         updates[k] = result;
@@ -122,8 +126,15 @@ exports.Resmix = (blueprint) => {
             const state = store.getState();
             const effects = state[EFFECTS];
             if (effects) {
-                effects.forEach(([k, run]) => {
-                    Promise.resolve(run()).then(value => {
+                effects.forEach(([k, result]) => {
+                    if (typeof result[symbolObservable] == 'function') {
+                        result[symbolObservable]().subscribe(value => {
+                            next({type: UPDATE, payload: {
+                                name: k,
+                                value,
+                            }});
+                        });
+                    } else Promise.resolve(result()).then(value => {
                         next({type: UPDATE, payload: {
                             name: k,
                             value,

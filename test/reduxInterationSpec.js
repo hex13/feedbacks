@@ -217,7 +217,7 @@ describe('[resmix]', () => {
             assert.deepStrictEqual(store.getState(), {future: null});
         });
 
-        it('when reducer returns a function, it should not assign it to the property', () => {
+        it('when reducer returns a function, engine should not assign it to the property', () => {
             store.dispatch({type: 'fetch'});
             assert.deepStrictEqual(store.getState(), {future: null});
         });
@@ -228,6 +228,36 @@ describe('[resmix]', () => {
                 return promise.then(value => {
                     assert.deepStrictEqual(store.getState(), {future: 124});
                 });
+        });
+
+    });
+
+
+    describe('[effects - observables]', () => {
+        let store;
+        let subscriptionCount = 0;
+        beforeEach(() => {
+            const blueprint = {
+                animal: Resmix.init('cat')
+                    .match([
+                        ['changeAnimal', () => new Observable(observer => {
+                            observer.next('dog')
+                            subscriptionCount++;
+                        })]
+                    ])
+            };
+            subscriptionCount = 0;
+            store = prepareStore(blueprint);
+        });
+
+        it('should resolve observable returned by reducer', () => {
+            store.dispatch({type: 'changeAnimal'});
+            assert.strictEqual(store.getState().animal, 'dog');
+        });
+
+        it('should subscribe once', () => {
+            store.dispatch({type: 'changeAnimal'});
+            assert.strictEqual(subscriptionCount, 1);
         });
 
     });
