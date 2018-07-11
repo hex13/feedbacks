@@ -3,6 +3,7 @@ const OBSERVABLES = Symbol('observables');
 
 
 const UPDATE = '@@resmix/update';
+const OPEN_CHANNEL = '@@resmix/openChannel';
 const symbolObservable = require('symbol-observable').default;
 
 
@@ -81,6 +82,7 @@ exports.init = (value) => {
 
 
 exports.Resmix = (blueprint) => {
+    const channels = {};
     const middleware = store => next => {
         if (!store || !store.getState) {
             throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);
@@ -118,6 +120,11 @@ exports.Resmix = (blueprint) => {
         });
     
         return action => {
+            if (action.type == OPEN_CHANNEL) {
+                channels[action.payload.id] = (value) => {
+                    update(action.payload.property, value);
+                }
+            }
             next(action);
             const state = store.getState();
             const effects = state[EFFECTS];
@@ -136,6 +143,7 @@ exports.Resmix = (blueprint) => {
     return {
         middleware,
         reducer: reducerFor(blueprint),
+        channels,
     }
 };
 
@@ -162,4 +170,6 @@ function actionMatchesPattern(pattern, action) {
     } else
         return pattern === action;
     return equal;
-}
+};
+
+exports.OPEN_CHANNEL = OPEN_CHANNEL;

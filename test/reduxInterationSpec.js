@@ -13,6 +13,12 @@ const prepareStore = (blueprint) => {
     return store;
 };
 
+const prepareEngine = (blueprint) => {
+    const resmix = Resmix.Resmix(blueprint);
+    const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+    return { store, engine: resmix };
+};
+
 
 describe('[resmix]', () => {
     it('should allow for declare plain values', () => {
@@ -291,4 +297,29 @@ describe('[resmix]', () => {
         });
     });
 
+    describe('[channels]', () => {
+        let store, engine;
+        beforeEach(() => {
+            ({ store, engine } = prepareEngine({
+                someFoo: 9,
+                someBar: 8
+            }));
+        });
+
+        it('should create channel', () => {
+            store.dispatch({
+                type: Resmix.OPEN_CHANNEL,
+                payload: {
+                    id: 'foo',
+                    property: 'someFoo'
+                }
+            })
+            assert.strictEqual(typeof engine.channels.foo, 'function')
+            engine.channels.foo(1248);
+            assert.deepStrictEqual(store.getState(), {
+                someFoo: 1248,
+                someBar: 8
+            })
+        });
+    });
 });
