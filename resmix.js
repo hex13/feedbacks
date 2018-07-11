@@ -1,5 +1,8 @@
 const EFFECTS = Symbol('effects');
 const OBSERVABLES = Symbol('observables');
+const SPAWN = Symbol('spawn');
+const ACTIONS = Symbol('actions');
+
 
 
 const UPDATE = '@@resmix/update';
@@ -17,6 +20,7 @@ const reducerFor = (blueprint) => {
         let updates = {};
         let effects = [];
         let observables = {};
+        const actions = [];
 
         Object.keys(blueprint).forEach(k => {
             const value = blueprint[k];
@@ -36,6 +40,8 @@ const reducerFor = (blueprint) => {
                         || (result && typeof result[symbolObservable] == 'function')
                     ) {
                         effects.push([k, result]);
+                    } else if (result[SPAWN]) {
+                        actions.push(result.action);
                     } else {
                         updates[k] = result;
                     }
@@ -47,7 +53,7 @@ const reducerFor = (blueprint) => {
         return Object.assign(
             {}, 
             state, updates,
-            {[EFFECTS]: effects, [OBSERVABLES]: observables}
+            {[EFFECTS]: effects, [OBSERVABLES]: observables, [ACTIONS]: actions}
         );
     };
 };
@@ -138,6 +144,10 @@ exports.Resmix = (blueprint) => {
                     }
                 })
             }
+            const actions = state[ACTIONS];
+            if (actions) {
+                actions.forEach(next);
+            }
         }    
     };
     return {
@@ -173,3 +183,10 @@ function actionMatchesPattern(pattern, action) {
 };
 
 exports.OPEN_CHANNEL = OPEN_CHANNEL;
+
+exports.spawn = (action) => {
+    return {
+        [SPAWN]: true,
+        action
+    }
+}
