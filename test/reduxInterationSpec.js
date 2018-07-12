@@ -302,12 +302,15 @@ describe('[resmix]', () => {
         beforeEach(() => {
             ({ store, engine } = prepareEngine({
                 someFoo: Resmix.init(0).match([
-                    ['foo', (state, action) => {
+                    ['foo', function (state, action) {
                         return Resmix.spawn({type: 'bar'});
                     }]
                 ]),
                 someBar: Resmix.init(100).match([
-                    ['bar', (state, action) => state + 10]
+                    ['bar', function* (state, action) {
+                        yield 'something yielded';
+                        return state + 10;
+                    }]
                 ]),
                 guard: 'the same'
             }));
@@ -315,17 +318,38 @@ describe('[resmix]', () => {
 
         it('should spawn action', () => {
             store.dispatch({type: 'foo'});
-            assert.deepStrictEqual(store.getState(), {someFoo: 0, someBar: 110, guard: 'the same'});
+            assert.deepStrictEqual(store.getState(), {someFoo: 'something yielded', someBar: 110, guard: 'the same'});
         });
 
         it('should spawn once, clean after each action', () => {
             store.dispatch({type: 'foo'});
             store.dispatch({type: 'some other action'});
             store.dispatch({type: 'yet another action'});
-            assert.deepStrictEqual(store.getState(), {someFoo: 0, someBar: 110, guard: 'the same'});
+            assert.deepStrictEqual(store.getState(), {someFoo: 'something yielded', someBar: 110, guard: 'the same'});
         });
 
     });
+
+    describe('[generators]', () => {
+        let store, engine;
+        beforeEach(() => {
+            ({ store, engine } = prepareEngine({
+                counter: Resmix.init(0).match([
+                    ['gen', function* (v) {
+                        yield 'not a right value';
+                        return v + 100;
+                    }]
+                ])
+            }));
+        });
+
+        it('should detect generator and assign correctly returned value (not yielded one)', () => {
+            store.dispatch({type: 'gen'});
+            assert.deepStrictEqual(store.getState(), {counter: 100});
+        });
+
+    });
+
 
     describe('[channels]', () => {
         let store, engine;

@@ -41,7 +41,18 @@ const reducerFor = (blueprint) => {
                     ) {
                         effects.push([k, result]);
                     } else if (result[SPAWN]) {
-                        actions.push(result.action);
+                        actions.push({action: result.action, owner: k});
+                    } else if (typeof result.next == 'function') {
+                        let yielded, lastYielded;
+                        do {
+                            lastYielded = yielded;
+                            yielded = result.next();
+                        } while (!yielded.done);
+
+                        if (action.meta && action.meta.owner) {
+                            updates[action.meta.owner] = lastYielded.value;
+                        }
+                        updates[k] = yielded.value;
                     } else {
                         updates[k] = result;
                     }
@@ -146,7 +157,10 @@ exports.Resmix = (blueprint) => {
             }
             const actions = state[ACTIONS];
             if (actions) {
-                actions.forEach(next);
+                actions.forEach(({action, owner}) => {
+                    action.meta = {owner};
+                    next(action);
+                });
             }
         }    
     };
