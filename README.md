@@ -23,13 +23,13 @@ Counter (increments automatically each 1000 milliseconds):
 
 ```javascript
 import Rx from 'rxjs'; // optional. You don't need Rx.js to use Feedbacks
-import { createStore } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
 import { createEngine } from 'feedbacks';
 
 const engine = createEngine(() => ({
     counter: Rx.interval(1000)
 }));
-const store = createStore(engine.reducer, engine.middleware);
+const store = createStore(engine.reducer, applyMiddleware(engine.middleware));
 
 ```
 
