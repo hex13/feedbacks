@@ -164,10 +164,9 @@ describe('[resmix]', () => {
                 [INC, v => 'second match should have not effect'],
                 [DEC, v => v - 1],
             ]),
-            counterX2: Resmix.match([
-                [INC, v => v + 2],
-                [DEC, v => v - 2],
-            ])
+            counterX2: Resmix
+                .match(INC, v => v + 2)
+                .match(DEC, v => v - 2)
         };
         const resmix = Resmix.Resmix(blueprint);
         const store = createStore(resmix.reducer, {counter: 0, counterX2: 0});

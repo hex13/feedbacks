@@ -99,16 +99,22 @@ class Recipe {
         recipe.hasInitialState = true;
         return recipe;
     }
-    match(pairs) {
+    match(...args) {
         const recipe = new Recipe(this);
         recipe.hasMatchPairs = true;
-        recipe.pairs = pairs;
+
+        if (args.length == 2) {
+            recipe.pairs = (recipe.pairs || []).concat([args]);
+        } else {
+            const pairs = args[0];
+            recipe.pairs = pairs;
+        }
         return recipe;
     }
 };
 
-exports.match = (pairs) => {
-    return new Recipe().match(pairs);
+exports.match = (...args) => {
+    return new Recipe().match(...args);
 };
 
 exports.init = (value) => {
