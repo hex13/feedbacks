@@ -1,7 +1,5 @@
 const EFFECTS = Symbol('effects');
-const OBSERVABLES = Symbol('observables');
 const SPAWN = Symbol('spawn');
-const ACTIONS = Symbol('actions');
 
 const UPDATE = '@@resmix/update';
 const UPDATE_ROOT = '@@resmix/updateRoot';
@@ -21,8 +19,6 @@ const reducerFor = (blueprint) => {
         }
         let updates = {};
         let effects = [];
-        let observables = {};
-        const actions = [];
 
         const checkMatchAndHandleAction = (parent, k, updates) => {
             const value = parent[k];
@@ -37,11 +33,12 @@ const reducerFor = (blueprint) => {
                 if (equal) {
                     const result = reducer(state[k], action);
                     if (typeof result == 'function'
-                        || (result && typeof result[symbolObservable] == 'function')) {
-                        effects.push([k, result]);
+                        || (result && typeof result[symbolObservable] == 'function')
+                    ) {
+                        effects.push({k, result});
                     }
                     else if (result[SPAWN]) {
-                        actions.push({ action: result.action, owner: k });
+                        effects.push({ action: result.action, k });
                     }
                     else if (typeof result.next == 'function') {
                         let yielded, lastYielded;
@@ -72,7 +69,7 @@ const reducerFor = (blueprint) => {
             checkMatchAndHandleAction(blueprint, key, updates);
         }
 
-        const returnedState = Object.assign({}, state, {[EFFECTS]: effects, [OBSERVABLES]: observables, [ACTIONS]: actions});
+        const returnedState = Object.assign({}, state, {[EFFECTS]: effects});
 
         function merge(target, updates) {
             for (let k in updates) {
@@ -181,21 +178,19 @@ exports.Resmix = (blueprint) => {
             const state = store.getState();
             const effects = state[EFFECTS];
             if (effects) {
-                effects.forEach(([k, result]) => {
+                effects.forEach(({k, result, action}) => {
                     const updateProperty = update.bind(null, k);
-                    if (typeof result[symbolObservable] == 'function') {
-                        result[symbolObservable]().subscribe(updateProperty);
-                    } else {
-                        Promise.resolve(result()).then(updateProperty);
+                    if (action) {
+                        action.meta = {owner: k};
+                        next(action);
+                    } else if (result) {
+                        if (typeof result[symbolObservable] == 'function') {
+                            result[symbolObservable]().subscribe(updateProperty);
+                        } else {
+                            Promise.resolve(result()).then(updateProperty);
+                        }
                     }
                 })
-            }
-            const actions = state[ACTIONS];
-            if (actions) {
-                actions.forEach(({action, owner}) => {
-                    action.meta = {owner};
-                    next(action);
-                });
             }
         }    
     };
