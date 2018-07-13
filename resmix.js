@@ -6,13 +6,12 @@ const UPDATE_ROOT = '@@resmix/updateRoot';
 const OPEN_CHANNEL = '@@resmix/openChannel';
 const symbolObservable = require('symbol-observable').default;
 
+const R = require('ramda');
 
 const reducerFor = (blueprint) => {
     return (state, action) => {
         if (action.type == UPDATE) {
-            return Object.assign({}, state, {
-                [action.payload.name]: action.payload.value
-            });
+            return R.assocPath(action.payload.name, action.payload.value, state);
         }
         if (action.type == UPDATE_ROOT) {
             return Object.assign({}, state, action.payload);
@@ -20,7 +19,7 @@ const reducerFor = (blueprint) => {
         let updates = {};
         let effects = [];
 
-        const checkMatchAndHandleAction = (parent, k, updates) => {
+        const checkMatchAndHandleAction = (parent, k, updates, path) => {
             const value = parent[k];
             const pairs = value && value.pairs;
             let matched = false;
@@ -34,7 +33,7 @@ const reducerFor = (blueprint) => {
                     if (typeof result == 'function'
                         || (result && typeof result[symbolObservable] == 'function')
                     ) {
-                        effects.push({k, result});
+                        effects.push({k, result, path});
                     }
                     else if (result[SPAWN]) {
                         effects.push({ action: result.action, k });
@@ -59,13 +58,13 @@ const reducerFor = (blueprint) => {
             if (value && !(value instanceof Recipe) && !value[symbolObservable] && typeof value == 'object') {
                 const deeperUpdates = updates[k] || (updates[k] = {});
                 for (let key in value) {
-                    checkMatchAndHandleAction(value, key, deeperUpdates);
+                    checkMatchAndHandleAction(value, key, deeperUpdates, path.concat(key));
                 }
             }
         };
 
         for (let key in blueprint) {
-            checkMatchAndHandleAction(blueprint, key, updates);
+            checkMatchAndHandleAction(blueprint, key, updates, [key]);
         }
 
 
@@ -123,9 +122,12 @@ exports.Resmix = (blueprint) => {
         if (!store || !store.getState) {
             throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);
         }
-        const update = (name, value) => {
+        const update = (path, value) => {
+            if (!(path instanceof Array)) {
+                path = [path];
+            }
             next({type: UPDATE, payload: {
-                name, value
+                name: path, value
             }});
         };
 
@@ -181,8 +183,8 @@ exports.Resmix = (blueprint) => {
             const state = store.getState();
             const effects = state[EFFECTS];
             if (effects) {
-                effects.forEach(({k, result, action}) => {
-                    const updateProperty = update.bind(null, k);
+                effects.forEach(({k, result, action, path}) => {
+                    const updateProperty = update.bind(null, path);
                     if (action) {
                         action.meta = {owner: k};
                         next(action);

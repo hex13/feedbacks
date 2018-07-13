@@ -52,8 +52,7 @@ describe('[resmix]', () => {
         assert.deepStrictEqual(store.getState(), createBlueprint());
     });
 
-    it('should allow for declare deep matchings', () => {
-        const someSymbol = Symbol();
+    it('should allow for declare deep matchings', (done) => {
         const createBlueprint = () => ({
             user: {
                 name: Resmix.init('Jack').match([
@@ -61,7 +60,8 @@ describe('[resmix]', () => {
                 ]),
                 from: {
                     city: Resmix.init('Los Angeles').match([
-                        ['changeCity', (value, action) => action.name]
+                        ['changeCity', (value, action) => () => Promise.resolve(action.name)],
+                        ['fly', (value, action) => of('Island')]
                     ]),
                     country: 'USA'
                 }
@@ -70,27 +70,43 @@ describe('[resmix]', () => {
         const resmix = Resmix.Resmix(createBlueprint());
         const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
 
-        assert.deepStrictEqual(store.getState(), {
+       assert.deepStrictEqual(store.getState(), {
             user: {
                 name: 'Jack',
                 from: {
                     city: 'Los Angeles',
                     country: 'USA'
                 }
-            }
+            },
+
         });
         store.dispatch({type: 'changeName', name: 'John'});
         store.dispatch({type: 'changeCity', name: 'Tustin'});
-
-        assert.deepStrictEqual(store.getState(), {
-            user: {
-                name: 'John',
-                from: {
-                    city: 'Tustin',
-                    country: 'USA'
+        setTimeout(() => {
+            assert.deepStrictEqual(store.getState(), {
+                user: {
+                    name: 'John',
+                    from: {
+                        city: 'Tustin',
+                        country: 'USA'
+                    }
                 }
-            }
-        });
+            }); 
+            store.dispatch({type: 'fly'});
+            setTimeout(() => {
+                assert.deepStrictEqual(store.getState(), {
+                    user: {
+                        name: 'John',
+                        from: {
+                            city: 'Island',
+                            country: 'USA'
+                        }
+                    }
+                });     
+                done();
+            }, 10)
+            
+        }, 10);
     });
 
     describe('init', () => {
