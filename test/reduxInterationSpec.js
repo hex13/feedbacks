@@ -169,6 +169,9 @@ describe('[resmix]', () => {
         const DEC = 'dec';
         const blueprint = {
             counter: Resmix.match([
+                [{type: INC, amount: {
+                    name: 'dozen'
+                }}, v => v + 12],
                 [{type: INC, double: true}, v => v + 2],
                 [{type: INC, amount: (v) => v > 100 }, (v, a) => 'too much'],
                 [{type: INC, amount: () => true}, (v, a) => v + a.amount],
@@ -185,6 +188,8 @@ describe('[resmix]', () => {
         assert.deepStrictEqual(store.getState(), {counter: 3});
         store.dispatch({type: INC, amount: 10});
         assert.deepStrictEqual(store.getState(), {counter: 13});
+        store.dispatch({type: INC, amount: {name: 'dozen'}});
+        assert.deepStrictEqual(store.getState(), {counter: 25});
         store.dispatch({type: INC, amount: 101});
         assert.deepStrictEqual(store.getState(), {counter: 'too much'});
     });

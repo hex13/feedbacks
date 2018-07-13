@@ -28,8 +28,6 @@ const reducerFor = (blueprint) => {
                 let [pattern, reducer] = pairs[i];
                 if (matched)
                     return;
-                if (typeof pattern == 'string')
-                    pattern = { type: pattern };
                 let equal = actionMatchesPattern(pattern, action);
                 if (equal) {
                     const result = reducer(state[k], action);
@@ -205,6 +203,7 @@ exports.Resmix = (blueprint) => {
 
 function actionMatchesPattern(pattern, action) {
     let equal = true;
+    if (typeof pattern == 'string') return pattern == action.type;
     if (typeof pattern == 'object' && typeof action == 'object') {
         Object.keys(pattern).forEach(patternKey => {
             // TODO optimize. forEach is sub-optimal because it goes on even after we know that there is no match.
