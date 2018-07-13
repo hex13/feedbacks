@@ -3,9 +3,8 @@ const OBSERVABLES = Symbol('observables');
 const SPAWN = Symbol('spawn');
 const ACTIONS = Symbol('actions');
 
-
-
 const UPDATE = '@@resmix/update';
+const UPDATE_ROOT = '@@resmix/updateRoot';
 const OPEN_CHANNEL = '@@resmix/openChannel';
 const symbolObservable = require('symbol-observable').default;
 
@@ -17,55 +16,75 @@ const reducerFor = (blueprint) => {
                 [action.payload.name]: action.payload.value
             });
         }
+        if (action.type == UPDATE_ROOT) {
+            return Object.assign({}, state, action.payload);
+        }
         let updates = {};
         let effects = [];
         let observables = {};
         const actions = [];
 
-        Object.keys(blueprint).forEach(k => {
-            const value = blueprint[k];
+        const checkMatchAndHandleAction = (parent, k, updates) => {
+            const value = parent[k];
             const pairs = value && value.pairs;
-
             let matched = false;
             pairs && pairs.forEach(([pattern, reducer]) => {
-                if (matched) return;
-                if (typeof pattern == 'string') pattern = {type: pattern};
-
+                if (matched)
+                    return;
+                if (typeof pattern == 'string')
+                    pattern = { type: pattern };
                 let equal = actionMatchesPattern(pattern, action);
-
                 if (equal) {
                     const result = reducer(state[k], action);
-                    if (
-                        typeof result == 'function'
-                        || (result && typeof result[symbolObservable] == 'function')
-                    ) {
+                    if (typeof result == 'function'
+                        || (result && typeof result[symbolObservable] == 'function')) {
                         effects.push([k, result]);
-                    } else if (result[SPAWN]) {
-                        actions.push({action: result.action, owner: k});
-                    } else if (typeof result.next == 'function') {
+                    }
+                    else if (result[SPAWN]) {
+                        actions.push({ action: result.action, owner: k });
+                    }
+                    else if (typeof result.next == 'function') {
                         let yielded, lastYielded;
                         do {
                             lastYielded = yielded;
                             yielded = result.next();
                         } while (!yielded.done);
-
                         if (action.meta && action.meta.owner) {
                             updates[action.meta.owner] = lastYielded.value;
                         }
                         updates[k] = yielded.value;
-                    } else {
+                    }
+                    else {
                         updates[k] = result;
                     }
                     matched = true;
                 }
             });
-        });
+            if (value && !(value instanceof Recipe) && !value[symbolObservable] && typeof value == 'object') {
+                const deeperUpdates = updates[k] || (updates[k] = {});
+                for (let key in value) {
+                    checkMatchAndHandleAction(value, key, deeperUpdates);
+                }
+            }
+        };
 
-        return Object.assign(
-            {}, 
-            state, updates,
-            {[EFFECTS]: effects, [OBSERVABLES]: observables, [ACTIONS]: actions}
-        );
+        for (let key in blueprint) {
+            checkMatchAndHandleAction(blueprint, key, updates);
+        }
+
+        const returnedState = Object.assign({}, state, {[EFFECTS]: effects, [OBSERVABLES]: observables, [ACTIONS]: actions});
+
+        function merge(target, updates) {
+            for (let k in updates) {
+                const patch = updates[k];
+                if (patch && typeof patch == 'object') {
+                    merge(target[k] || (target[k] = {}), patch);
+                } else
+                    target[k] = patch;
+            }
+        }
+        merge(returnedState, updates);
+        return returnedState;
     };
 };
 
@@ -109,32 +128,48 @@ exports.Resmix = (blueprint) => {
                 name, value
             }});
         };
-        Object.keys(blueprint).forEach(k => {
+
+        const visitProperty = (blueprint, k, setValue) => {
             const desc = blueprint[k];
             const t = typeof desc;
             const isPlainValue = !desc || t == 'number' || t == 'string' || t == 'boolean' || t == 'symbol';
-
-            if (desc instanceof Recipe && desc.hasInitialState) {
-                update(k, desc.initialState);
+            if (desc instanceof Recipe) {
+                if (desc.hasInitialState)
+                    setValue(desc.initialState);
                 return;
             }
             if (isPlainValue) {
-                update(k, desc);
+                setValue(desc);
                 return;
             }
             const toObservable = desc[symbolObservable];
             const isMatchObject = desc.hasMatchPairs;
-            if (!toObservable && !isMatchObject) {
-                update(k, desc);
-                return;
-            }
             if (toObservable) {
                 const observable = toObservable.call(desc);
                 observable.subscribe(value => {
-                    update(k, value);
+                    setValue(value);
                 });
+                return;
             }
+            if (desc && typeof desc == 'object') {
+                const computedCurrentObjectValue = {};
+                Object.keys(desc).forEach(function goDeeper(k) {
+                    visitProperty(desc, k, (v) => {
+                        computedCurrentObjectValue[k] = v;
+                    }); 
+                });
+                setValue(computedCurrentObjectValue);
+                return; 
+            }
+        };
+
+        const initialState = {};
+        Object.keys(blueprint).forEach(k => {
+            visitProperty(blueprint, k, (v) => {
+                initialState[k] = v;
+            });
         });
+        next({type: UPDATE_ROOT, payload: initialState})
     
         return action => {
             if (action.type == OPEN_CHANNEL) {

@@ -50,7 +50,47 @@ describe('[resmix]', () => {
         const resmix = Resmix.Resmix(createBlueprint());
         const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
         assert.deepStrictEqual(store.getState(), createBlueprint());
+    });
 
+    it('should allow for declare deep matchings', () => {
+        const someSymbol = Symbol();
+        const createBlueprint = () => ({
+            user: {
+                name: Resmix.init('Jack').match([
+                    ['changeName', (value, action) => action.name]
+                ]),
+                from: {
+                    city: Resmix.init('Los Angeles').match([
+                        ['changeCity', (value, action) => action.name]
+                    ]),
+                    country: 'USA'
+                }
+            }
+        });
+        const resmix = Resmix.Resmix(createBlueprint());
+        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+
+        assert.deepStrictEqual(store.getState(), {
+            user: {
+                name: 'Jack',
+                from: {
+                    city: 'Los Angeles',
+                    country: 'USA'
+                }
+            }
+        });
+        store.dispatch({type: 'changeName', name: 'John'});
+        store.dispatch({type: 'changeCity', name: 'Tustin'});
+
+        assert.deepStrictEqual(store.getState(), {
+            user: {
+                name: 'John',
+                from: {
+                    city: 'Tustin',
+                    country: 'USA'
+                }
+            }
+        });
     });
 
     describe('init', () => {
