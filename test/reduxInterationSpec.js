@@ -6,9 +6,10 @@ const { createStore, applyMiddleware } = require('redux');
 const { Observable, interval, Subscription, of } = require('rxjs');
 const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
+const { createEngine }= require('..');
 
 const prepareStore = (blueprint) => {
-    const resmix = Resmix.Resmix(blueprint);
+    const resmix = createEngine(blueprint);
     const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
     return store;
 };
@@ -110,9 +111,9 @@ describe('[resmix]', () => {
     });
 
     describe('init', () => {
-        const blueprint = {
-            a: Resmix.init(2)
-        }
+        const blueprint = ({ init }) => ({
+            a: init(2)
+        });
 
         beforeEach(() => {
         });
