@@ -205,13 +205,12 @@ function actionMatchesPattern(pattern, action) {
     let equal = true;
     if (typeof pattern == 'string') return pattern == action.type;
     if (typeof pattern == 'object' && typeof action == 'object') {
-        Object.keys(pattern).forEach(patternKey => {
+        for (let patternKey in pattern) {
+        //Object.keys(pattern).forEach(patternKey => {
             // TODO optimize. forEach is sub-optimal because it goes on even after we know that there is no match.
             if (action[patternKey] == undefined) {
                 equal = false;
-                return;
-            }
-            if (typeof pattern[patternKey] == 'function') {
+            } else if (typeof pattern[patternKey] == 'function') {
                 equal = equal && pattern[patternKey](action[patternKey]);
             }
             else if (pattern[patternKey] && typeof pattern[patternKey] == 'object') {
@@ -220,7 +219,8 @@ function actionMatchesPattern(pattern, action) {
             else {
                 equal = equal && pattern[patternKey] == action[patternKey];
             }
-        });
+            if (!equal) return false;
+        }
     } else
         return pattern === action;
     return equal;
