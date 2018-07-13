@@ -24,7 +24,8 @@ const reducerFor = (blueprint) => {
             const value = parent[k];
             const pairs = value && value.pairs;
             let matched = false;
-            pairs && pairs.forEach(([pattern, reducer]) => {
+            if (pairs) for (let i = 0; i < pairs.length; i++) {
+                let [pattern, reducer] = pairs[i];
                 if (matched)
                     return;
                 if (typeof pattern == 'string')
@@ -56,7 +57,7 @@ const reducerFor = (blueprint) => {
                     }
                     matched = true;
                 }
-            });
+            }
             if (value && !(value instanceof Recipe) && !value[symbolObservable] && typeof value == 'object') {
                 const deeperUpdates = updates[k] || (updates[k] = {});
                 for (let key in value) {
