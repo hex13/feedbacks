@@ -68,7 +68,11 @@ const reducerFor = (blueprint) => {
             checkMatchAndHandleAction(blueprint, key, updates);
         }
 
-        const returnedState = Object.assign({}, state, {[EFFECTS]: effects});
+
+        const returnedState = {[EFFECTS]: effects};
+        for (let k in state) {
+            returnedState[k] = state[k];
+        }
 
         function merge(target, updates) {
             for (let k in updates) {
