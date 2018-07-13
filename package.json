@@ -1,6 +1,6 @@
 {
   "name": "feedbacks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Feedbacks - reactive blueprints for your Redux apps",
   "main": "index.js",
   "scripts": {
