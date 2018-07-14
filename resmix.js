@@ -19,7 +19,8 @@ const reducerFor = (blueprint) => {
         let updates = {};
         let effects = [];
 
-        const checkMatchAndHandleAction = (parent, k, updates, path) => {
+        const checkMatchAndHandleAction = (parent, k, updates, path, state) => {
+
             const value = parent[k];
             const pairs = value && value.pairs;
             let matched = false;
@@ -58,13 +59,13 @@ const reducerFor = (blueprint) => {
             if (value && !(value instanceof Recipe) && !value[symbolObservable] && typeof value == 'object') {
                 const deeperUpdates = updates[k] || (updates[k] = {});
                 for (let key in value) {
-                    checkMatchAndHandleAction(value, key, deeperUpdates, path.concat(key));
+                    checkMatchAndHandleAction(value, key, deeperUpdates, path.concat(key), state[k]);
                 }
             }
         };
-
-        for (let key in blueprint) {
-            checkMatchAndHandleAction(blueprint, key, updates, [key]);
+        
+        if (state) for (let key in blueprint) {
+            checkMatchAndHandleAction(blueprint, key, updates, [key], state);
         }
 
 

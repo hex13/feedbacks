@@ -56,6 +56,7 @@ describe('[resmix]', () => {
     it('should allow for declare deep matchings', (done) => {
         const createBlueprint = () => ({
             user: {
+                season: Resmix.init(1).match('nextSeason', value => value + 1),
                 name: Resmix.init('Jack').match([
                     ['changeName', (value, action) => action.name]
                 ]),
@@ -68,11 +69,12 @@ describe('[resmix]', () => {
                 }
             }
         });
-        const resmix = Resmix.Resmix(createBlueprint());
+        const resmix = createEngine(a => createBlueprint(a));
         const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
 
        assert.deepStrictEqual(store.getState(), {
             user: {
+                season: 1,
                 name: 'Jack',
                 from: {
                     city: 'Los Angeles',
@@ -86,6 +88,7 @@ describe('[resmix]', () => {
         setTimeout(() => {
             assert.deepStrictEqual(store.getState(), {
                 user: {
+                    season: 1,                    
                     name: 'John',
                     from: {
                         city: 'Tustin',
@@ -97,6 +100,7 @@ describe('[resmix]', () => {
             setTimeout(() => {
                 assert.deepStrictEqual(store.getState(), {
                     user: {
+                        season: 1,                        
                         name: 'John',
                         from: {
                             city: 'Island',
@@ -104,6 +108,20 @@ describe('[resmix]', () => {
                         }
                     }
                 });     
+
+                store.dispatch({ type: 'nextSeason'});
+
+                assert.deepStrictEqual(store.getState(), {
+                    user: {
+                        season: 2,                        
+                        name: 'John',
+                        from: {
+                            city: 'Island',
+                            country: 'USA'
+                        }
+                    }
+                });     
+
                 done();
             }, 10)
             
@@ -435,6 +453,30 @@ describe('[resmix]', () => {
                 someFoo: 1248,
                 someBar: 8
             })
+        });
+    });
+});
+
+describe('[immutability]', () => {
+    it('should keep immutability', () => {
+        const store = prepareStore(({init}) => ({
+            deep: {
+                a: init(0)
+                    .match('inc', v => v + 1)
+            }
+        }));
+        const state1 = store.getState();
+        assert.deepStrictEqual(state1, {
+            deep: {
+                a: 0
+            }
+        });
+        store.dispatch({type: 'inc'})
+        const state2 = store.getState();
+        assert.deepStrictEqual(state2, {
+            deep: {
+                a: 1    
+            }
         });
     });
 });
