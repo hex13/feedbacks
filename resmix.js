@@ -68,23 +68,7 @@ const reducerFor = (blueprint) => {
             checkMatchAndHandleAction(blueprint, key, updates, [key], state);
         }
 
-
-        const returnedState = {[EFFECTS]: effects};
-        for (let k in state) {
-            returnedState[k] = state[k];
-        }
-
-        function merge(target, updates) {
-            for (let k in updates) {
-                const patch = updates[k];
-                if (patch && typeof patch == 'object') {
-                    merge(target[k] || (target[k] = {}), patch);
-                } else
-                    target[k] = patch;
-            }
-        }
-        merge(returnedState, updates);
-        return returnedState;
+        return Object.assign(R.mergeDeepLeft(updates, state), {[EFFECTS]: effects});
     };
 };
 

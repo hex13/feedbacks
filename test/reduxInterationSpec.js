@@ -459,24 +459,24 @@ describe('[resmix]', () => {
 
 describe('[immutability]', () => {
     it('should keep immutability', () => {
+        const foo = {a: 123};
         const store = prepareStore(({init}) => ({
+            foo: {
+                a: Resmix.init(123).match('foo', v => 456)
+            },
             deep: {
+                foo,
                 a: init(0)
                     .match('inc', v => v + 1)
             }
         }));
+
         const state1 = store.getState();
-        assert.deepStrictEqual(state1, {
-            deep: {
-                a: 0
-            }
-        });
-        store.dispatch({type: 'inc'})
+        assert.deepStrictEqual(state1.foo, {a: 123});
+
+        store.dispatch({type: 'foo'})
         const state2 = store.getState();
-        assert.deepStrictEqual(state2, {
-            deep: {
-                a: 1    
-            }
-        });
+        assert.deepStrictEqual(state1.foo, {a: 123});
+        assert.deepStrictEqual(state2.foo, {a: 456});
     });
 });
