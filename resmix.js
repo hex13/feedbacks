@@ -7,6 +7,8 @@ const OPEN_CHANNEL = '@@resmix/openChannel';
 const symbolObservable = require('symbol-observable').default;
 
 const R = require('ramda');
+const EffectRunner = require('./effectRunner');
+const effectRunner = new EffectRunner();
 
 const reducerFor = (blueprint) => {
     return (state, action) => {
@@ -180,11 +182,7 @@ exports.Resmix = (blueprint) => {
                         action.meta = {owner: k};
                         next(action);
                     } else if (result) {
-                        if (typeof result[symbolObservable] == 'function') {
-                            result[symbolObservable]().subscribe(updateProperty);
-                        } else {
-                            Promise.resolve(result()).then(updateProperty);
-                        }
+                        effectRunner.run(result, updateProperty);
                     }
                 })
             }
