@@ -8,7 +8,6 @@ const symbolObservable = require('symbol-observable').default;
 
 const R = require('ramda');
 const EffectRunner = require('./effectRunner');
-const effectRunner = new EffectRunner();
 
 const reducerFor = (blueprint) => {
     return (state, action) => {
@@ -39,7 +38,12 @@ const reducerFor = (blueprint) => {
                         effects.push({k, result, path});
                     }
                     else if (result[SPAWN]) {
-                        effects.push({ action: result.action, k });
+                        const action = result.action;
+                        action.meta = {owner: k};
+                        effects.push({
+                            result: { [EffectRunner.CALL]: ['dispatch', action] },
+                            k, path
+                        });
                     }
                     else if (typeof result.next == 'function') {
                         let yielded, lastYielded;
@@ -112,6 +116,9 @@ exports.init = (value) => {
 exports.Resmix = (blueprint) => {
     const channels = {};
     const middleware = store => next => {
+        const effectRunner = new EffectRunner({
+            dispatch: next
+        });
         if (!store || !store.getState) {
             throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);
         }
@@ -176,14 +183,9 @@ exports.Resmix = (blueprint) => {
             const state = store.getState();
             const effects = state[EFFECTS];
             if (effects) {
-                effects.forEach(({k, result, action, path}) => {
+                effects.forEach(({ result, path}) => {
                     const updateProperty = update.bind(null, path);
-                    if (action) {
-                        action.meta = {owner: k};
-                        next(action);
-                    } else if (result) {
-                        effectRunner.run(result, updateProperty);
-                    }
+                    effectRunner.run(result, updateProperty);
                 })
             }
         }    

@@ -406,7 +406,6 @@ describe('[resmix]', () => {
             store.dispatch({type: 'yet another action'});
             assert.deepStrictEqual(store.getState(), {someFoo: 'something yielded', someBar: 110, guard: 'the same'});
         });
-
     });
 
     describe('[generators]', () => {
