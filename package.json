@@ -1,5 +1,6 @@
 {
   "name": "feedbacks",
+  "repository": "https://github.com/hex13/feedbacks",
   "version": "0.1.2",
   "description": "Feedbacks - reactive blueprints for your Redux apps",
   "main": "index.js",
