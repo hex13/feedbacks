@@ -115,8 +115,7 @@ You can do it in either way:
 ```javascript
 {
     user: init({name: '', city: ''})
-        .match('changeUser', (value, action) => action.paylod)
-    },
+        .match('changeUser', (value, action) => action.payload)
 }
 ```
 
