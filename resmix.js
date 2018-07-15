@@ -52,7 +52,14 @@ const reducerFor = (blueprint) => {
                             yielded = result.next();
                         } while (!yielded.done);
                         if (action.meta && action.meta.owner) {
-                            updates[action.meta.owner] = lastYielded.value;
+                            effects.push({
+                                result: { [EffectRunner.CALL]: ['dispatch', {
+                                    type: UPDATE,
+                                    payload: {
+                                        name: [].concat(action.meta.owner), value: lastYielded.value
+                                    }
+                                }] },
+                            });
                         }
                         updates[k] = yielded.value;
                     }
@@ -117,7 +124,9 @@ exports.Resmix = (blueprint) => {
     const channels = {};
     const middleware = store => next => {
         const effectRunner = new EffectRunner({
-            dispatch: next
+            dispatch(a) {
+                store.dispatch(a);
+            }
         });
         if (!store || !store.getState) {
             throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);

@@ -385,26 +385,29 @@ describe('[resmix]', () => {
                         return Resmix.spawn({type: 'bar'});
                     }]
                 ]),
-                someBar: Resmix.init(100).match([
-                    ['bar', function* (state, action) {
-                        yield 'something yielded';
-                        return state + 10;
-                    }]
-                ]),
+                deep: {
+                    someBar: Resmix.init(100).match([
+                        ['bar', function* (state, action) {
+                            yield 'something yielded';
+                            return state + 10;
+                        }]
+                    ]),    
+                },
                 guard: 'the same'
             }));
         });
 
         it('should spawn action', () => {
             store.dispatch({type: 'foo'});
-            assert.deepStrictEqual(store.getState(), {someFoo: 'something yielded', someBar: 110, guard: 'the same'});
-        });
-
-        it('should spawn once, clean after each action', () => {
-            store.dispatch({type: 'foo'});
             store.dispatch({type: 'some other action'});
-            store.dispatch({type: 'yet another action'});
-            assert.deepStrictEqual(store.getState(), {someFoo: 'something yielded', someBar: 110, guard: 'the same'});
+            assert.deepStrictEqual(store.getState(), {
+                someFoo: 'something yielded', 
+                deep: {
+                    someBar: 110, 
+                },
+                guard: 'the same'
+            });
+
         });
     });
 
