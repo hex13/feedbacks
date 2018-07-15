@@ -93,11 +93,34 @@ Feedback allow you also for making some advanced pattern matching. You've seen s
 // ...
 ```
 
-Reducers that affect more than one property
+If you want to change more than one property during action:
 ---
-Just connect reducer to the upper property (e.g. to `user`, not to `user.location.city`)
 
-TODO: describe more precisely, give an example
+You can do it in either way:
+
+1. match on all properties you want to change:
+
+```javascript
+{
+    user: {
+        name: init('')
+            .match('changeUser', (value, action) => action.payload.name),
+        city: init('')
+            .match('changeUser', (value, action) => action.payload.city),
+    },
+}
+```
+2. match action at the upper property:
+
+```javascript
+{
+    user: init({name: '', city: ''})
+        .match('changeUser', (value, action) => action.paylod)
+    },
+}
+```
+
+Whatever will make more sense to what you want to achieve.
 
 Philosophy of side-effects
 ---
