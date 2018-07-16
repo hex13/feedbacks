@@ -1,28 +1,26 @@
 const EFFECTS = Symbol('effects');
 const SPAWN = Symbol('spawn');
+const EFFECT = Symbol('effect');
 
 const UPDATE = '@@resmix/update';
 const UPDATE_ROOT = '@@resmix/updateRoot';
 const OPEN_CHANNEL = '@@resmix/openChannel';
 const symbolObservable = require('symbol-observable').default;
-
+const { get, set } = require('transmutable/get-set');
 const R = require('ramda');
 const EffectRunner = require('./effectRunner');
 
-function runPropertyReducer(reducer, state, action, {updates, effects, path, k}) {
+function runPropertyReducer(reducer, state, action, {updates, effects, path, k }) {
     const result = reducer(state, action);
     if (typeof result == 'function'
         || (result && typeof result[symbolObservable] == 'function')
     )
     {
-        effects.push({result, path});
+        effects[k] = {[EFFECT]: result};
     } else if (result[SPAWN]) {
         const action = result.action;
         action.meta = {owner: path};
-        effects.push({
-            result: { [EffectRunner.CALL]: ['dispatch', action] },
-            path
-        });
+        effects[k] = {[EFFECT]: { [EffectRunner.CALL]: ['dispatch', action] }};
     } else if (typeof result.next == 'function') {
         let yielded, lastYielded;
         do {
@@ -30,14 +28,13 @@ function runPropertyReducer(reducer, state, action, {updates, effects, path, k})
             yielded = result.next();
         } while (!yielded.done);
         if (action.meta && action.meta.owner) {
-            effects.push({
-                result: { [EffectRunner.CALL]: ['dispatch', {
+            effects[k] = {[EFFECT]: { [EffectRunner.CALL]: ['dispatch', {
                     type: UPDATE,
                     payload: {
                         name: [].concat(action.meta.owner), value: lastYielded.value
-                    }
-                }] },
-            });
+                    },
+                }] }};
+
         }
         updates[k] = yielded.value;
     } else {
@@ -56,9 +53,9 @@ const reducerFor = (blueprint) => {
             return Object.assign({}, state, action.payload);
         }
         let updates = {};
-        let effects = [];
+        let effects = {};
 
-        const checkMatchAndHandleAction = (parent, k, updates, path, state) => {
+        const checkMatchAndHandleAction = (parent, k, updates, path, state, effects) => {
 
             const value = parent[k];
             const pairs = value && value.pairs;
@@ -75,14 +72,15 @@ const reducerFor = (blueprint) => {
             }
             if (value && !(value instanceof Recipe) && !value[symbolObservable] && typeof value == 'object') {
                 const deeperUpdates = updates[k] || (updates[k] = {});
+                const deeperEffects = effects[k] || (effects[k] = {});
                 for (let key in value) {
-                    checkMatchAndHandleAction(value, key, deeperUpdates, path.concat(key), state[k]);
+                    checkMatchAndHandleAction(value, key, deeperUpdates, path.concat(key), state[k], deeperEffects);
                 }
             }
         };
         
         if (state) for (let key in blueprint) {
-            checkMatchAndHandleAction(blueprint, key, updates, [key], state);
+            checkMatchAndHandleAction(blueprint, key, updates, [key], state, effects);
         }
 
         return Object.assign(R.mergeDeepLeft(updates, state), {[EFFECTS]: effects});
@@ -195,11 +193,26 @@ exports.Resmix = (blueprint) => {
             next(action);
             const state = store.getState();
             const effects = state[EFFECTS];
+            //console.log('jakie efekt\n\n\n', effects);
             if (effects) {
-                effects.forEach(({ result, path}) => {
-                    const updateProperty = update.bind(null, path);
-                    effectRunner.run(result, updateProperty);
-                })
+                const effectPatch = effects;
+                // effects.forEach(({ result, path}) => {
+                //     set(effectPatch, path, {[EFFECT]: result});
+                // });
+
+                function visitNode(node, path) {
+                    if (node[EFFECT]) {
+                        const updateProperty = update.bind(null, path);
+                        effectRunner.run(node[EFFECT], updateProperty);
+
+                    } else {
+                        for (let k in node) {
+                            visitNode(node[k], path.concat(k));
+                        }
+                    }
+                }
+                visitNode(effectPatch, []);
+                //console.log('effectPatch', effectPatch);
             }
         }    
     };
