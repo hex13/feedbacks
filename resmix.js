@@ -9,7 +9,7 @@ const symbolObservable = require('symbol-observable').default;
 const { get, set } = require('transmutable/get-set');
 const R = require('ramda');
 const EffectRunner = require('./effectRunner');
-
+const nop = ()=>{};
 function runPropertyReducer(reducer, state, action, {updates, effects, path, k }) {
     const result = reducer(state, action);
     if (typeof result == 'function'
@@ -57,24 +57,17 @@ const reducerFor = (blueprint) => {
 
         const checkMatchAndHandleAction = (parent, k, updates, path, state, effects) => {
 
-            const value = parent[k];
-            const pairs = value && value.pairs;
-            let matched = false;
-            if (pairs) for (let i = 0; i < pairs.length; i++) {
-                let [pattern, reducer] = pairs[i];
-                if (matched)
-                    return;
-                let equal = actionMatchesPattern(pattern, action);
-                if (equal) {
-                    const result = runPropertyReducer(reducer, state[k], action, {updates, effects, path, k});
-                    matched = true;
-                }
-            }
-            if (value && !(value instanceof Recipe) && !value[symbolObservable] && typeof value == 'object') {
-                const deeperUpdates = updates[k] || (updates[k] = {});
-                const deeperEffects = effects[k] || (effects[k] = {});
-                for (let key in value) {
-                    checkMatchAndHandleAction(value, key, deeperUpdates, path.concat(key), state[k], deeperEffects);
+            const field = parent[k];
+
+            if (field instanceof Recipe) {
+                field.doMatch(action, (reducer) => runPropertyReducer(reducer, state[k], action, {updates, effects, path, k}));
+            } else {
+                if (field && !field[symbolObservable] && typeof field == 'object') {
+                    const deeperUpdates = updates[k] || (updates[k] = {});
+                    const deeperEffects = effects[k] || (effects[k] = {});
+                    for (let key in field) {
+                        checkMatchAndHandleAction(field, key, deeperUpdates, path.concat(key), state[k], deeperEffects);
+                    }
                 }
             }
         };
@@ -99,6 +92,7 @@ class Recipe {
         recipe.hasInitialState = true;
         return recipe;
     }
+    // return new Recipe object with given pattern and data
     match(...args) {
         const recipe = new Recipe(this);
         recipe.hasMatchPairs = true;
@@ -110,6 +104,21 @@ class Recipe {
             recipe.pairs = pairs;
         }
         return recipe;
+    }
+    // executes pattern-matching and run callback
+    doMatch(action, onMatch) {
+        let matched = false;
+        const pairs = this.pairs;
+        for (let i = 0; i < pairs.length; i++) {
+            let [pattern, reducer] = pairs[i];
+            if (matched)
+                return;
+            let equal = actionMatchesPattern(pattern, action);
+            if (equal) {
+                onMatch(reducer);
+                matched = true;
+            }
+        }
     }
 };
 
@@ -204,7 +213,6 @@ exports.Resmix = (blueprint) => {
                     if (node[EFFECT]) {
                         const updateProperty = update.bind(null, path);
                         effectRunner.run(node[EFFECT], updateProperty);
-
                     } else {
                         for (let k in node) {
                             visitNode(node[k], path.concat(k));

@@ -24,6 +24,6 @@ class EffectRunner {
     }
 }
 
-EffectRunner.CALL = Symbol();
+EffectRunner.CALL = Symbol('EffectRunner/CALL');
 
 module.exports = EffectRunner;
