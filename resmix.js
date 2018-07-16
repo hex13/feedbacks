@@ -9,6 +9,44 @@ const symbolObservable = require('symbol-observable').default;
 const R = require('ramda');
 const EffectRunner = require('./effectRunner');
 
+function runPropertyReducer(reducer, state, action, {updates, effects, path, k}) {
+    const result = reducer(state, action);
+    if (typeof result == 'function'
+        || (result && typeof result[symbolObservable] == 'function')
+    )
+    {
+        effects.push({result, path});
+    } else if (result[SPAWN]) {
+        const action = result.action;
+        action.meta = {owner: path};
+        effects.push({
+            result: { [EffectRunner.CALL]: ['dispatch', action] },
+            path
+        });
+    } else if (typeof result.next == 'function') {
+        let yielded, lastYielded;
+        do {
+            lastYielded = yielded;
+            yielded = result.next();
+        } while (!yielded.done);
+        if (action.meta && action.meta.owner) {
+            effects.push({
+                result: { [EffectRunner.CALL]: ['dispatch', {
+                    type: UPDATE,
+                    payload: {
+                        name: [].concat(action.meta.owner), value: lastYielded.value
+                    }
+                }] },
+            });
+        }
+        updates[k] = yielded.value;
+    } else {
+        updates[k] = result;
+    }
+
+    return result;
+}
+
 const reducerFor = (blueprint) => {
     return (state, action) => {
         if (action.type == UPDATE) {
@@ -31,41 +69,7 @@ const reducerFor = (blueprint) => {
                     return;
                 let equal = actionMatchesPattern(pattern, action);
                 if (equal) {
-                    const result = reducer(state[k], action);
-                    if (typeof result == 'function'
-                        || (result && typeof result[symbolObservable] == 'function')
-                    ) {
-                        effects.push({k, result, path});
-                    }
-                    else if (result[SPAWN]) {
-                        const action = result.action;
-                        action.meta = {owner: k};
-                        effects.push({
-                            result: { [EffectRunner.CALL]: ['dispatch', action] },
-                            k, path
-                        });
-                    }
-                    else if (typeof result.next == 'function') {
-                        let yielded, lastYielded;
-                        do {
-                            lastYielded = yielded;
-                            yielded = result.next();
-                        } while (!yielded.done);
-                        if (action.meta && action.meta.owner) {
-                            effects.push({
-                                result: { [EffectRunner.CALL]: ['dispatch', {
-                                    type: UPDATE,
-                                    payload: {
-                                        name: [].concat(action.meta.owner), value: lastYielded.value
-                                    }
-                                }] },
-                            });
-                        }
-                        updates[k] = yielded.value;
-                    }
-                    else {
-                        updates[k] = result;
-                    }
+                    const result = runPropertyReducer(reducer, state[k], action, {updates, effects, path, k});
                     matched = true;
                 }
             }
