@@ -4,6 +4,7 @@ Feedbacks - reactive blueprints for your Redux apps
 No more wiring manually your actions, reducers, thunks etc. 
 Just create an object which will represent both the initial and future states of your application and pass it to the Feedbacks engine.
 
+
 (Note that it's an early version, if you stumble upon some problems, feel free to file an issue:
 https://github.com/hex13/feedbacks/issues )
 
@@ -22,13 +23,16 @@ Counter (increments automatically each 1000 milliseconds):
 ---
 
 ```javascript
-import Rx from 'rxjs'; // optional. You don't need Rx.js to use Feedbacks
+import Rx from 'rxjs'; // optional. You don't need Rx.js (or other kind of Observables) to use Feedbacks
 import { createStore, applyMiddleware } from 'redux';
 import { createEngine } from 'feedbacks';
 
+
 const engine = createEngine(() => ({
-    counter: Rx.interval(1000)
+    counter: Rx.interval(1000) // Feedbacks can subscribe to an Observable and automatically update property
 }));
+
+
 const store = createStore(engine.reducer, applyMiddleware(engine.middleware));
 
 ```
@@ -66,14 +70,47 @@ Two gotchas:
 But why? (what is the problem this library addresses)
 ---
 
-1. Well, they say that Redux is functional but in reality so many Redux projects has ton of imperative code in thunks or in action creators. Dispatch status, call API, dispatch another status, dispatch result of fetching... There are tons of indirections of control flow (running thunks -> waiting for promise -> dispatching -> handling action in reducers...). It's very procedural, imperative. You write HOW instead of WHAT. Feedbacks allow you for more declarative approach.
 
-2. Logic in Redux projects is often spreaded in completely different places in projects (thunks, action creators, reducers...). Off course in any bigger project it's convenient to split into smaller files but the problem with many Redux projects is that they are split by type (reducers, actions, thunks...) instead of by feature/functionality/domain entity (e.g. `todos`, `user`). This way one functionality is spreaded in different files. Projects become hard to understand. Even smaller ones.
+1. many Redux projects has ton of imperative code in thunks or in action creators. Dispatch status, call API, dispatch another status, dispatch result of fetching... There are tons of indirections of control flow (running thunks -> waiting for promise -> dispatching -> handling action in reducers...). It's very procedural, imperative. You write HOW instead of WHAT. Feedbacks allow you for more declarative approach.
 
-3. Need for support asynchronous somethings (e.g. Promises or Observables). Very known problem. Feedbacks just tackle this problem in a functional reactive way. It allows each property to "listen" to the promises/observables and "react" by changing its value appropriately. <br><br> 
+2. Need for support asynchronous somethings (e.g. Promises or Observables). Very known problem. Feedbacks just tackle this problem in a functional reactive way. It allows each property to "listen" to the promises/observables and "react" by changing its value appropriately. <br><br> 
 Imagine what if Redux allowed for putting observables or promises into state, and if it was completely transparent for consumers of Redux state? Feedbacks are something like this (although notice that technically none of observables/promises etc. would go to the Redux state directly. They would be just intercepted by Feedbacks and then resolved value would be applied to the given property).  [But what if you want write reducer that affects more than one property?](#Reducers-that-affect-more-than-one-property).
 
-4. both switch/cases and "objects with reducers as methods" are somewhat primitive version of pattern matching (they allow match just by type of action). Having a better pattern matching could help in Redux projects to be more expressive and concise.
+3. both switch/cases and "objects with reducers as methods" are somewhat primitive version of pattern matching (they allow match just by type of action). Having a better pattern matching could help in Redux projects to be more expressive and concise.
+
+
+Power of declarativeness
+---
+
+**Traditional Redux:**
+
+You first think about actions, when to dispatch them (e.g. in thunks), how reducer should change state upon this action:
+
+"I will spawn some side-effects (e.g. API call) then I will dispatch `FOO` action. I will write reducer which will react to `FOO` action by changing property `foo` in store.
+
+So basically half of your code is imperative/procedural, only second half (in reducers) is declarative/functional. This raises some problems (for example boilerplate in your imperative thunks, or proliferation of helper actions which will act only as [DTO](https://en.wikipedia.org/wiki/Data_transfer_object) between imperative side of your app (e.g. thunks) and declarative reducers).
+
+**Feedbacks:**
+
+You first think about shape of your state how the state will change because of actions:
+
+"I have `foo` property in my store and I can describe on which actions `foo` will react and how its value will be changing"
+
+Changes can be **immediate**, e.g.
+```javascript
+(state, action) => state + action.amount
+(state, action) => 42
+```
+or **deferred** e.g.
+```javascript
+(state, action) => () => Promise.resolve(42)
+(state, action) => Rx.interval(1000)
+(state, action) => () => somePromiseBasedAPI()
+```
+
+include asynchronous changes from spawned side-effects (e.g. promises or observables) - spawning is made in a functional way, reducers just return side-effect-to-resolve instead of returning values).
+
+This allows you for conciseness (especially that Feedbacks comes with nice DSL).
 
 Pattern Matching
 ---
@@ -175,6 +212,14 @@ Well, in current version of Feedbacks there is no one and only recommended way t
 ```
 
 But it up to you. Something may also change when React suspense will come to play (assuming you use React). Though Feedbacks are not dependent of React and they shoudn't be coupled with React-only features. So in future versions there will be probably the idiomatic "Feedbacky" way to make this (maybe alternative to so called createFetcher/simple-cache-provider from future React? Or extension to it?)
+
+Glossary (TODO):
+---
+* blueprint
+* immediate vs. deferred values
+* pattern-matching
+* mounting
+
 
 But Feedbacks is not even correct word...
 ---
