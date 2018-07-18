@@ -2,14 +2,19 @@
 
 const symbolObservable = require('symbol-observable').default;
 
+
 class EffectRunner {
     constructor(api) {
         this.api = api;
     }
+    // TODO make run recursive
     run(effect, cb) {
         if (effect[EffectRunner.CALL]) {
             const [method, ...args] = effect[EffectRunner.CALL];
-            this.api[method](...args);
+            const handle = this.api[method];
+            if (handle)
+                handle(...args);
+            else throw new Error(`EffectRunner: couldn't find method '${method}'`);
         } else if (typeof effect[symbolObservable] == 'function') {
             effect[symbolObservable]().subscribe(cb);
         } else if (typeof effect == 'function') {
