@@ -2,9 +2,12 @@ const EFFECTS = Symbol('effects');
 const SPAWN = Symbol('spawn');
 const EFFECT = Symbol('effect');
 const VALUE = Symbol('value');
+const BLUEPRINT = Symbol('blueprint');
+
 
 const UPDATE = '@@resmix/update';
 const UPDATE_ROOT = '@@resmix/updateRoot';
+const UPDATE_BLUEPRINT = '@@resmix/updateBlueprint';
 const OPEN_CHANNEL = '@@resmix/openChannel';
 const symbolObservable = require('symbol-observable').default;
 const { get, set } = require('transmutable/get-set');
@@ -54,16 +57,22 @@ function runPropertyReducer(reducer, state, action, {updates, effects, path, k }
     return result;
 }
 
-const reducerFor = (blueprint) => {
+const reducerFor = () => {
     return (state, action) => {
+        if (action.type == UPDATE_BLUEPRINT) {
+            return R.assocPath([BLUEPRINT], action.payload.blueprint, state);
+        }
         if (action.type == UPDATE) {
-            return R.assocPath(action.payload.name, action.payload.value, state);
+            const copy = R.assocPath(action.payload.name, action.payload.value, state);
+            copy[BLUEPRINT] = state[BLUEPRINT];
+            return copy;
         }
         if (action.type == UPDATE_ROOT) {
             return Object.assign({}, state, action.payload);
         }
         let updates = {};
         let effects = {};
+        const blueprint = state && state[BLUEPRINT]? state[BLUEPRINT] : {}; 
 
         const checkMatchAndHandleAction = (parent, k, updates, path, state, effects) => {
 
@@ -88,6 +97,7 @@ const reducerFor = (blueprint) => {
 
         const newState = applyPatch(state || {}, updates);
         newState[EFFECTS] = effects;
+        newState[BLUEPRINT] = blueprint;
         return newState;
     };
 };
@@ -164,6 +174,13 @@ exports.Resmix = (blueprint) => {
             }});
         };
 
+        next({
+            type: UPDATE_BLUEPRINT,
+            payload: {
+                blueprint
+            }
+        });
+
         const visitProperty = (blueprint, k, setValue) => {
             const desc = blueprint[k];
             const t = typeof desc;
@@ -239,7 +256,7 @@ exports.Resmix = (blueprint) => {
     };
     return {
         middleware,
-        reducer: reducerFor(blueprint),
+        reducer: reducerFor(),
         channels,
     }
 };

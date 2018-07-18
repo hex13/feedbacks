@@ -224,7 +224,7 @@ describe('[resmix]', () => {
                 .match(DEC, v => v - 2)
         };
         const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, {counter: 0, counterX2: 0});
+        const store = createStore(resmix.reducer, {counter: 0, counterX2: 0}, applyMiddleware(resmix.middleware));
         assert.deepStrictEqual(store.getState(), {counter: 0, counterX2: 0});
         store.dispatch({type: INC});
         store.dispatch({type: INC});
@@ -250,7 +250,7 @@ describe('[resmix]', () => {
             ]),
         };
         const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, {counter: 0});
+        const store = createStore(resmix.reducer, {counter: 0}, applyMiddleware(resmix.middleware));
         assert.deepStrictEqual(store.getState(), {counter: 0});
         store.dispatch({type: INC});
         assert.deepStrictEqual(store.getState(), {counter: 1});
@@ -278,7 +278,7 @@ describe('[resmix]', () => {
             ]),
         };
         const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, {counter: 0});
+        const store = createStore(resmix.reducer, {counter: 0}, applyMiddleware(resmix.middleware));
         assert.deepStrictEqual(store.getState(), {counter: 0});
         store.dispatch({
             type: FOO, 
@@ -306,7 +306,7 @@ describe('[resmix]', () => {
             ]),
         };
         const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, {counter: 0});
+        const store = createStore(resmix.reducer, {counter: 0}, applyMiddleware(resmix.middleware));
         assert.deepStrictEqual(store.getState(), {counter: 0});
         store.dispatch({type: FOO, a:{b: 'dog'}});
         assert.deepStrictEqual(store.getState(), {counter: 0});
