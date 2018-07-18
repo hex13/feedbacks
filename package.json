@@ -11,17 +11,20 @@
   "license": "MIT",
   "dependencies": {
     "ramda": "^0.25.0",
-    "symbol-observable": "^1.2.0"
+    "symbol-observable": "^1.2.0",
+    "transmutable": "^0.15.5"
   },
   "devDependencies": {
-    "rxjs": "^6.2.1",
-    "mocha": "^5.2.0",
     "enzyme": "^3.3.0",
     "enzyme-adapter-react-16": "^1.1.1",
     "jsdom": "^11.11.0",
+    "mocha": "^5.2.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
     "redux": "^4.0.0",
-    "redux-observable": "^1.0.0"
+    "redux-observable": "^1.0.0",
+    "redux-saga": "^0.16.0",
+    "rxjs": "^6.2.1",
+    "typescript": "^2.9.2"
   }
 }
