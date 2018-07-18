@@ -1,15 +1,25 @@
 const EFFECTS = Symbol('effects');
 const SPAWN = Symbol('spawn');
 const EFFECT = Symbol('effect');
+const VALUE = Symbol('value');
 
 const UPDATE = '@@resmix/update';
 const UPDATE_ROOT = '@@resmix/updateRoot';
 const OPEN_CHANNEL = '@@resmix/openChannel';
 const symbolObservable = require('symbol-observable').default;
 const { get, set } = require('transmutable/get-set');
+const { MUTATION } = require('transmutable/symbols');
+const { applyPatch } = require('transmutable/transform');
 const R = require('ramda');
 const EffectRunner = require('./effectRunner');
 const nop = ()=>{};
+
+const raw = value => ({
+    [MUTATION]: {
+        value
+    }
+});
+
 function runPropertyReducer(reducer, state, action, {updates, effects, path, k }) {
     const result = reducer(state, action);
     if (typeof result == 'function'
@@ -36,9 +46,9 @@ function runPropertyReducer(reducer, state, action, {updates, effects, path, k }
                 }] }};
 
         }
-        updates[k] = yielded.value;
+        updates[k] = raw(yielded.value);
     } else {
-        updates[k] = result;
+        updates[k] = raw(result);
     }
 
     return result;
@@ -66,7 +76,7 @@ const reducerFor = (blueprint) => {
                     const deeperUpdates = updates[k] || (updates[k] = {});
                     const deeperEffects = effects[k] || (effects[k] = {});
                     for (let key in field) {
-                        checkMatchAndHandleAction(field, key, deeperUpdates, path.concat(key), state[k], deeperEffects);
+                        checkMatchAndHandleAction(field, key, deeperUpdates, path.concat(key), state && state[k], deeperEffects);
                     }
                 }
             }
@@ -76,7 +86,9 @@ const reducerFor = (blueprint) => {
             checkMatchAndHandleAction(blueprint, key, updates, [key], state, effects);
         }
 
-        return Object.assign(R.mergeDeepLeft(updates, state), {[EFFECTS]: effects});
+        const newState = applyPatch(state || {}, updates);
+        newState[EFFECTS] = effects;
+        return newState;
     };
 };
 
@@ -109,7 +121,8 @@ class Recipe {
     doMatch(action, onMatch) {
         let matched = false;
         const pairs = this.pairs;
-        for (let i = 0; i < pairs.length; i++) {
+        
+        if (pairs) for (let i = 0; i < pairs.length; i++) {
             let [pattern, reducer] = pairs[i];
             if (matched)
                 return;
@@ -118,7 +131,7 @@ class Recipe {
                 onMatch(reducer);
                 matched = true;
             }
-        }
+        } else console.log("####", this)
     }
 };
 

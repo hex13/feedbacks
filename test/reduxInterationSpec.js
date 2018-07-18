@@ -53,6 +53,42 @@ describe('[resmix]', () => {
         assert.deepStrictEqual(store.getState(), createBlueprint());
     });
 
+
+
+    it('should allow reducers for returning objects', () => {
+        const someSymbol = Symbol();
+        const createBlueprint = () => (
+            {
+                user: Resmix.init({name: '', city: '', planet: 'Earth'})
+                    .match('changeUser', (value, action) => Object.assign({}, value, action.payload))
+                    .match('clear', (value, action) => ({foo: true}))
+            }
+        );
+        const store = prepareStore(createBlueprint());
+        assert.deepStrictEqual(store.getState(), {
+            user: {
+                name: '', 
+                city: '',
+                planet: 'Earth'
+            }
+        });
+        store.dispatch({type: 'changeUser', payload: {name: 'John', city: 'London'}})
+        assert.deepStrictEqual(store.getState(), {
+            user: {
+                name: 'John', 
+                city: 'London',
+                planet: 'Earth'
+            }
+        });
+        store.dispatch({type: 'clear'})        
+        assert.deepStrictEqual(store.getState(), {
+            user: {
+                foo: true
+            }
+        });
+
+    });
+
     it('should allow for declare deep matchings', (done) => {
         const createBlueprint = () => ({
             user: {
