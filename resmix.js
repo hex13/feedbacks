@@ -1,3 +1,5 @@
+'use strict';
+
 const EFFECTS = Symbol('effects');
 const SPAWN = Symbol('spawn');
 const EFFECT = Symbol('effect');

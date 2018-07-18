@@ -1,3 +1,5 @@
+'use strict';
+
 const symbolObservable = require('symbol-observable').default;
 
 class EffectRunner {
