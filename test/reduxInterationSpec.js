@@ -165,6 +165,33 @@ describe('[resmix]', () => {
             
         }, 10);
     });
+    
+    it('should allow for change blueprint', () => {    
+        const store = prepareStore({
+            foo: {
+                counter: Resmix.init(0)
+                    .match('foo', (value, action) => {
+                        return Resmix.mount(
+                            Resmix.match('inc', (value, action) => value + action.payload)
+                        )
+                    })
+            },
+        });
+        const initialState = {
+            foo: { counter: 0 }, 
+        };
+
+        assert.deepStrictEqual(store.getState(), initialState);
+        store.dispatch({type: 'inc', payload: 10});
+        assert.deepStrictEqual(store.getState(), initialState);
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), initialState);
+        store.dispatch({type: 'inc', payload: 10});
+        assert.deepStrictEqual(store.getState(), {
+            foo: { counter: 10},
+        });
+
+    });
 
     describe('init', () => {
         const blueprint = ({ init }) => ({

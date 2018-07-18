@@ -3,6 +3,7 @@
 const EFFECTS = Symbol('effects');
 const SPAWN = Symbol('spawn');
 const EFFECT = Symbol('effect');
+const MOUNT = Symbol('mount');
 const VALUE = Symbol('value');
 const BLUEPRINT = Symbol('blueprint');
 
@@ -27,11 +28,15 @@ const raw = value => ({
 
 function runPropertyReducer(reducer, state, action, {updates, effects, path, k }) {
     const result = reducer(state, action);
-    if (typeof result == 'function'
+    if (result[EFFECT]) {
+        effects[k] = result;
+    } else if (typeof result == 'function'
         || (result && typeof result[symbolObservable] == 'function')
     )
     {
         effects[k] = {[EFFECT]: result};
+    } else if (result[MOUNT]) {
+        effects[k] =  createEffect({[EffectRunner.CALL]: ['mount', result.value, path]});
     } else if (result[SPAWN]) {
         const action = result.action;
         action.meta = {owner: path};
@@ -62,6 +67,9 @@ function runPropertyReducer(reducer, state, action, {updates, effects, path, k }
 const reducerFor = () => {
     return (state, action) => {
         if (action.type == UPDATE_BLUEPRINT) {
+            if (action.payload.path) {
+                return R.assocPath([BLUEPRINT].concat(action.payload.path), action.payload.blueprint, state);    
+            }
             return R.assocPath([BLUEPRINT], action.payload.blueprint, state);
         }
         if (action.type == UPDATE) {
@@ -162,7 +170,16 @@ exports.Resmix = (blueprint) => {
         const effectRunner = new EffectRunner({
             dispatch(a) {
                 store.dispatch(a);
-            }
+            },
+            mount(blueprint, path) {
+               store.dispatch({
+                   type: UPDATE_BLUEPRINT,
+                   payload: {
+                        path,
+                        blueprint
+                   }
+               });
+            },
         });
         if (!store || !store.getState) {
             throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);
@@ -291,9 +308,23 @@ function actionMatchesPattern(pattern, action) {
 
 exports.OPEN_CHANNEL = OPEN_CHANNEL;
 
+function createEffect(data) {
+    return {
+        [EFFECT]: data
+    }
+}
+
 exports.spawn = (action) => {
     return {
         [SPAWN]: true,
         action
     }
-}
+};
+
+
+exports.mount = (blueprint) => {
+    return {
+        [MOUNT]: true,
+        value: blueprint
+    }
+};
