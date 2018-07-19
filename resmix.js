@@ -179,6 +179,14 @@ exports.Resmix = (blueprint) => {
                         blueprint
                    }
                });
+               const initialState = resolveInitialState(blueprint);
+               if (initialState != undefined) store.dispatch({
+                   type: UPDATE,
+                   payload: {
+                       name: path,
+                       value: initialState,
+                   }
+               })
             },
         });
         if (!store || !store.getState) {
@@ -200,46 +208,7 @@ exports.Resmix = (blueprint) => {
             }
         });
 
-        const visitProperty = (blueprint, k, setValue) => {
-            const desc = blueprint[k];
-            const t = typeof desc;
-            const isPlainValue = !desc || t == 'number' || t == 'string' || t == 'boolean' || t == 'symbol';
-            if (desc instanceof Recipe) {
-                if (desc.hasInitialState)
-                    setValue(desc.initialState);
-                return;
-            }
-            if (isPlainValue) {
-                setValue(desc);
-                return;
-            }
-            const toObservable = desc[symbolObservable];
-            const isMatchObject = desc.hasMatchPairs;
-            if (toObservable) {
-                const observable = toObservable.call(desc);
-                observable.subscribe(value => {
-                    setValue(value);
-                });
-                return;
-            }
-            if (desc && typeof desc == 'object') {
-                const computedCurrentObjectValue = {};
-                Object.keys(desc).forEach(function goDeeper(k) {
-                    visitProperty(desc, k, (v) => {
-                        computedCurrentObjectValue[k] = v;
-                    }); 
-                });
-                setValue(computedCurrentObjectValue);
-                return; 
-            }
-        };
-
-        const initialState = {};
-        Object.keys(blueprint).forEach(k => {
-            visitProperty(blueprint, k, (v) => {
-                initialState[k] = v;
-            });
-        });
+        const initialState = resolveInitialState(blueprint);
         next({type: UPDATE_ROOT, payload: initialState})
     
         return action => {
@@ -280,6 +249,48 @@ exports.Resmix = (blueprint) => {
     }
 };
 
+
+function resolveInitialState(blueprint) {
+    const visitProperty = (desc, setValue) => {
+        const t = typeof desc;
+        const isPlainValue = !desc || t == 'number' || t == 'string' || t == 'boolean' || t == 'symbol';
+        if (isPlainValue) {
+            setValue(desc);
+            return;
+        }
+        if (desc instanceof Recipe) {
+            if (desc.hasInitialState)
+                setValue(desc.initialState);
+            return;
+        }
+        const toObservable = desc && desc[symbolObservable];
+
+        if (toObservable) {
+            const observable = toObservable.call(desc);
+            observable.subscribe(value => {
+                setValue(value);
+            });
+            return;
+        }
+        if (desc && typeof desc == 'object') {
+            let computedCurrentObjectValue = undefined;
+            Object.keys(desc).forEach(function goDeeper(k) {
+                visitProperty(desc[k], (v) => {
+                    computedCurrentObjectValue = computedCurrentObjectValue === undefined? {} :computedCurrentObjectValue;
+                    computedCurrentObjectValue[k] = v;
+                });
+            });
+            setValue(computedCurrentObjectValue);
+            return;
+        }
+    };
+    let initialState;
+    visitProperty(blueprint, (v) => {
+        initialState = v;
+    });
+
+    return initialState;
+}
 
 function actionMatchesPattern(pattern, action) {
     let equal = true;

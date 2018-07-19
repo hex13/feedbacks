@@ -10,6 +10,7 @@ const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
 const { createEngine }= require('..');
 
+const { init } = Resmix;
 const prepareStore = (blueprint) => {
     const resmix = createEngine(blueprint);
     const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
@@ -166,7 +167,7 @@ describe('[resmix]', () => {
         }, 10);
     });
     
-    it('should allow for change blueprint', () => {    
+    it('should allow for change blueprint (single recipe) ', () => {
         const store = prepareStore({
             foo: {
                 counter: Resmix.init(0)
@@ -192,6 +193,112 @@ describe('[resmix]', () => {
         });
 
     });
+
+
+    it('should allow for change blueprint (single recipe, with init) ', () => {
+        const store = prepareStore({
+            foo: {
+                counter: Resmix.init(0)
+                    .match('foo', (value, action) => {
+                        return Resmix.mount(
+                            Resmix.init(100).match('inc', (value, action) => value + action.payload)
+                        )
+                    })
+            },
+        });
+        const initialState = {
+            foo: { counter: 0 }, 
+        };
+
+        assert.deepStrictEqual(store.getState(), initialState);
+        store.dispatch({type: 'inc', payload: 10});
+        assert.deepStrictEqual(store.getState(), initialState);
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), {
+            foo: { counter: 100 }
+        });
+        store.dispatch({type: 'inc', payload: 10});
+        assert.deepStrictEqual(store.getState(), {
+            foo: { counter: 110},
+        });
+    });
+
+    xit('should allow for change blueprint (mounting Promise) ', (done) => {    
+        const store = prepareStore({
+            foo: init(0).match('foo', () => () => Resmix.mount(Promise.resolve(1234)))
+        });
+        const initialState = {
+            foo: 0
+        };
+
+        assert.deepStrictEqual(store.getState(), initialState);
+        store.dispatch({type: 'foo'});
+        setTimeout(() => {
+            assert.deepStrictEqual(store.getState(), {
+                foo: 1234
+            });    
+            done();
+        }, 10);
+
+    });
+
+    
+    it('should allow for change blueprint (object with recipes) ', () => {    
+        const store = prepareStore({
+            foo: {
+                counter: Resmix.init({value: 0})
+                    .match('foo', (value, action) => {
+                        return Resmix.mount({
+                            value: Resmix.match('inc', (value, action) => value + action.payload)
+                        })
+                    })
+            },
+        });
+        const initialState = {
+            foo: { counter: {value: 0} }, 
+        };
+
+        assert.deepStrictEqual(store.getState(), initialState);
+        store.dispatch({type: 'inc', payload: 10});
+        assert.deepStrictEqual(store.getState(), initialState);
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), initialState);
+        store.dispatch({type: 'inc', payload: 10});
+        assert.deepStrictEqual(store.getState(), {
+            foo: { counter: {value: 10}},
+        });
+
+    });
+
+    it('should allow for change blueprint (object with recipes, with init) ', () => {    
+        const store = prepareStore({
+            foo: {
+                counter: Resmix.init({value: 0})
+                    .match('foo', (value, action) => {
+                        return Resmix.mount({
+                            value: Resmix.init(100).match('inc', (value, action) => value + action.payload)
+                        })
+                    })
+            },
+        });
+        const initialState = {
+            foo: { counter: {value: 0} }, 
+        };
+
+        assert.deepStrictEqual(store.getState(), initialState);
+        store.dispatch({type: 'inc', payload: 10});
+        assert.deepStrictEqual(store.getState(), initialState);
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), {
+            foo: { counter: { value: 100 } }
+        });
+        store.dispatch({type: 'inc', payload: 10});
+        assert.deepStrictEqual(store.getState(), {
+            foo: { counter: {value: 110}},
+        });
+
+    });
+
 
     describe('init', () => {
         const blueprint = ({ init }) => ({
