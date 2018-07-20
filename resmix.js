@@ -3,7 +3,6 @@
 const EFFECTS = Symbol('effects');
 const EFFECT = Symbol('effect');
 const MOUNT = Symbol('mount');
-const VALUE = Symbol('value');
 const BLUEPRINT = Symbol('blueprint');
 
 const UPDATE = '@@resmix/update';
