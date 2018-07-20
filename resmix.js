@@ -100,8 +100,18 @@ const reducerFor = () => {
                 }
             }
         };
-        
-        if (state) for (let key in blueprint) {
+        if (state && action.meta && action.meta.feedbacks && action.meta.feedbacks.path) {
+            const path = action.meta.feedbacks.path;
+            const key = path[path.length - 1];
+            const p = path.slice(0, -1);
+            
+            let namespacedUpdates = get(updates, p);
+            if (!namespacedUpdates) {
+                set(updates, p, {});
+                namespacedUpdates = get(updates, p);
+            }
+            checkMatchAndHandleAction(get(blueprint, path.slice(0, -1)), key, namespacedUpdates, [key], get(state, p), effects);
+        } else  if (state) for (let key in blueprint) {
             checkMatchAndHandleAction(blueprint, key, updates, [key], state, effects);
         }
 

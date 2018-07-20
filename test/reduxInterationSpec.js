@@ -654,3 +654,61 @@ describe('[immutability]', () => {
         assert.deepStrictEqual(state2.foo, {a: 456});
     });
 });
+
+
+describe('[namespaced actions]', () => {
+    it('should allow for dispatching namespaced actions', () => {
+        const foo = {a: 123};
+        const store = prepareStore({
+            foo: Resmix.init(0).match('inc', v => v + 1),
+            bar: Resmix.init(0).match('inc', v => v + 10),
+            deep: {
+                baz: Resmix.init(0).match('inc', v => v + 100),
+                qux: Resmix.init(0).match('inc', v => v + 1000)
+            }
+        });
+
+        assert.deepStrictEqual(store.getState(), {foo: 0, bar: 0, deep: {baz: 0, qux: 0} });
+        store.dispatch({
+            type: 'inc',
+            meta: {
+                feedbacks: {
+                    path: ['foo']
+                }
+            }
+        })
+        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 0, deep: {baz: 0, qux: 0} });
+        store.dispatch({
+            type: 'inc',
+            meta: {
+                feedbacks: {
+                    path: ['bar']
+                }
+            }
+        })
+        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 10, deep: {baz: 0, qux: 0} });
+        
+        store.dispatch({
+            type: 'inc',
+            meta: {
+                feedbacks: {
+                    path: ['deep']
+                }
+            }
+        });
+
+        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 10, deep: {baz: 100, qux: 1000} });
+
+        store.dispatch({
+            type: 'inc',
+            meta: {
+                feedbacks: {
+                    path: ['deep', 'baz']
+                }
+            }
+        });
+
+        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 10, deep: {baz: 200, qux: 1000} });
+
+    });
+});
