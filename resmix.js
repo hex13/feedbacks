@@ -22,9 +22,8 @@ const raw = value => ({
     }
 });
 
-function runPropertyReducer(reducer, state, action) {
+function mapReducerResultToEffectOrUpdate(result, causingAction) {
     const output = {};
-    const result = reducer(state, action);
     if (result[EFFECT]) {
         output.effect = result;
     } else if (typeof result == 'function'
@@ -38,11 +37,11 @@ function runPropertyReducer(reducer, state, action) {
             lastYielded = yielded;
             yielded = result.next();
         } while (!yielded.done);
-        if (action.meta && action.meta.owner) {
+        if (causingAction.meta && causingAction.meta.owner) {
             output.effect = spawn({
                 type: UPDATE,
                 payload: {
-                    name: [].concat(action.meta.owner), value: lastYielded.value
+                    name: [].concat(causingAction.meta.owner), value: lastYielded.value
                 },
             });
         }
@@ -79,7 +78,8 @@ const reducerFor = () => {
 
             if (field instanceof Recipe) {
                 field.doMatch(action, (reducer) => {
-                    const output = runPropertyReducer(reducer, state[k], action)
+                    const reducerResult = reducer(state[k], action);
+                    const output = mapReducerResultToEffectOrUpdate(reducerResult, action)
                     updates[k] = output.update;
                     if (output.effect) effects[k] = output.effect;
                 });
