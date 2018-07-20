@@ -31,7 +31,7 @@ function runPropertyReducer(reducer, state, action) {
         || (result && typeof result[symbolObservable] == 'function')
     )
     {
-        output.effect = {[EFFECT]: result};
+        output.effect = createEffect(result);
     } else if (typeof result.next == 'function') {
         let yielded, lastYielded;
         do {
@@ -39,13 +39,12 @@ function runPropertyReducer(reducer, state, action) {
             yielded = result.next();
         } while (!yielded.done);
         if (action.meta && action.meta.owner) {
-            output.effect = {[EFFECT]: { [EffectRunner.CALL]: ['dispatch', {
-                    type: UPDATE,
-                    payload: {
-                        name: [].concat(action.meta.owner), value: lastYielded.value
-                    },
-                }] }};
-
+            output.effect = spawn({
+                type: UPDATE,
+                payload: {
+                    name: [].concat(action.meta.owner), value: lastYielded.value
+                },
+            });
         }
         output.update = raw(yielded.value);
     } else {
@@ -331,7 +330,7 @@ function createEffect(data) {
     }
 }
 
-exports.spawn = (action) => {
+const spawn = exports.spawn = (action) => {
     return {[EFFECT]: { [EffectRunner.CALL]: ['dispatch', action] }};    
 };
 
