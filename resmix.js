@@ -2,7 +2,6 @@
 
 const EFFECTS = Symbol('effects');
 const EFFECT = Symbol('effect');
-const MOUNT = Symbol('mount');
 const BLUEPRINT = Symbol('blueprint');
 
 const UPDATE = '@@resmix/update';
@@ -33,8 +32,6 @@ function runPropertyReducer(reducer, state, action) {
     )
     {
         output.effect = {[EFFECT]: result};
-    } else if (result[MOUNT]) {
-        output.effect =  createEffect({[EffectRunner.CALL]: ['mount', result.value]});
     } else if (typeof result.next == 'function') {
         let yielded, lastYielded;
         do {
@@ -340,8 +337,5 @@ exports.spawn = (action) => {
 
 
 exports.mount = (blueprint) => {
-    return {
-        [MOUNT]: true,
-        value: blueprint
-    }
+    return createEffect({[EffectRunner.CALL]: ['mount', blueprint]});
 };
