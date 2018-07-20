@@ -18,12 +18,14 @@ describe('EffectRunner', () => {
 
     it('run api call', () => {
         const result = [];
+        const ctx = {ourContext: true};
         const api = {
             foo(...args) {
-                result.push(['foo called', ...args]);
+                result.push(['foo called', this, ...args]);
             },
             bar(...args) {
-                result.push(['bar called', ...args]);
+                assert.strictEqual(this, ctx);
+                result.push(['bar called', this, ...args]);
             }
         };
         const er = new EffectRunner(api);
@@ -32,11 +34,12 @@ describe('EffectRunner', () => {
         });
         er.run({
             [EffectRunner.CALL]: ['bar', 1, 'abc']
-        });
+        }, null, ctx);
         assert.deepStrictEqual(result, [
-            ['foo called'],
-            ['bar called', 1, 'abc'],
-        ])
+            ['foo called', undefined],
+            ['bar called', ctx, 1, 'abc'],
+        ]);
+
     });
 
     describe('[observables as effects]', () => {

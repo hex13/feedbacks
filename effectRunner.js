@@ -8,12 +8,12 @@ class EffectRunner {
         this.api = api;
     }
     // TODO make run recursive
-    run(effect, cb) {
+    run(effect, cb, ctx) {
         if (effect[EffectRunner.CALL]) {
             const [method, ...args] = effect[EffectRunner.CALL];
             const handle = this.api[method];
             if (handle)
-                handle(...args);
+                handle.apply(ctx, args);
             else throw new Error(`EffectRunner: couldn't find method '${method}'`);
         } else if (typeof effect[symbolObservable] == 'function') {
             effect[symbolObservable]().subscribe(cb);
