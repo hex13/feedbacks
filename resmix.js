@@ -26,21 +26,22 @@ const raw = value => ({
     }
 });
 
-function runPropertyReducer(reducer, state, action, {updates, effects, path, k }) {
+function runPropertyReducer(reducer, state, action, { path }) {
+    const output = {};
     const result = reducer(state, action);
     if (result[EFFECT]) {
-        effects[k] = result;
+        output.effect = result;
     } else if (typeof result == 'function'
         || (result && typeof result[symbolObservable] == 'function')
     )
     {
-        effects[k] = {[EFFECT]: result};
+        output.effect = {[EFFECT]: result};
     } else if (result[MOUNT]) {
-        effects[k] =  createEffect({[EffectRunner.CALL]: ['mount', result.value, path]});
+        output.effect =  createEffect({[EffectRunner.CALL]: ['mount', result.value, path]});
     } else if (result[SPAWN]) {
         const action = result.action;
         action.meta = {owner: path};
-        effects[k] = {[EFFECT]: { [EffectRunner.CALL]: ['dispatch', action] }};
+        output.effect = {[EFFECT]: { [EffectRunner.CALL]: ['dispatch', action] }};
     } else if (typeof result.next == 'function') {
         let yielded, lastYielded;
         do {
@@ -48,7 +49,7 @@ function runPropertyReducer(reducer, state, action, {updates, effects, path, k }
             yielded = result.next();
         } while (!yielded.done);
         if (action.meta && action.meta.owner) {
-            effects[k] = {[EFFECT]: { [EffectRunner.CALL]: ['dispatch', {
+            output.effect = {[EFFECT]: { [EffectRunner.CALL]: ['dispatch', {
                     type: UPDATE,
                     payload: {
                         name: [].concat(action.meta.owner), value: lastYielded.value
@@ -56,12 +57,11 @@ function runPropertyReducer(reducer, state, action, {updates, effects, path, k }
                 }] }};
 
         }
-        updates[k] = raw(yielded.value);
+        output.update = raw(yielded.value);
     } else {
-        updates[k] = raw(result);
+        output.update = raw(result);
     }
-
-    return result;
+    return output;
 }
 
 const reducerFor = () => {
@@ -89,7 +89,11 @@ const reducerFor = () => {
             const field = parent[k];
 
             if (field instanceof Recipe) {
-                field.doMatch(action, (reducer) => runPropertyReducer(reducer, state[k], action, {updates, effects, path, k}));
+                field.doMatch(action, (reducer) => {
+                    const output = runPropertyReducer(reducer, state[k], action, { path })
+                    updates[k] = output.update;
+                    if (output.effect) effects[k] = output.effect;
+                });
             } else {
                 if (field && !field[symbolObservable] && typeof field == 'object') {
                     const deeperUpdates = updates[k] || (updates[k] = {});
