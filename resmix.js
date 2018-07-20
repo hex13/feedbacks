@@ -26,7 +26,7 @@ const raw = value => ({
     }
 });
 
-function runPropertyReducer(reducer, state, action, { path }) {
+function runPropertyReducer(reducer, state, action) {
     const output = {};
     const result = reducer(state, action);
     if (result[EFFECT]) {
@@ -37,11 +37,9 @@ function runPropertyReducer(reducer, state, action, { path }) {
     {
         output.effect = {[EFFECT]: result};
     } else if (result[MOUNT]) {
-        output.effect =  createEffect({[EffectRunner.CALL]: ['mount', result.value, path]});
+        output.effect =  createEffect({[EffectRunner.CALL]: ['mount', result.value]});
     } else if (result[SPAWN]) {
-        const action = result.action;
-        action.meta = {owner: path};
-        output.effect = {[EFFECT]: { [EffectRunner.CALL]: ['dispatch', action] }};
+        output.effect = {[EFFECT]: { [EffectRunner.CALL]: ['dispatch', result.action] }};
     } else if (typeof result.next == 'function') {
         let yielded, lastYielded;
         do {
@@ -90,7 +88,7 @@ const reducerFor = () => {
 
             if (field instanceof Recipe) {
                 field.doMatch(action, (reducer) => {
-                    const output = runPropertyReducer(reducer, state[k], action, { path })
+                    const output = runPropertyReducer(reducer, state[k], action)
                     updates[k] = output.update;
                     if (output.effect) effects[k] = output.effect;
                 });
@@ -182,25 +180,27 @@ exports.Resmix = (blueprint) => {
     const channels = {};
     const middleware = store => next => {
         const effectRunner = new EffectRunner({
-            dispatch(a) {
-                store.dispatch(a);
+            dispatch(action) {
+                action.meta = {owner: this.path};
+                store.dispatch(action);
             },
-            mount(blueprint, path) {
-               store.dispatch({
-                   type: UPDATE_BLUEPRINT,
-                   payload: {
+            mount(blueprint) {
+                const { path } = this;
+                store.dispatch({
+                    type: UPDATE_BLUEPRINT,
+                    payload: {
                         path,
                         blueprint
-                   }
-               });
-               const initialState = resolveInitialState(blueprint);
-               if (initialState != undefined) store.dispatch({
-                   type: UPDATE,
-                   payload: {
-                       name: path,
-                       value: initialState,
-                   }
-               })
+                    }
+                });
+                const initialState = resolveInitialState(blueprint);
+                if (initialState != undefined) store.dispatch({
+                    type: UPDATE,
+                    payload: {
+                        name: path,
+                        value: initialState,
+                    }
+                })
             },
         });
         if (!store || !store.getState) {
@@ -244,7 +244,7 @@ exports.Resmix = (blueprint) => {
                 function visitNode(node, path) {
                     if (node[EFFECT]) {
                         const updateProperty = update.bind(null, path);
-                        effectRunner.run(node[EFFECT], updateProperty);
+                        effectRunner.run(node[EFFECT], updateProperty, { path });
                     } else {
                         for (let k in node) {
                             visitNode(node[k], path.concat(k));
