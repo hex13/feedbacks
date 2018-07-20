@@ -26,5 +26,9 @@
     "redux-saga": "^0.16.0",
     "rxjs": "^6.2.1",
     "typescript": "^2.9.2"
-  }
+  },
+  "keywords": [
+    "redux", "observable", "rxjs", "rx", 
+    "pattern", "match", "reactive", "actions", "side effects"
+  ]
 }
