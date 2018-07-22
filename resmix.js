@@ -128,6 +128,9 @@ class Recipe {
         return recipe;
     }
     // return new Recipe object with given pattern and data
+    on(...args) {
+        return this.match(...args);
+    }
     match(...args) {
         const recipe = new Recipe(this);
         recipe.hasMatchPairs = true;
@@ -161,6 +164,11 @@ class Recipe {
 exports.match = (...args) => {
     return new Recipe().match(...args);
 };
+
+exports.on = (...args) => {
+    return new Recipe().match(...args);
+};
+
 
 exports.init = (value) => {
     return new Recipe().init(value);

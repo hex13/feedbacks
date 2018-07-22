@@ -9,3 +9,11 @@ exports.createEngine = (blueprint) => {
     );
     return Resmix.Resmix(finalBlueprint);
 }
+
+
+exports.withRedux = (Redux) => ({
+    createStore(blueprint) {
+        const engine = exports.createEngine(blueprint);
+        return Redux.createStore(engine.reducer, Redux.applyMiddleware(engine.middleware))
+    }
+});

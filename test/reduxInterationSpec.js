@@ -5,13 +5,15 @@ const Resmix = require('../resmix');
 
 require('symbol-observable');
 const { createStore, applyMiddleware } = require('redux');
+const Redux = require('redux');
 const { Observable, interval, Subscription, of } = require('rxjs');
 const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
-const { createEngine }= require('..');
+const { createEngine, withRedux }= require('..');
 
 const { init } = Resmix;
 const prepareStore = (blueprint) => {
+    return withRedux(Redux).createStore(blueprint);
     const resmix = createEngine(blueprint);
     const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
     return store;
@@ -173,7 +175,7 @@ describe('[resmix]', () => {
                 counter: Resmix.init(0)
                     .match('foo', (value, action) => {
                         return Resmix.mount(
-                            Resmix.match('inc', (value, action) => value + action.payload)
+                            Resmix.on('inc', (value, action) => value + action.payload)
                         )
                     })
             },
