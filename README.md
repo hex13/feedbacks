@@ -55,22 +55,6 @@ const store = withRedux(Redux).createStore({
 Fetching resources
 ---
 
-```javascript
-// ...
-//const fetchData = 
-const blueprint = {
-    todos: init([])
-        .on('fetchTodos').loads('todos.json').
-        .on('addTodo', (value, action) => addsItem(action.payload))        
-};
-
-const store = withRedux(Redux)
-    .createEngine(blueprint)
-    .addLoader((url) => fetch(url).then(r => r.json()))
-    .getStore();
-// ...
-```
-
 
 ```javascript
 // ...
