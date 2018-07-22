@@ -1,51 +1,54 @@
 Feedbacks - reactive blueprints for your Redux apps
 ===
 
+*(Note that it's an early version, if you stumble upon some problems, feel free to file an issue:
+https://github.com/hex13/feedbacks/issues )*
+
 No more wiring manually your actions, reducers, thunks etc. 
-Just create an object which will represent both the initial and future states of your application and pass it to the Feedbacks engine.
 
+Just create a "blueprint" which will define a shape of state and define how it should react on incoming actions (pattern-matching: action -> reducer). 
 
-(Note that it's an early version, if you stumble upon some problems, feel free to file an issue:
-https://github.com/hex13/feedbacks/issues )
+You can hook into individual properties even in deep in the state (and wire up a property to the reducer via pattern-matching mechanism)
+
+Reducers in Feedbacks can return both normal values and side-effects. And side-effects represent future value(s) of given property. 
+
+Observables and promises are auto-resolved, and owner property is auto-updated.
 
 
 Feedbacks will:
 ---
 - match actions automatically (powerful DSL with pattern matching capabilities)
+- allow for working on individual properties 
 - resolve promises and observables and feed it back to given property in the state
+- give you a nice reactive state tree instead of just ugly shapeless state
 
 
-Let's see some examples:
----
+# Let's see some examples:
 
-
-Counter (increments automatically each 1000 milliseconds):
----
+## Counter (increments automatically each 1000 milliseconds):
 
 ```javascript
-import Rx from 'rxjs'; // optional. You don't need Rx.js (or other kind of Observables) to use Feedbacks
-import { createStore, applyMiddleware } from 'redux';
-import { createEngine } from 'feedbacks';
+import { withRedux } from 'feedbacks';
+import * as Redux from 'redux';
+import Rx from 'rxjs'; 
 
-
-const engine = createEngine(() => ({
-    counter: Rx.interval(1000) // Feedbacks can subscribe to an Observable and automatically update property
-}));
-
-
-const store = createStore(engine.reducer, applyMiddleware(engine.middleware));
-
+const store = withRedux(Redux).createStore({
+    // Feedbacks will subscribe to the Observable and auto-update property:
+    counter: Rx.interval(1000) 
+});
 ```
+Notice that you don't need Rx (or any kind of Observables to use Feedbacks. This is just one of use cases)
 
-Counter (can be incremented / decremented):
----
+## Counter (can be incremented / decremented):
+
+
 ```javascript
 // ...
-const engine = createEngine(({ init }) => ({
-    counter: init(0)
-        .match('increment', value => value + 1)
-        .match('decrement', value => value - 1)
-}));
+const store = withRedux(Redux).createStore({
+    counter: is(0)
+        .on('increment', value => value + 1)
+        .on('decrement', value => value - 1)
+});
 // ...
 ```
 
@@ -54,43 +57,48 @@ Fetching resources
 
 ```javascript
 // ...
+//const fetchData = 
+const blueprint = {
+    todos: is([])
+        .on('fetchTodos').loads('todos.json').
+        .on('addTodo', (value, action) => addsItem(action.payload))        
+};
+
+const store = withRedux(Redux)
+    .createEngine(blueprint)
+    .addLoader((url) => fetch(url).then(r => r.json()))
+    .getStore();
+// ...
+```
+
+
+```javascript
+// ...
 const fetchData = (url) => fetch(url).then(r => r.json());
 
-const engine = createEngine(({ init }) => init({
+const store = withRedux(Redux).createStore({
     todos: init([])
-        .match('fetchTodos', () => () => fetchData('todos.json'))
-        .match('addTodo', (value, action) => value.concat(action.payload))        
+        .on('fetchTodos', () => () => fetchData('todos.json'))
+        .on('addTodo', (value, action) => value.concat(action.payload))        
 });
 // ...
 ```
 Two gotchas:
-- because Promise are eager you shouldn't return just Promise from reducer. You should wrap it in additional function (like in example above) to keep reducer pure.
-- the good practice is separate low level API infrastructure from business logic. So don't put `fetch`, `axios`, `firebase` API etc. directly to reducers to avoid coupling them with external APIs. It's better to make some wrapper/service which will isolate application logic from data fetching details.
+- Don't return directly a Promise from the reducer. You should wrap it in additional function (like in example above) to keep reducer pure.
+- The good practice is separate low level API infrastructure from business logic. So don't put `fetch`, `axios`, `firebase` API etc. directly to reducers to avoid coupling them with external APIs. It's better to make some wrapper/service which will isolate application logic from data fetching details.
 
-But why? (what is the problem this library addresses)
----
-
-
-1. many Redux projects has ton of imperative code in thunks or in action creators. Dispatch status, call API, dispatch another status, dispatch result of fetching... There are tons of indirections of control flow (running thunks -> waiting for promise -> dispatching -> handling action in reducers...). It's very procedural, imperative. You write HOW instead of WHAT. Feedbacks allow you for more declarative approach.
-
-2. Need for support asynchronous somethings (e.g. Promises or Observables). Very known problem. Feedbacks just tackle this problem in a functional reactive way. It allows each property to "listen" to the promises/observables and "react" by changing its value appropriately. <br><br> 
-Imagine what if Redux allowed for putting observables or promises into state, and if it was completely transparent for consumers of Redux state? Feedbacks are something like this (although notice that technically none of observables/promises etc. would go to the Redux state directly. They would be just intercepted by Feedbacks and then resolved value would be applied to the given property).  [But what if you want write reducer that affects more than one property?](#Reducers-that-affect-more-than-one-property).
-
-3. both switch/cases and "objects with reducers as methods" are somewhat primitive version of pattern matching (they allow match just by type of action). Having a better pattern matching could help in Redux projects to be more expressive and concise.
+# Power of declarativeness
 
 
-Power of declarativeness
----
-
-**Traditional Redux:**
+## Traditional Redux:
 
 You first think about actions, when to dispatch them (e.g. in thunks), how reducer should change state upon this action:
 
 "I will spawn some side-effects (e.g. API call) then I will dispatch `FOO` action. I will write reducer which will react to `FOO` action by changing property `foo` in store.
 
-So basically half of your code is imperative/procedural, only second half (in reducers) is declarative/functional. This raises some problems (for example boilerplate in your imperative thunks, or proliferation of helper actions which will act only as [DTO](https://en.wikipedia.org/wiki/Data_transfer_object) between imperative side of your app (e.g. thunks) and declarative reducers).
+So basically **half of your code is imperative/procedural**, only second half (in reducers) is declarative/functional. This raises some problems (for example boilerplate in your imperative thunks, or proliferation of helper actions which will act only as [DTO](https://en.wikipedia.org/wiki/Data_transfer_object) between imperative side of your app (e.g. thunks) and declarative reducers).
 
-**Feedbacks:**
+## Feedbacks:
 
 You first think about shape of your state how the state will change because of actions:
 
@@ -98,29 +106,27 @@ You first think about shape of your state how the state will change because of a
 
 Changes can be **immediate**, e.g.
 ```javascript
-(state, action) => state + action.amount
-(state, action) => 42
+(value, action) => value + action.amount
+(value, action) => 42
 ```
 or **deferred** e.g.
 ```javascript
-(state, action) => () => Promise.resolve(42)
-(state, action) => Rx.interval(1000)
-(state, action) => () => somePromiseBasedAPI()
+(value, action) => () => Promise.resolve(42)
+(value, action) => Rx.interval(1000)
+(value, action) => () => somePromiseBasedAPI()
 ```
 
-include asynchronous changes from spawned side-effects (e.g. promises or observables) - spawning is made in a functional way, reducers just return side-effect-to-resolve instead of returning values).
+This allows you for conciseness (especially that Feedbacks comes with the nice DSL).
 
-This allows you for conciseness (especially that Feedbacks comes with nice DSL).
+# Pattern Matching
 
-Pattern Matching
----
-Feedback allow you also for making some advanced pattern matching. You've seen string based patterns in examples above. But this is not the end. Look something like this:
+Feedbacks allow you also for making some advanced pattern matching. You've seen string based patterns in examples above. But this is not the end. Look something like this:
 
 ```javascript
 // ...
 {
     foo: init(0)
-        .match({
+        .on({
             type: 'response',
             payload: {
                 status: value => value >= 400 && value < 500
@@ -130,36 +136,7 @@ Feedback allow you also for making some advanced pattern matching. You've seen s
 // ...
 ```
 
-If you want to change more than one property during action:
----
-
-You can do it in either way:
-
-1. match on all properties you want to change:
-
-```javascript
-{
-    user: {
-        name: init('')
-            .match('changeUser', (value, action) => action.payload.name),
-        city: init('')
-            .match('changeUser', (value, action) => action.payload.city),
-    },
-}
-```
-2. match action at the upper property:
-
-```javascript
-{
-    user: init({name: '', city: ''})
-        .match('changeUser', (value, action) => action.payload)
-}
-```
-
-Whatever will make more sense to what you want to achieve.
-
-Philosophy of side-effects
----
+# Philosophy of side-effects
 
 Feedbacks address the fact so called "side-effects" are often merely a way to get some data and put it back in some property of the Redux state. Consider this code, written traditionally:
 
@@ -191,7 +168,7 @@ There is a ton of indirection and logic is put all over the project (in the exam
 In Feedbacks library you are encouraged to write more direct code. Let's rewrite previous example to Feedbacks: 
 ```javascript
 {
-    todos: match('FETCH_TODOS', (state, action) => () => someAsyncApi())
+    todos: on('FETCH_TODOS', (state, action) => () => someAsyncApi())
 }
 ```
 
@@ -200,10 +177,40 @@ this way in one line of code you express:
 2. which action you want to handle (`FETCH_TODOS` but you're not limited to just matching by type. Read more about [advanced pattern matching](#Pattern-Matching))
 3. how value will change including asynchronous changes via observables or function-wrapped promises. You could also spawn another action (and reducer of the next action could send values back to previous property by using `yield` statement). TODO: example
 
-Showing spinners
----
 
-What about data-fetching-status and all this science of when to show spinner and when to hide it?
+# Tips & Tricks
+
+## Changing more than one property during action:
+
+You can do it in either way:
+
+1. match on all properties you want to change:
+
+```javascript
+{
+    user: {
+        name: init('')
+            .on('changeUser', (value, action) => action.payload.name),
+        city: init('')
+            .on('changeUser', (value, action) => action.payload.city),
+    },
+}
+```
+2. match action at the upper property:
+
+```javascript
+{
+    user: init({name: '', city: ''})
+        .on('changeUser', (value, action) => action.payload)
+}
+```
+
+Whatever will make more sense to what you want to achieve.
+
+
+## Showing spinners:
+
+What about data-fetching-status and all this science of when to show a spinner and when to hide it?
 
 Well, in current version of Feedbacks there is no one and only recommended way to do it. Though you could achieve this e.g. by doing this:
 
@@ -213,24 +220,22 @@ Well, in current version of Feedbacks there is no one and only recommended way t
 
 But it up to you. Something may also change when React suspense will come to play (assuming you use React). Though Feedbacks are not dependent of React and they shoudn't be coupled with React-only features. So in future versions there will be probably the idiomatic "Feedbacky" way to make this (maybe alternative to so called createFetcher/simple-cache-provider from future React? Or extension to it?)
 
-Glossary (TODO):
----
+# Glossary (TODO):
+
 * blueprint
 * immediate vs. deferred values
 * pattern-matching
 * mounting
 
 
-But Feedbacks is not even correct word...
----
+# But Feedbacks is not even correct word...
 
 Maybe. But who cares? 
 
 And this is Doge: https://en.wikipedia.org/wiki/Doge_(meme)
 
 
-Additional reading
----
+# Additional reading
 
 Redux documentation: https://redux.js.org/
 
