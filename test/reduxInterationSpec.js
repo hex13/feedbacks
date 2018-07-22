@@ -25,6 +25,7 @@ const prepareEngine = (blueprint) => {
     return { store, engine: resmix };
 };
 
+global.assert = assert;
 
 describe('[resmix]', () => {
     it('should allow for declare plain values', () => {
@@ -43,6 +44,42 @@ describe('[resmix]', () => {
         const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
         assert.deepStrictEqual(store.getState(), createBlueprint());
     });
+
+    // it('should allow for declare Recipe with primitive as initial state', () => {
+    //     const someSymbol = Symbol();
+    //     const resmix = Resmix.Resmix(Resmix.init(10));
+    //     const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+    //     assert.deepStrictEqual(store.getState(), 10)
+    // });
+
+    // it('should allow for declare Recipe with blueprint as initial state', () => {
+    //     const someSymbol = Symbol();
+    //     const resmix = Resmix.Resmix(Resmix.init({
+    //         a: 10,
+    //         b: Resmix.init(20)
+    //     }));
+    //     const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+    //     assert.deepStrictEqual(store.getState(), {a: 10, b: 20})
+    // });
+
+    describe('init',() => {
+        it('should treat first argument as a blueprint', () => {
+            const someSymbol = Symbol();
+            const resmix = Resmix.Resmix({
+                a: Resmix.init({
+                    b: Resmix.init(10).on('foo', () => 3)
+                })
+            });
+            const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+            assert.deepStrictEqual(store.getState(), {a: {b: 10}})
+            
+            store.dispatch({type: 'foo'});
+
+            assert.deepStrictEqual(store.getState(), {a: {b: 3}})
+        });        
+    });
+
+
 
     it('should allow for declare plain objects', () => {
         const someSymbol = Symbol();

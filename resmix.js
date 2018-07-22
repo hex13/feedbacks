@@ -55,6 +55,26 @@ function mapReducerResultToEffectOrUpdate(result, causingAction) {
 const reducerFor = () => {
     return (state, action) => {
         if (action.type == UPDATE_BLUEPRINT) {
+
+            // function resolveBlueprint(blueprint) {
+            //     if (isPlainValue(blueprint)) return blueprint;
+            //     const o = {};
+            //     if (blueprint instanceof Recipe) {
+            //         if (blueprint.initialState && typeof initialState == 'object') {
+            //             blueprint.initialState = resolveBlueprint(blueprint.initialState);
+            //         }
+            //         return blueprint;
+            //     }
+            //     for (let k in blueprint) {
+            //         o[k] = resolveBlueprint(blueprint[k]);
+            //     }
+            //     return o; 
+            //     if (blueprint.hasInitialState) {
+            //     } else {
+
+            //     }
+            // }
+            //const blueprint = resolveBlueprint(action.payload.blueprint);
             if (action.payload.path) {
                 return R.assocPath([BLUEPRINT].concat(action.payload.path), action.payload.blueprint, state);    
             }
@@ -78,11 +98,27 @@ const reducerFor = () => {
 
             if (field instanceof Recipe) {
                 field.doMatch(action, (reducer) => {
-                    const reducerResult = reducer(state[k], action);
+
+                    const reducerResult = reducer(state && state[k], action);
                     const output = mapReducerResultToEffectOrUpdate(reducerResult, action)
                     updates[k] = output.update;
                     if (output.effect) effects[k] = output.effect;
                 });
+                if (field.initialState && typeof field.initialState == 'object') {
+                    //checkMatchAndHandleAction(parent, k, updates, path, state, effects);
+                    const deeperUpdates = updates[k] || (updates[k] = {});
+                    const deeperEffects = effects[k] || (effects[k] = {});
+
+                    for (let key in field.initialState) {
+//                        try { 
+                        checkMatchAndHandleAction(field.initialState, key, deeperUpdates, path.concat(key), state && state[k] && state[k][key], deeperEffects);
+                        // } catch (e) {
+                        //     console.log("$$$$err",e);
+                        //     debugger;
+                        // }
+                    }
+    
+                }
             } else {
                 if (field && !field[symbolObservable] && typeof field == 'object') {
                     const deeperUpdates = updates[k] || (updates[k] = {});
@@ -157,7 +193,20 @@ class Recipe {
                 onMatch(reducer);
                 matched = true;
             }
-        } else console.log("####", this)
+        } else console.log("####^", this);
+
+        function search(node) {
+            if (node instanceof Recipe) {
+                node.doMatch(action, onMatch);
+                return;
+            }
+            if (!isPlainValue(node)) for (let k in node) {
+                search(node[k])
+            }
+        }
+        if (this.hasInitialState) {
+         //   search(this.initialState)
+        }
     }
 };
 
@@ -262,6 +311,10 @@ exports.Resmix = (blueprint) => {
     }
 };
 
+function isPlainValue(desc) {
+    const t = typeof desc;
+    return !desc || t == 'number' || t == 'string' || t == 'boolean' || t == 'symbol';
+}
 
 function resolveInitialState(blueprint) {
     const visitProperty = (desc, setValue) => {
@@ -273,7 +326,7 @@ function resolveInitialState(blueprint) {
         }
         if (desc instanceof Recipe) {
             if (desc.hasInitialState)
-                setValue(desc.initialState);
+                setValue(resolveInitialState(desc.initialState));
             return;
         }
         const toObservable = desc && desc[symbolObservable];
