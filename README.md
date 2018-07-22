@@ -45,7 +45,7 @@ Notice that you don't need Rx (or any kind of Observables to use Feedbacks. This
 ```javascript
 // ...
 const store = withRedux(Redux).createStore({
-    counter: is(0)
+    counter: init(0)
         .on('increment', value => value + 1)
         .on('decrement', value => value - 1)
 });
@@ -59,7 +59,7 @@ Fetching resources
 // ...
 //const fetchData = 
 const blueprint = {
-    todos: is([])
+    todos: init([])
         .on('fetchTodos').loads('todos.json').
         .on('addTodo', (value, action) => addsItem(action.payload))        
 };
