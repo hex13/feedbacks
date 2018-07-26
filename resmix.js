@@ -22,6 +22,30 @@ const raw = value => ({
     }
 });
 
+function Cursor(trees, path = [], root) {
+    if (!root) root = trees;
+    return {
+        // get() { return trees; },
+        set(treeName, value) {
+            trees[treeName][k];
+        },
+        setMetadata(kind, value) {
+            set(root[kind], path, value);
+            //
+            //trees[kind] = 
+        },
+        select(k) {
+            const newTrees = {};
+            for (let name in trees) {
+                const tree = trees[name];
+                newTrees[name] = tree[k] || (tree[k] = {});
+            }
+            return new Cursor(newTrees, path.concat(k), root);
+        },
+        // path: () => [path, trees, root]
+    }
+}
+
 function mapReducerResultToEffectOrUpdate(result, causingAction) {
     const output = {};
     if (result[EFFECT]) {
@@ -92,8 +116,7 @@ const reducerFor = () => {
         let effects = {};
         const blueprint = state && state[BLUEPRINT]? state[BLUEPRINT] : {}; 
 
-        const checkMatchAndHandleAction = (parent, k, updates, path, state, effects) => {
-
+        const checkMatchAndHandleAction = (parent, k, state, cursor) => {
             const field = parent[k];
 
             if (field instanceof Recipe) {
@@ -101,34 +124,28 @@ const reducerFor = () => {
 
                     const reducerResult = reducer(state && state[k], action);
                     const output = mapReducerResultToEffectOrUpdate(reducerResult, action)
-                    updates[k] = output.update;
-                    if (output.effect) effects[k] = output.effect;
+                    cursor.setMetadata('updates', output.update);
+                    if (output.effect) cursor.setMetadata('effects', output.effect);
                 });
                 if (field.initialState && typeof field.initialState == 'object') {
-                    //checkMatchAndHandleAction(parent, k, updates, path, state, effects);
-                    const deeperUpdates = updates[k] || (updates[k] = {});
-                    const deeperEffects = effects[k] || (effects[k] = {});
 
                     for (let key in field.initialState) {
-//                        try { 
-                        checkMatchAndHandleAction(field.initialState, key, deeperUpdates, path.concat(key), state && state[k] && state[k][key], deeperEffects);
-                        // } catch (e) {
-                        //     console.log("$$$$err",e);
-                        //     debugger;
-                        // }
+
+                        checkMatchAndHandleAction(field.initialState, key, state && state[k] && state[k][key], cursor && cursor.select(key));
                     }
     
                 }
             } else {
                 if (field && !field[symbolObservable] && typeof field == 'object') {
-                    const deeperUpdates = updates[k] || (updates[k] = {});
-                    const deeperEffects = effects[k] || (effects[k] = {});
                     for (let key in field) {
-                        checkMatchAndHandleAction(field, key, deeperUpdates, path.concat(key), state && state[k], deeperEffects);
+                        checkMatchAndHandleAction(field, key, state && state[k], cursor && cursor.select(key));
                     }
                 }
             }
         };
+
+
+        const cursor = new Cursor({updates, effects});
         if (state && action.meta && action.meta.feedbacks && action.meta.feedbacks.path) {
             const path = action.meta.feedbacks.path;
             const key = path[path.length - 1];
@@ -139,9 +156,10 @@ const reducerFor = () => {
                 set(updates, p, {});
                 namespacedUpdates = get(updates, p);
             }
-            checkMatchAndHandleAction(get(blueprint, path.slice(0, -1)), key, namespacedUpdates, [key], get(state, p), effects);
+            const cursor = new Cursor({updates: namespacedUpdates, effects});
+            checkMatchAndHandleAction(get(blueprint, path.slice(0, -1)), key, get(state, p), cursor.select(key));
         } else  if (state) for (let key in blueprint) {
-            checkMatchAndHandleAction(blueprint, key, updates, [key], state, effects);
+            checkMatchAndHandleAction(blueprint, key, state, cursor.select(key));
         }
 
         const newState = applyPatch(state || {}, updates);
