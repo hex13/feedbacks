@@ -123,10 +123,13 @@ const reducerFor = () => {
                     cursor.setMetadata('updates', output.update);
                     if (output.effect) cursor.setMetadata('effects', output.effect);
                 });
+                if (field.itemBlueprint) {
+                    const itemKey = field.mapActionToKey(action);
+                    checkMatchAndHandleAction(field, 'itemBlueprint', cursor && cursor.select(itemKey));
+                }
                 if (field.initialState && typeof field.initialState == 'object') {
 
                     for (let key in field.initialState) {
-
                         checkMatchAndHandleAction(field.initialState, key, cursor && cursor.select(key));
                     }
     
@@ -221,6 +224,12 @@ class Recipe {
         if (this.hasInitialState) {
          //   search(this.initialState)
         }
+    }
+    itemsLike(itemBlueprint, mapActionToKey) {
+        const recipe = new Recipe(this);
+        recipe.itemBlueprint = itemBlueprint;
+        recipe.mapActionToKey = mapActionToKey;
+        return recipe;
     }
 };
 

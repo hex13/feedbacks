@@ -338,6 +338,45 @@ describe('[resmix]', () => {
 
     });
 
+    it('should allow for declaring shape of items and dispatch actions only to selected item', () => {
+        const store = prepareStore({
+            collection: init({
+                item: {
+                    text: 'foo'
+                },
+                secondItem: {
+                    text: 'bar'
+                }
+            }).itemsLike({
+                text: init('').on('change', value => value + '!')
+            }, action => action.key)
+        });
+
+        assert.deepStrictEqual(store.getState(), {
+            collection: {
+                item: {
+                    text: 'foo'
+                },
+                secondItem: {
+                    text: 'bar'
+                }
+            }
+        });
+        store.dispatch({type: 'change', key: 'item'});
+
+        assert.deepStrictEqual(store.getState(), {
+            collection: {
+                item: {
+                    text: 'foo!'
+                },
+                secondItem: {
+                    text: 'bar'
+                }
+            }
+        });
+
+    });
+
 
     describe('init', () => {
         const blueprint = ({ init }) => ({
