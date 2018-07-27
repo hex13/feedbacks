@@ -3,7 +3,7 @@
   "repository": "https://github.com/hex13/feedbacks",
   "version": "0.1.5",
   "description": "Feedbacks - reactive blueprints for your Redux apps",
-  "main": "index.js",
+  "main": "resmix.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

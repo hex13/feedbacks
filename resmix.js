@@ -402,3 +402,23 @@ const spawn = exports.spawn = (action) => {
 exports.mount = (blueprint) => {
     return createEffect({[EffectRunner.CALL]: ['mount', blueprint]});
 };
+
+
+exports.createEngine = (blueprint) => {
+    const finalBlueprint = (
+        typeof blueprint == 'function'? 
+        blueprint({
+            init: exports.init
+        }) : blueprint
+    );
+    return exports.Resmix(finalBlueprint);
+}
+
+
+exports.withRedux = (Redux) => ({
+    createStore(blueprint) {
+        const engine = exports.createEngine(blueprint);
+        return Redux.createStore(engine.reducer, Redux.applyMiddleware(engine.middleware))
+    }
+});
+

@@ -9,9 +9,8 @@ const Redux = require('redux');
 const { Observable, interval, Subscription, of } = require('rxjs');
 const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
-const { createEngine, withRedux }= require('..');
+const { createEngine, withRedux, init } = require('..');
 
-const { init } = Resmix;
 const prepareStore = (blueprint) => {
     return withRedux(Redux).createStore(blueprint);
     const resmix = createEngine(blueprint);
