@@ -285,13 +285,9 @@ exports.Resmix = (blueprint) => {
             next(action);
             const state = store.getState();
             const effects = state[EFFECTS];
-            //console.log('jakie efekt\n\n\n', effects);
+
             if (effects) {
                 const effectPatch = effects;
-                // effects.forEach(({ result, path}) => {
-                //     set(effectPatch, path, {[EFFECT]: result});
-                // });
-
                 function visitNode(node, path) {
                     if (node[EFFECT]) {
                         const updateProperty = update.bind(null, path);
@@ -303,7 +299,7 @@ exports.Resmix = (blueprint) => {
                     }
                 }
                 visitNode(effectPatch, []);
-                //console.log('effectPatch', effectPatch);
+
             }
         }    
     };
