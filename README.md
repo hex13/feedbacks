@@ -1,6 +1,8 @@
 Feedbacks - reactive blueprints for your Redux apps
 ===
 
+Live example: https://codesandbox.io/s/qq5mvym779
+
 *(Note that it's an early version, if you stumble upon some problems, feel free to file an issue:
 https://github.com/hex13/feedbacks/issues )*
 
