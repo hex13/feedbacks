@@ -22,27 +22,23 @@ const raw = value => ({
     }
 });
 
-function Cursor(trees, path = [], root) {
-    if (!root) root = trees;
+function Cursor(metadata, state, path = []) {
     return {
-        // get() { return trees; },
-        set(treeName, value) {
-            trees[treeName][k];
+        get() {
+            return get(state, path);
         },
+        // set(value) {
+        //     set(state, path, value);
+        // },
+        // getMetadata(kind) {
+        //     return get(metadata[kind], path);
+        // },
         setMetadata(kind, value) {
-            set(root[kind], path, value);
-            //
-            //trees[kind] = 
+            set(metadata[kind], path, value);
         },
         select(k) {
-            const newTrees = {};
-            for (let name in trees) {
-                const tree = trees[name];
-                newTrees[name] = tree[k] || (tree[k] = {});
-            }
-            return new Cursor(newTrees, path.concat(k), root);
+            return new Cursor(metadata, state, path.concat(k));
         },
-        // path: () => [path, trees, root]
     }
 }
 
@@ -116,13 +112,13 @@ const reducerFor = () => {
         let effects = {};
         const blueprint = state && state[BLUEPRINT]? state[BLUEPRINT] : {}; 
 
-        const checkMatchAndHandleAction = (parent, k, state, cursor) => {
+        const checkMatchAndHandleAction = (parent, k, cursor) => {
             const field = parent[k];
 
             if (field instanceof Recipe) {
                 field.doMatch(action, (reducer) => {
 
-                    const reducerResult = reducer(state && state[k], action);
+                    const reducerResult = reducer(cursor.get(), action);
                     const output = mapReducerResultToEffectOrUpdate(reducerResult, action)
                     cursor.setMetadata('updates', output.update);
                     if (output.effect) cursor.setMetadata('effects', output.effect);
@@ -131,21 +127,21 @@ const reducerFor = () => {
 
                     for (let key in field.initialState) {
 
-                        checkMatchAndHandleAction(field.initialState, key, state && state[k] && state[k][key], cursor && cursor.select(key));
+                        checkMatchAndHandleAction(field.initialState, key, cursor && cursor.select(key));
                     }
     
                 }
             } else {
                 if (field && !field[symbolObservable] && typeof field == 'object') {
                     for (let key in field) {
-                        checkMatchAndHandleAction(field, key, state && state[k], cursor && cursor.select(key));
+                        checkMatchAndHandleAction(field, key, cursor && cursor.select(key));
                     }
                 }
             }
         };
 
 
-        const cursor = new Cursor({updates, effects});
+        const cursor = new Cursor({updates, effects}, state, []);
         if (state && action.meta && action.meta.feedbacks && action.meta.feedbacks.path) {
             const path = action.meta.feedbacks.path;
             const key = path[path.length - 1];
@@ -156,10 +152,10 @@ const reducerFor = () => {
                 set(updates, p, {});
                 namespacedUpdates = get(updates, p);
             }
-            const cursor = new Cursor({updates: namespacedUpdates, effects});
-            checkMatchAndHandleAction(get(blueprint, path.slice(0, -1)), key, get(state, p), cursor.select(key));
+            const cursor = new Cursor({updates: namespacedUpdates, effects}, get(state, p), []);
+            checkMatchAndHandleAction(get(blueprint, path.slice(0, -1)), key, cursor.select(key));
         } else  if (state) for (let key in blueprint) {
-            checkMatchAndHandleAction(blueprint, key, state, cursor.select(key));
+            checkMatchAndHandleAction(blueprint, key, cursor.select(key));
         }
 
         const newState = applyPatch(state || {}, updates);
