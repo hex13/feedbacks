@@ -75,26 +75,6 @@ function mapReducerResultToEffectOrUpdate(result, causingAction) {
 const reducerFor = () => {
     return (state, action) => {
         if (action.type == UPDATE_BLUEPRINT) {
-
-            // function resolveBlueprint(blueprint) {
-            //     if (isPlainValue(blueprint)) return blueprint;
-            //     const o = {};
-            //     if (blueprint instanceof Recipe) {
-            //         if (blueprint.initialState && typeof initialState == 'object') {
-            //             blueprint.initialState = resolveBlueprint(blueprint.initialState);
-            //         }
-            //         return blueprint;
-            //     }
-            //     for (let k in blueprint) {
-            //         o[k] = resolveBlueprint(blueprint[k]);
-            //     }
-            //     return o; 
-            //     if (blueprint.hasInitialState) {
-            //     } else {
-
-            //     }
-            // }
-            //const blueprint = resolveBlueprint(action.payload.blueprint);
             if (action.payload.path) {
                 return R.assocPath([BLUEPRINT].concat(action.payload.path), action.payload.blueprint, state);    
             }
@@ -196,7 +176,7 @@ class Recipe {
         }
         return recipe;
     }
-    // executes pattern-matching and run callback
+    // executes pattern-matching and runs callback
     doMatch(action, onMatch) {
         let matched = false;
         const pairs = this.pairs;
