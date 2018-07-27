@@ -10,6 +10,7 @@
   "author": "Łukasz Lityński (hex13)",
   "license": "MIT",
   "dependencies": {
+    "istanbul": "^0.4.5",
     "ramda": "^0.25.0",
     "symbol-observable": "^1.2.0",
     "transmutable": "^0.15.5"
@@ -28,7 +29,14 @@
     "typescript": "^2.9.2"
   },
   "keywords": [
-    "redux", "observable", "rxjs", "rx", 
-    "pattern", "match", "reactive", "actions", "side effects"
+    "redux",
+    "observable",
+    "rxjs",
+    "rx",
+    "pattern",
+    "match",
+    "reactive",
+    "actions",
+    "side effects"
   ]
 }
