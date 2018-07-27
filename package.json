@@ -10,12 +10,12 @@
   "author": "Łukasz Lityński (hex13)",
   "license": "MIT",
   "dependencies": {
-    "istanbul": "^0.4.5",
     "ramda": "^0.25.0",
     "symbol-observable": "^1.2.0",
     "transmutable": "^0.15.5"
   },
   "devDependencies": {
+    "istanbul": "^0.4.5",    
     "enzyme": "^3.3.0",
     "enzyme-adapter-react-16": "^1.1.1",
     "jsdom": "^11.11.0",
