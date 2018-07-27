@@ -338,10 +338,10 @@ function resolveInitialState(blueprint) {
             return;
         }
         if (desc && typeof desc == 'object') {
-            let computedCurrentObjectValue = undefined;
+
+            let computedCurrentObjectValue = {};
             Object.keys(desc).forEach(function goDeeper(k) {
                 visitProperty(desc[k], (v) => {
-                    computedCurrentObjectValue = computedCurrentObjectValue === undefined? {} :computedCurrentObjectValue;
                     computedCurrentObjectValue[k] = v;
                 });
             });

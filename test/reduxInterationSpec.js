@@ -44,6 +44,13 @@ describe('[resmix]', () => {
         assert.deepStrictEqual(store.getState(), createBlueprint());
     });
 
+    it('should allow for create empty object as value of property', () => {
+        const store = prepareStore({
+            a: {}
+        });
+        assert.deepStrictEqual(store.getState(), {a: {}})
+
+    });
     // it('should allow for declare Recipe with primitive as initial state', () => {
     //     const someSymbol = Symbol();
     //     const resmix = Resmix.Resmix(Resmix.init(10));
@@ -76,6 +83,15 @@ describe('[resmix]', () => {
 
             assert.deepStrictEqual(store.getState(), {a: {b: 3}})
         });        
+
+        it('should allow for create empty object as value of property', () => {
+            const store = prepareStore({
+                a: init({})
+            });
+            assert.deepStrictEqual(store.getState(), {a: {}})    
+        });
+    
+
     });
 
 
@@ -287,7 +303,7 @@ describe('[resmix]', () => {
                 counter: Resmix.init({value: 0})
                     .match('foo', (value, action) => {
                         return Resmix.mount({
-                            value: Resmix.match('inc', (value, action) => value + action.payload)
+                            value: Resmix.init(0).match('inc', (value, action) => value + action.payload)
                         })
                     })
             },
