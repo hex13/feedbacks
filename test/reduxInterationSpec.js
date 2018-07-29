@@ -617,21 +617,39 @@ describe('[resmix]', () => {
         let subscriptionCount;;
         beforeEach(() => {
             const blueprint = {
-                a: new Observable(observer => {
-                    observer.next(100);
-                    subscriptionCount++;
-                }),
+                deep: {
+                    a: new Observable(observer => {
+                        observer.next(100);
+                        subscriptionCount++;
+                        setTimeout(() => {
+                            observer.next(123);
+                        }, 200);
+                    }),    
+                }
             };
             const resmix = Resmix.Resmix(blueprint);
             subscriptionCount = 0;
-            store = createStore(resmix.reducer, {a: null}, applyMiddleware(resmix.middleware));
+            store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
         });
 
-        it('should resolve observable', () => {
+        it('should resolve observable', (done) => {
             store.dispatch({type: 'foo'});
-            assert.deepStrictEqual(store.getState(), {
-                a: 100
-            });            
+            setTimeout(() => {
+                assert.deepStrictEqual(store.getState(), {
+                    deep: {a: 100}
+                });                
+                done();
+            }, 100)
+        });
+
+        it('should resolve asynchronous updates from observable', (done) => {
+            store.dispatch({type: 'foo'});
+            setTimeout(() => {
+                assert.deepStrictEqual(store.getState(), {
+                    deep: {a: 123}
+                });                
+                done();
+            }, 250);
         });
 
         it('should subscribe once', () => {

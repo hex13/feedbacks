@@ -244,7 +244,7 @@ exports.Resmix = (blueprint) => {
                         blueprint
                     }
                 });
-                const initialState = resolveInitialState(blueprint);
+                const { initialState } = resolveInitialState(blueprint);
                 if (initialState != undefined) store.dispatch({
                     type: UPDATE,
                     payload: {
@@ -273,8 +273,16 @@ exports.Resmix = (blueprint) => {
             }
         });
 
-        const initialState = resolveInitialState(blueprint);
-        next({type: UPDATE_ROOT, payload: initialState})
+        const { initialState, observables } = resolveInitialState(blueprint);
+        next({type: UPDATE_ROOT, payload: initialState});
+
+        observables.forEach(({observable, path}) => {
+            observable.subscribe(value => {
+                update(path, value);
+            });
+        })
+
+        
     
         return action => {
             if (action.type == OPEN_CHANNEL) {
@@ -316,7 +324,8 @@ function isPlainValue(desc) {
 }
 
 function resolveInitialState(blueprint) {
-    const visitProperty = (desc, setValue) => {
+    const observables = [];
+    const visitProperty = (desc, setValue, path = []) => {
         const t = typeof desc;
         const isPlainValue = !desc || t == 'number' || t == 'string' || t == 'boolean' || t == 'symbol';
         if (isPlainValue) {
@@ -325,16 +334,20 @@ function resolveInitialState(blueprint) {
         }
         if (desc instanceof Recipe) {
             if (desc.hasInitialState)
-                setValue(resolveInitialState(desc.initialState));
+                setValue(resolveInitialState(desc.initialState).initialState);
             return;
         }
         const toObservable = desc && desc[symbolObservable];
 
         if (toObservable) {
             const observable = toObservable.call(desc);
-            observable.subscribe(value => {
-                setValue(value);
-            });
+            // observable.subscribe(value => {
+            //     setValue(value);
+            // });
+            observables.push({
+                path,
+                observable
+            })
             return;
         }
         if (desc && typeof desc == 'object') {
@@ -343,7 +356,7 @@ function resolveInitialState(blueprint) {
             Object.keys(desc).forEach(function goDeeper(k) {
                 visitProperty(desc[k], (v) => {
                     computedCurrentObjectValue[k] = v;
-                });
+                }, path.concat(k));
             });
             setValue(computedCurrentObjectValue);
             return;
@@ -354,7 +367,7 @@ function resolveInitialState(blueprint) {
         initialState = v;
     });
 
-    return initialState;
+    return { initialState, observables } ;
 }
 
 function actionMatchesPattern(pattern, action) {
