@@ -15,9 +15,10 @@
     "transmutable": "^0.15.5"
   },
   "devDependencies": {
-    "istanbul": "^0.4.5",    
+    "chai": "^4.1.2",
     "enzyme": "^3.3.0",
     "enzyme-adapter-react-16": "^1.1.1",
+    "istanbul": "^0.4.5",
     "jsdom": "^11.11.0",
     "mocha": "^5.2.0",
     "react": "^16.4.1",
