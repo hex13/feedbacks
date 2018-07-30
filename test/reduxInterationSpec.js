@@ -9,7 +9,9 @@ const Redux = require('redux');
 const { Observable, interval, Subscription, of } = require('rxjs');
 const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
-const { createEngine, withRedux, init, load } = require('..');
+const { createEngine, withRedux, init } = require('..');
+
+const fx = require('../fx');
 
 const prepareStore = (blueprint) => {
     return withRedux(Redux).createStore(blueprint);
@@ -226,7 +228,7 @@ describe('[resmix]', () => {
             foo: {
                 counter: Resmix.init(0)
                     .match('foo', (value, action) => {
-                        return Resmix.mount(
+                        return fx.mount(
                             Resmix.on('inc', (value, action) => value + action.payload)
                         )
                     })
@@ -254,7 +256,7 @@ describe('[resmix]', () => {
             foo: {
                 counter: Resmix.init(0)
                     .match('foo', (value, action) => {
-                        return Resmix.mount(
+                        return fx.mount(
                             Resmix.init(100).match('inc', (value, action) => value + action.payload)
                         )
                     })
@@ -279,7 +281,7 @@ describe('[resmix]', () => {
 
     xit('should allow for change blueprint (mounting Promise) ', (done) => {    
         const store = prepareStore({
-            foo: init(0).match('foo', () => () => Resmix.mount(Promise.resolve(1234)))
+            foo: init(0).match('foo', () => () => fx.mount(Promise.resolve(1234)))
         });
         const initialState = {
             foo: 0
@@ -302,7 +304,7 @@ describe('[resmix]', () => {
             foo: {
                 counter: Resmix.init({value: 0})
                     .match('foo', (value, action) => {
-                        return Resmix.mount({
+                        return fx.mount({
                             value: Resmix.init(0).match('inc', (value, action) => value + action.payload)
                         })
                     })
@@ -329,7 +331,7 @@ describe('[resmix]', () => {
             foo: {
                 counter: Resmix.init({value: 0})
                     .match('foo', (value, action) => {
-                        return Resmix.mount({
+                        return fx.mount({
                             value: Resmix.init(100).match('inc', (value, action) => value + action.payload)
                         })
                     })
@@ -617,7 +619,7 @@ describe('[resmix]', () => {
             //const 
             const { store, engine } = prepareEngine({ 
                 a: {
-                    b: init(123).on('loadThis', () => load('someResource'))
+                    b: init(123).on('loadThis', () => fx.load('someResource'))
                 }
             });
             const whatHappened = [];
@@ -693,7 +695,7 @@ describe('[resmix]', () => {
             ({ store, engine } = prepareEngine({
                 someFoo: Resmix.init(0).match([
                     ['foo', function (state, action) {
-                        return Resmix.spawn({type: 'bar'});
+                        return fx.spawn({type: 'bar'});
                     }]
                 ]),
                 deep: {

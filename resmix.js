@@ -14,7 +14,7 @@ const { MUTATION } = require('transmutable/symbols');
 const { applyPatch } = require('transmutable/transform');
 const R = require('ramda');
 const EffectRunner = require('./effectRunner');
-const { createEffect, EFFECT, spawn, mount, load } = require('./fx');
+const { createEffect, EFFECT, spawn } = require('./fx');
 const nop = ()=>{};
 
 const raw = value => ({
@@ -404,11 +404,6 @@ function actionMatchesPattern(pattern, action) {
 };
 
 exports.OPEN_CHANNEL = OPEN_CHANNEL;
-
-exports.spawn = spawn;
-exports.mount = mount;
-exports.load = load;
-
 
 exports.createEngine = (blueprint) => {
     const finalBlueprint = (
