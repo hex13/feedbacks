@@ -9,7 +9,7 @@ const Redux = require('redux');
 const { Observable, interval, Subscription, of } = require('rxjs');
 const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
-const { createEngine, withRedux, init } = require('..');
+const { createEngine, withRedux, init, load } = require('..');
 
 const prepareStore = (blueprint) => {
     return withRedux(Redux).createStore(blueprint);
@@ -611,6 +611,34 @@ describe('[resmix]', () => {
         });
 
     });
+
+    describe('[effects - load]', () => {
+        it('should load via provided loader', () => {
+            //const 
+            const { store, engine } = prepareEngine({ 
+                a: {
+                    b: init(123).on('loadThis', () => load('someResource'))
+                }
+            });
+            const whatHappened = [];
+            engine.loader((params, state) => {
+                whatHappened.push(['loader', params, state])
+                return 456;
+            });
+            assert.deepStrictEqual(store.getState(), {a: {b: 123}});
+
+            store.dispatch({ type: 'loadThis' });
+            assert.deepStrictEqual(store.getState(), {a: {b: 456}});
+            assert.deepStrictEqual(whatHappened, [
+               ['loader', 'someResource', {
+                   a: {
+                       b: 123
+                   }
+               }] 
+            ]);
+
+        });
+    })
 
     describe('[observables]', () => {
         let store;

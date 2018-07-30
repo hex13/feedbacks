@@ -14,7 +14,7 @@ const { MUTATION } = require('transmutable/symbols');
 const { applyPatch } = require('transmutable/transform');
 const R = require('ramda');
 const EffectRunner = require('./effectRunner');
-const { createEffect, EFFECT, spawn, mount } = require('./fx');
+const { createEffect, EFFECT, spawn, mount, load } = require('./fx');
 const nop = ()=>{};
 
 const raw = value => ({
@@ -230,6 +230,7 @@ exports.init = (value) => {
 
 exports.Resmix = (blueprint) => {
     const channels = {};
+    let loader;
     const middleware = store => next => {
         const effectRunner = new EffectRunner({
             dispatch(action) {
@@ -254,6 +255,9 @@ exports.Resmix = (blueprint) => {
                     }
                 })
             },
+            load(params) {
+                return loader(params, store.getState());
+            }
         });
         if (!store || !store.getState) {
             throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);
@@ -316,6 +320,9 @@ exports.Resmix = (blueprint) => {
         middleware,
         reducer: reducerFor(),
         channels,
+        loader(doLoad) {
+            loader = doLoad;
+        }
     }
 };
 
@@ -400,6 +407,8 @@ exports.OPEN_CHANNEL = OPEN_CHANNEL;
 
 exports.spawn = spawn;
 exports.mount = mount;
+exports.load = load;
+
 
 exports.createEngine = (blueprint) => {
     const finalBlueprint = (

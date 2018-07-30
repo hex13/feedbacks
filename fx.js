@@ -10,10 +10,6 @@ function createEffect(data) {
     }
 }
 
-function load() {
-    // TODO
-}
-
 const spawn = (action) => {
     return createEffect({ [EffectRunner.CALL]: ['dispatch', action] });    
 };
@@ -23,11 +19,16 @@ const mount = (blueprint) => {
     return createEffect({[EffectRunner.CALL]: ['mount', blueprint]});
 };
 
+const load = (params) => {
+    return createEffect({[EffectRunner.CALL]: ['load', params]});
+};
+
 module.exports = {
     createEffect, 
     EFFECT,
     spawn, 
-    mount
+    mount,
+    load,
 };
 
 
