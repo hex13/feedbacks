@@ -10,7 +10,6 @@
   "author": "Łukasz Lityński (hex13)",
   "license": "MIT",
   "dependencies": {
-    "ramda": "^0.25.0",
     "symbol-observable": "^1.2.0",
     "transmutable": "^0.15.5"
   },

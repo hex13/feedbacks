@@ -12,7 +12,7 @@ const symbolObservable = require('symbol-observable').default;
 const { get, set } = require('transmutable/get-set');
 const { MUTATION } = require('transmutable/symbols');
 const { applyPatch } = require('transmutable/transform');
-const R = require('ramda');
+
 const EffectRunner = require('./effectRunner');
 const { createEffect, EFFECT, spawn } = require('./fx');
 const nop = ()=>{};
@@ -75,22 +75,38 @@ function mapReducerResultToEffectOrUpdate(result, causingAction) {
 
 const reducerFor = () => {
     return (state, action) => {
-        if (action.type == UPDATE_BLUEPRINT) {
-            if (action.payload.path) {
-                return R.assocPath([BLUEPRINT].concat(action.payload.path), action.payload.blueprint, state);    
-            }
-            return R.assocPath([BLUEPRINT], action.payload.blueprint, state);
-        }
-        if (action.type == UPDATE) {
-            const copy = R.assocPath(action.payload.name, action.payload.value, state);
-            copy[BLUEPRINT] = state[BLUEPRINT];
-            return copy;
-        }
-        if (action.type == UPDATE_ROOT) {
-            return Object.assign({}, state, action.payload);
-        }
         let updates = {};
         let effects = {};
+        let isSpecialAction = true;
+        if (action.type == UPDATE_BLUEPRINT) {
+            if (action.payload.path) {
+                const newState = Object.assign({}, state);
+                const patch = {};
+                set(patch, action.payload.path, {
+                    [MUTATION]: {
+                        value: action.payload.blueprint
+                    }
+                });
+
+                newState[BLUEPRINT] = applyPatch(state[BLUEPRINT], patch);
+                newState[EFFECTS] = effects;
+                return newState;
+            }
+            return Object.assign({}, state, {[ BLUEPRINT ]: action.payload.blueprint});
+            
+        }
+        else if (action.type == UPDATE) {
+            set(updates, action.payload.name, {
+                [MUTATION]: {
+                    value: action.payload.value
+                }
+            })
+        }
+        else if (action.type == UPDATE_ROOT) {
+            return Object.assign({}, state, action.payload);
+        } else isSpecialAction = false;
+        
+        
         const blueprint = state && state[BLUEPRINT]? state[BLUEPRINT] : {}; 
 
         const checkMatchAndHandleAction = (parent, k, cursor) => {
@@ -126,20 +142,23 @@ const reducerFor = () => {
 
 
         const cursor = new Cursor({updates, effects}, state, []);
-        if (state && action.meta && action.meta.feedbacks && action.meta.feedbacks.path) {
-            const path = action.meta.feedbacks.path;
-            const key = path[path.length - 1];
-            const p = path.slice(0, -1);
-            
-            let namespacedUpdates = get(updates, p);
-            if (!namespacedUpdates) {
-                set(updates, p, {});
-                namespacedUpdates = get(updates, p);
+        if (!isSpecialAction) {
+            if (state && action.meta && action.meta.feedbacks && action.meta.feedbacks.path) {
+                const path = action.meta.feedbacks.path;
+                const key = path[path.length - 1];
+                const p = path.slice(0, -1);
+                
+                let namespacedUpdates = get(updates, p);
+                if (!namespacedUpdates) {
+                    set(updates, p, {});
+                    namespacedUpdates = get(updates, p);
+                }
+                const cursor = new Cursor({updates: namespacedUpdates, effects}, get(state, p), []);
+                checkMatchAndHandleAction(get(blueprint, path.slice(0, -1)), key, cursor.select(key));
+            } else  if (state) for (let key in blueprint) {
+                checkMatchAndHandleAction(blueprint, key, cursor.select(key));
             }
-            const cursor = new Cursor({updates: namespacedUpdates, effects}, get(state, p), []);
-            checkMatchAndHandleAction(get(blueprint, path.slice(0, -1)), key, cursor.select(key));
-        } else  if (state) for (let key in blueprint) {
-            checkMatchAndHandleAction(blueprint, key, cursor.select(key));
+    
         }
 
         const newState = applyPatch(state || {}, updates);
