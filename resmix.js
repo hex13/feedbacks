@@ -1,4 +1,6 @@
 'use strict';
+const DEBUG = false;
+const debug = console.log.bind(console);
 
 const EFFECTS = Symbol('effects');
 
@@ -75,6 +77,7 @@ function mapReducerResultToEffectOrUpdate(result, causingAction) {
 
 const reducerFor = () => {
     return (state, action) => {
+        if (DEBUG) debug('action', action);
         let updates = {};
         let effects = {};
         let isSpecialAction = true;
