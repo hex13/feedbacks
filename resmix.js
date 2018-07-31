@@ -83,17 +83,18 @@ const reducerFor = () => {
         let isSpecialAction = true;
         if (action.type == UPDATE_BLUEPRINT) {
             if (action.payload.path) {
-                const newState = Object.assign({}, state);
-                const patch = {};
-                set(patch, action.payload.path, {
+
+                const patch = {[BLUEPRINT]: {}};
+                set(patch[BLUEPRINT], action.payload.path, {
                     [MUTATION]: {
                         value: action.payload.blueprint
                     }
                 });
+                const newState = applyPatch(state, patch);
 
-                newState[BLUEPRINT] = applyPatch(state[BLUEPRINT], patch);
                 newState[EFFECTS] = effects;
                 return newState;
+
             }
             return Object.assign({}, state, {[ BLUEPRINT ]: action.payload.blueprint});
             
@@ -166,7 +167,6 @@ const reducerFor = () => {
 
         const newState = applyPatch(state || {}, updates);
         newState[EFFECTS] = effects;
-        newState[BLUEPRINT] = blueprint;
         return newState;
     };
 };
