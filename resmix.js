@@ -25,6 +25,28 @@ const raw = value => ({
     }
 });
 
+class State {
+    constructor(state, trees) {
+        this._state = state;
+        this._trees = trees;
+    }
+    getCursor() {
+        return new Cursor(this._trees, this._state, []);
+    }
+    commit() {
+        const newState = applyPatch(this._state || {}, this._trees.updates);
+        newState[EFFECTS] = this._trees.effects;
+        return newState;
+    }
+    set(path, value) {
+        set(this._trees.updates, path, {
+            [MUTATION]: {
+                value
+            }
+        });
+    }
+}
+
 function Cursor(metadata, state, path = []) {
     return {
         get() {
@@ -80,31 +102,15 @@ const reducerFor = () => {
         if (DEBUG) debug('action', action);
         let updates = {};
         let effects = {};
+        const smartState = new State(state, {updates, effects});
         let isSpecialAction = true;
         if (action.type == UPDATE_BLUEPRINT) {
-            if (action.payload.path) {
-
-                const patch = {[BLUEPRINT]: {}};
-                set(patch[BLUEPRINT], action.payload.path, {
-                    [MUTATION]: {
-                        value: action.payload.blueprint
-                    }
-                });
-                const newState = applyPatch(state, patch);
-
-                newState[EFFECTS] = effects;
-                return newState;
-
-            }
-            return Object.assign({}, state, {[ BLUEPRINT ]: action.payload.blueprint});
-            
+            const finalPath = action.payload.path? [BLUEPRINT].concat(action.payload.path) : [BLUEPRINT];
+            smartState.set(finalPath, action.payload.blueprint);
+            return smartState.commit();
         }
         else if (action.type == UPDATE) {
-            set(updates, action.payload.name, {
-                [MUTATION]: {
-                    value: action.payload.value
-                }
-            })
+            smartState.set(action.payload.name, action.payload.value);
         }
         else if (action.type == UPDATE_ROOT) {
             return Object.assign({}, state, action.payload);
@@ -144,8 +150,7 @@ const reducerFor = () => {
             }
         };
 
-
-        const cursor = new Cursor({updates, effects}, state, []);
+        const cursor = smartState.getCursor();
         if (!isSpecialAction) {
             if (state && action.meta && action.meta.feedbacks && action.meta.feedbacks.path) {
                 const path = action.meta.feedbacks.path;
@@ -165,8 +170,7 @@ const reducerFor = () => {
     
         }
 
-        const newState = applyPatch(state || {}, updates);
-        newState[EFFECTS] = effects;
+        const newState = smartState.commit();
         return newState;
     };
 };
