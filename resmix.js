@@ -28,7 +28,7 @@ const raw = value => ({
 class State {
     constructor(state, trees) {
         this._state = state;
-        this._trees = trees;
+        this._trees = {updates:{}, effects:{}};
     }
     getCursor() {
         return new Cursor(this._trees, this._state, []);
@@ -36,14 +36,23 @@ class State {
     commit() {
         const newState = applyPatch(this._state || {}, this._trees.updates);
         newState[EFFECTS] = this._trees.effects;
+        newState[SMART_STATE] = this;
+        this._newState = newState;
+
         return newState;
     }
     set(path, value) {
-        set(this._trees.updates, path, {
-            [MUTATION]: {
-                value
-            }
-        });
+        if (!path.length) {
+            this._state = Object.assign({}, this._state, value);
+        } else 
+            set(this._trees.updates, path, {
+                [MUTATION]: {
+                    value
+                }
+            });
+    }
+    clean() {
+        return new State(this._newState);
     }
 }
 
@@ -97,12 +106,17 @@ function mapReducerResultToEffectOrUpdate(result, causingAction) {
     return output;
 }
 
+const SMART_STATE = Symbol('SmartState');
 const reducerFor = () => {
     return (state, action) => {
         if (DEBUG) debug('action', action);
-        let updates = {};
-        let effects = {};
-        const smartState = new State(state, {updates, effects});
+        let smartState;
+        if (state && state[SMART_STATE]) {
+            smartState = state[SMART_STATE].clean();
+        } else {
+            smartState = new State(state);
+        }
+        
         let isSpecialAction = true;
         if (action.type == UPDATE_BLUEPRINT) {
             const finalPath = action.payload.path? [BLUEPRINT].concat(action.payload.path) : [BLUEPRINT];
@@ -113,7 +127,8 @@ const reducerFor = () => {
             smartState.set(action.payload.name, action.payload.value);
         }
         else if (action.type == UPDATE_ROOT) {
-            return Object.assign({}, state, action.payload);
+            smartState.set([], action.payload);
+            return smartState.commit();
         } else isSpecialAction = false;
         
         
