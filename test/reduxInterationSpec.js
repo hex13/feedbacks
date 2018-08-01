@@ -804,12 +804,14 @@ describe('[namespaced actions]', () => {
             foo: Resmix.init(0).match('inc', v => v + 1),
             bar: Resmix.init(0).match('inc', v => v + 10),
             deep: {
-                baz: Resmix.init(0).match('inc', v => v + 100),
-                qux: Resmix.init(0).match('inc', v => v + 1000)
+                deeper: {
+                    baz: Resmix.init(0).match('inc', v => v + 100),
+                    qux: Resmix.init(0).match('inc', v => v + 1000)
+                }
             }
         });
 
-        assert.deepStrictEqual(store.getState(), {foo: 0, bar: 0, deep: {baz: 0, qux: 0} });
+        assert.deepStrictEqual(store.getState(), {foo: 0, bar: 0, deep: {deeper: {baz: 0, qux: 0}} });
         store.dispatch({
             type: 'inc',
             meta: {
@@ -818,7 +820,7 @@ describe('[namespaced actions]', () => {
                 }
             }
         })
-        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 0, deep: {baz: 0, qux: 0} });
+        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 0, deep: {deeper: {baz: 0, qux: 0}} });
         store.dispatch({
             type: 'inc',
             meta: {
@@ -827,7 +829,7 @@ describe('[namespaced actions]', () => {
                 }
             }
         })
-        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 10, deep: {baz: 0, qux: 0} });
+        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 10, deep: {deeper: {baz: 0, qux: 0}} });
         
         store.dispatch({
             type: 'inc',
@@ -838,18 +840,18 @@ describe('[namespaced actions]', () => {
             }
         });
 
-        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 10, deep: {baz: 100, qux: 1000} });
+        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 10, deep: {deeper: {baz: 100, qux: 1000}} });
 
         store.dispatch({
             type: 'inc',
             meta: {
                 feedbacks: {
-                    path: ['deep', 'baz']
+                    path: ['deep', 'deeper', 'baz']
                 }
             }
         });
 
-        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 10, deep: {baz: 200, qux: 1000} });
+        assert.deepStrictEqual(store.getState(), {foo: 1, bar: 10, deep: {deeper:{baz: 200, qux: 1000}} });
 
     });
 });
