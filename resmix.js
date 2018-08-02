@@ -50,6 +50,16 @@ const effectHandlers = {
     },
     load(dispatch, getState, params) {
         return this.loader(params, getState());
+    },
+    effect(dispatch, getState, effect) {
+        const pairs =  this.customEffectHandlers;
+        for (let i = 0; i < pairs.length; i++) {
+            const [pattern, run] = pairs[i];
+
+            if (isMatch(pattern, effect)) {
+                return run(dispatch, getState, effect);
+            }
+        }
     }
 };
 
@@ -249,7 +259,7 @@ class Recipe {
             let [pattern, reducer] = pairs[i];
             if (matched)
                 return;
-            let equal = actionMatchesPattern(pattern, action);
+            let equal = isMatch(pattern, action);
             if (equal) {
                 onMatch(reducer);
                 matched = true;
@@ -295,6 +305,7 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
     const channels = {};
 
     let _store;
+    let customEffectHandlers = [];
     const middleware = store => next => {
         _store = store;
         const finalEffectHandlers = {};
@@ -350,7 +361,7 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
                 function visitNode(node, path) {
                     if (node[EFFECT]) {
                         const updateProperty = update.bind(null, path);
-                        effectRunner.run(node[EFFECT], updateProperty, { path, loader });
+                        effectRunner.run(node[EFFECT], updateProperty, { path, loader, customEffectHandlers });
                     } else {
                         for (let k in node) {
                             visitNode(node[k], path.concat(k));
@@ -361,7 +372,7 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
 
             }
         }    
-    };
+    }
     return {
         middleware,
         reducer: reducerFor(),
@@ -371,6 +382,10 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
         },
         getStore() {
             return _store;
+        },
+        onEffect(pattern, runEffect) {
+            customEffectHandlers.push([pattern, runEffect]);
+            return this;
         }
     }
 };
@@ -427,28 +442,26 @@ function resolveInitialState(blueprint) {
     return { initialState, observables } ;
 }
 
-function actionMatchesPattern(pattern, action) {
+function isMatch(pattern, object) {
     let equal = true;
-    if (typeof pattern == 'string') return pattern == action.type;
-    if (typeof pattern == 'object' && typeof action == 'object') {
+    if (typeof pattern == 'string') return pattern == object.type;
+    if (typeof pattern == 'object' && typeof object == 'object') {
         for (let patternKey in pattern) {
-        //Object.keys(pattern).forEach(patternKey => {
-            // TODO optimize. forEach is sub-optimal because it goes on even after we know that there is no match.
-            if (action[patternKey] == undefined) {
+            if (object[patternKey] == undefined) {
                 equal = false;
             } else if (typeof pattern[patternKey] == 'function') {
-                equal = equal && pattern[patternKey](action[patternKey]);
+                equal = equal && pattern[patternKey](object[patternKey]);
             }
             else if (pattern[patternKey] && typeof pattern[patternKey] == 'object') {
-                equal = equal && actionMatchesPattern(pattern[patternKey], action[patternKey]);
+                equal = equal && isMatch(pattern[patternKey], object[patternKey]);
             }
             else {
-                equal = equal && pattern[patternKey] == action[patternKey];
+                equal = equal && pattern[patternKey] == object[patternKey];
             }
             if (!equal) return false;
         }
     } else
-        return pattern === action;
+        return pattern === object;
     return equal;
 };
 

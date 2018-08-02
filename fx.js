@@ -23,12 +23,18 @@ const load = (params) => {
     return createEffect({[EffectRunner.CALL]: ['load', params]});
 };
 
+const effect = (params) => {
+    return createEffect({[EffectRunner.CALL]: ['effect', params]});
+};
+
+
 module.exports = {
     createEffect, 
     EFFECT,
     spawn, 
     mount,
     load,
+    effect,
 };
 
 

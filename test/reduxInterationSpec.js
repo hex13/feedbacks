@@ -622,7 +622,7 @@ describe('[resmix]', () => {
 
     });
 
-    describe('[effects - load]', () => {
+    describe('[effect - load]', () => {
         it('should load via provided loader', () => {
             //const 
 
@@ -652,6 +652,36 @@ describe('[resmix]', () => {
             ]);
 
         });
+
+        it('should run matching effect handler', () => {
+            const store = withRedux(Redux).createEngine({ 
+                a: {
+                    b: init(123).on('loadThis', () => fx.effect({type: 'someEffect', params: 'blah'})),
+                    c: init(100).on('inc', (state, action) => state + action.payload)
+                }
+            })
+            .onEffect({type: 'abc'}, () => 'aaaaa')
+            .onEffect({type: 'someEffect'}, (dispatch, getState, effect) => {
+                assert.deepStrictEqual(effect, {type: 'someEffect', params: 'blah'});
+                assert.deepStrictEqual(getState(), {
+                    a: {
+                        b: 123,
+                        c: 100
+                    }
+                });
+                dispatch({type: 'inc', payload: 20});
+                return 'here comes';
+            })
+            .onEffect({type: 'otherEffect'}, () => 'something else')
+            .getStore();
+
+            store.dispatch({ type: 'loadThis' });
+
+            assert.deepStrictEqual(store.getState(), {
+                a: {b: 'here comes', c: 120}
+            });
+        });
+
     })
 
     describe('[observables]', () => {
