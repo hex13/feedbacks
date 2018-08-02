@@ -28,6 +28,14 @@ const prepareEngine = (blueprint) => {
 
 global.assert = assert;
 
+describe('[creating store (smoke test)]', () => {
+    it('should be possible to create store', () => {
+        const store = withRedux(Redux).createEngine().getStore();
+        store.getState();
+        store.dispatch({type: 'not very important'});
+    });
+});
+
 describe('[resmix]', () => {
     it('should allow for declare plain values', () => {
         const someSymbol = Symbol();
@@ -617,16 +625,20 @@ describe('[resmix]', () => {
     describe('[effects - load]', () => {
         it('should load via provided loader', () => {
             //const 
-            const { store, engine } = prepareEngine({ 
+
+            const store = withRedux(Redux).createEngine({ 
                 a: {
                     b: init(123).on('loadThis', () => fx.load('someResource'))
                 }
-            });
+            }, {
+                loader: (params, state) => {
+                    whatHappened.push(['loader', params, state])
+                    return 456;
+                }
+            }).getStore();
+
             const whatHappened = [];
-            engine.loader((params, state) => {
-                whatHappened.push(['loader', params, state])
-                return 456;
-            });
+
             assert.deepStrictEqual(store.getState(), {a: {b: 123}});
 
             store.dispatch({ type: 'loadThis' });

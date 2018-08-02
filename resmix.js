@@ -25,6 +25,36 @@ const raw = value => ({
     }
 });
 
+const effectHandlers = {
+    spawn(dispatch, getState, action) {
+        action.meta = {owner: this.path};
+        dispatch(action);
+    },
+    mount(dispatch, getState, blueprint) {
+        const { path } = this;
+        dispatch({
+            type: UPDATE_BLUEPRINT,
+            payload: {
+                path,
+                blueprint
+            }
+        });
+        const { initialState } = resolveInitialState(blueprint);
+        if (initialState != undefined) dispatch({
+            type: UPDATE,
+            payload: {
+                name: path,
+                value: initialState,
+            }
+        })
+    },
+    load(dispatch, getState, params) {
+        return this.loader(params, getState());
+    }
+};
+
+
+
 class State {
     constructor(state, trees) {
         this._state = state;
@@ -261,37 +291,20 @@ exports.init = (value) => {
 };
 
 
-exports.Resmix = (blueprint) => {
+exports.Resmix = (blueprint, { loader } = {} ) => {
     const channels = {};
-    let loader;
+
+    let _store;
     const middleware = store => next => {
-        const effectRunner = new EffectRunner({
-            dispatch(action) {
-                action.meta = {owner: this.path};
-                store.dispatch(action);
-            },
-            mount(blueprint) {
-                const { path } = this;
-                store.dispatch({
-                    type: UPDATE_BLUEPRINT,
-                    payload: {
-                        path,
-                        blueprint
-                    }
-                });
-                const { initialState } = resolveInitialState(blueprint);
-                if (initialState != undefined) store.dispatch({
-                    type: UPDATE,
-                    payload: {
-                        name: path,
-                        value: initialState,
-                    }
-                })
-            },
-            load(params) {
-                return loader(params, store.getState());
-            }
-        });
+        _store = store;
+        const finalEffectHandlers = {};
+        for (let k in effectHandlers) {
+            finalEffectHandlers[k] = function (...args) {
+                return effectHandlers[k].call(this, store.dispatch, store.getState, ...args);
+            };
+        }
+
+        const effectRunner = new EffectRunner(finalEffectHandlers);
         if (!store || !store.getState) {
             throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);
         }
@@ -337,7 +350,7 @@ exports.Resmix = (blueprint) => {
                 function visitNode(node, path) {
                     if (node[EFFECT]) {
                         const updateProperty = update.bind(null, path);
-                        effectRunner.run(node[EFFECT], updateProperty, { path });
+                        effectRunner.run(node[EFFECT], updateProperty, { path, loader });
                     } else {
                         for (let k in node) {
                             visitNode(node[k], path.concat(k));
@@ -355,6 +368,9 @@ exports.Resmix = (blueprint) => {
         channels,
         loader(doLoad) {
             loader = doLoad;
+        },
+        getStore() {
+            return _store;
         }
     }
 };
@@ -438,22 +454,32 @@ function actionMatchesPattern(pattern, action) {
 
 exports.OPEN_CHANNEL = OPEN_CHANNEL;
 
-exports.createEngine = (blueprint) => {
+// TODO remove indirections 
+// now there are 5 ways to create an engine. This is serious WTF
+
+exports.createEngine = (blueprint, ...rest) => {
     const finalBlueprint = (
         typeof blueprint == 'function'? 
         blueprint({
             init: exports.init
         }) : blueprint
     );
-    return exports.Resmix(finalBlueprint);
+    return exports.Resmix(finalBlueprint, ...rest);
 }
 
+function createEngine(Redux, blueprint, ...rest) {
+    const engine = exports.createEngine(blueprint, ...rest);
+    Redux.createStore(engine.reducer, Redux.applyMiddleware(engine.middleware));
+    return engine;
+
+}
 
 exports.withRedux = (Redux) => ({
     createStore(blueprint) {
-        const engine = exports.createEngine(blueprint);
-        return Redux.createStore(engine.reducer, Redux.applyMiddleware(engine.middleware))
-    }
+        const engine = createEngine(Redux, blueprint);
+        return engine.getStore();
+    },
+    createEngine: createEngine.bind(null, Redux)
 });
 
 exports.ac = require('./ac');

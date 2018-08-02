@@ -11,7 +11,7 @@ function createEffect(data) {
 }
 
 const spawn = (action) => {
-    return createEffect({ [EffectRunner.CALL]: ['dispatch', action] });    
+    return createEffect({ [EffectRunner.CALL]: ['spawn', action] });
 };
 
 
