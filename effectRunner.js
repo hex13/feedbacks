@@ -17,7 +17,7 @@ class EffectRunner {
             if (handle) {
                 const callResult  = handle.apply(ctx, args);
                 if (callResult !== undefined) {
-                    cb(callResult);
+                    this.run(callResult, cb);
                 }
             }
             else throw new Error(`EffectRunner: couldn't find method '${method}'`);
@@ -33,6 +33,13 @@ class EffectRunner {
                 }
             }
 
+        } else if (typeof effect.then == 'function') {
+            effect.then(v => {
+                this.run(v, cb);
+            });
+
+        } else {
+            cb(effect)
         }
     }
 }
