@@ -14,6 +14,8 @@ class EffectRunner {
         if (!effect) {
             // if (effect !== undefined)
                 cb(effect);
+        } else if (effect[EffectRunner.EFFECT]) {
+            this.run(effect[EffectRunner.EFFECT], cb, ctx, params);
         } else if (effect[EffectRunner.FLOW]) {
             const flow = effect[EffectRunner.FLOW];
             let last = Promise.resolve();
@@ -71,5 +73,6 @@ class EffectRunner {
 
 EffectRunner.CALL = Symbol('EffectRunner/CALL');
 EffectRunner.FLOW = Symbol('EffectRunner/FLOW');
+EffectRunner.EFFECT = Symbol('effect');
 
 module.exports = EffectRunner;

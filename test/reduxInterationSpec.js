@@ -684,6 +684,65 @@ describe('[resmix]', () => {
 
     })
 
+    describe('[flow]', () => {
+        it('should run flow from effect handler', (done) => {
+            const store = withRedux(Redux).createEngine({ 
+                a: {
+                    b: init(123).on('loadThis', () => fx.effect({type: 'someEffect'}))
+                }
+            })
+            .onEffect({type: 'someEffect'}, (dispatch, getState, effect) => {
+                return fx.flow([
+                    10,
+                    x => x * 10, 
+                    x => x + 1
+                ]);
+            })
+            .getStore();
+
+            assert.deepStrictEqual(store.getState(), {
+                a: {b: 123}
+            });
+        
+            store.dispatch({ type: 'loadThis' });
+    
+            setTimeout(() => {
+                assert.deepStrictEqual(store.getState(), {
+                    a: {b: 101}
+                });
+                done();
+            }, 0)
+        });
+
+        it('should run flow from action', (done) => {
+            const store = withRedux(Redux).createEngine({ 
+                a: {
+                    b: init(123).on('loadThis', () => fx.flow([
+                        10,
+                        x => x * 10, 
+                        x => x + 1
+                    ]))
+                }
+            })
+            .getStore();
+
+            assert.deepStrictEqual(store.getState(), {
+                a: {b: 123}
+            });
+    
+            store.dispatch({ type: 'loadThis' });
+    
+            setTimeout(() => {
+                assert.deepStrictEqual(store.getState(), {
+                    a: {b: 101}
+                });
+                done();
+            }, 0)
+        });
+        
+    
+    });
+
     describe('[observables]', () => {
         let store;
         let subscriptionCount;;

@@ -186,6 +186,17 @@ describe('EffectRunner', () => {
         });
     });
 
+    describe('[effect tagged as EffectRunner.EFFECT]', () => {
+        it('should detect effect', () => {
+            const result = er.run({
+                [EffectRunner.EFFECT]: 'efekt'
+            }, next); 
+            assert.deepStrictEqual(whatHappened, [
+                ['next', 'efekt'],
+            ]);
+        });
+    });
+
     describe('[functions as effects]', () => {
         it('should run the function and given the result is a scalar, should invoke the callback with the exact value', () => {
             const result = er.run(() => {

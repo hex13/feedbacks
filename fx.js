@@ -1,7 +1,7 @@
 'use strict';
 
 const EffectRunner = require('./effectRunner');
-const EFFECT = Symbol('effect');
+const EFFECT = EffectRunner.EFFECT;
 
 
 function createEffect(data) {
@@ -27,6 +27,9 @@ const effect = (params) => {
     return createEffect({[EffectRunner.CALL]: ['effect', params]});
 };
 
+const flow = (list) => {
+    return createEffect({[EffectRunner.FLOW]: list});
+};
 
 module.exports = {
     createEffect, 
@@ -35,6 +38,7 @@ module.exports = {
     mount,
     load,
     effect,
+    flow,
 };
 
 
