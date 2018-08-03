@@ -213,6 +213,61 @@ describe('EffectRunner', () => {
             }, 0);
         });
 
+        it('should run the functions recursively until result', () => {
+            const result = er.run(() => () => () => () => 98765, next);
+            
+            assert.deepStrictEqual(whatHappened, [
+                ['next', 98765],
+            ]);
+        });
+
+    });
+
+    describe('[flow]', () => {
+        it('resolves flow', () => {
+            er.run({
+                [EffectRunner.FLOW]: [
+                    'Hey',
+                    'You!',
+                    {name: 'Pink Floyd'},
+                    1,
+                    0,
+                    '',
+                    null,
+                    () => 123,
+                    (v) => v * 2,
+                    () => Promise.resolve(456),
+                    undefined, 
+                    () => () => () => Promise.resolve('Inception'),
+                    () => of(10, 20, 30),
+                    // TODO. next handle should receive last observable value, not first:
+                    // last => last + 1
+                ]
+            }, next);
+
+            return deferChecking(() => {
+                console.log("\n\n\n\n\n", JSON.stringify(whatHappened,0,2));
+                assert.deepEqual(whatHappened, [
+                    ['next', 'Hey'],
+                    ['next', 'You!'],
+                    ['next', {name: 'Pink Floyd'}],
+                    ['next', 1],
+                    ['next', 0],
+                    ['next', ''],
+                    ['next', null],
+                    ['next', 123],
+                    ['next', 246],
+                    ['next', 456],
+                    ['next', undefined],
+                    ['next', 'Inception'],
+                    ['next', 10],
+                    ['next', 20],
+                    ['next', 30],
+                    // ['next', 31],
+                ]);    
+            })
+        })
+       
     });
 
 });

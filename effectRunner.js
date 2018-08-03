@@ -9,9 +9,26 @@ class EffectRunner {
         this.api = api;
     }
     // TODO make run recursive
-    run(effect, cb, ctx) {
+    run(effect, cb, ctx, params = []) {
         if (!cb) cb = nop;
-        if (effect[EffectRunner.CALL]) {
+        if (!effect) {
+            // if (effect !== undefined)
+                cb(effect);
+        } else if (effect[EffectRunner.FLOW]) {
+            const flow = effect[EffectRunner.FLOW];
+            let last = Promise.resolve();
+            flow.forEach(item => {
+                last = last.then((value) => {
+                    return new Promise(resolve => {
+                        this.run(item, (v)=> {
+                            cb(v);
+                            resolve(v)
+                        }, null, [value]);
+                    });
+                });
+
+            })
+        } else if (effect[EffectRunner.CALL]) {
             const [method, ...args] = effect[EffectRunner.CALL];
             const handle = this.api[method];
             if (handle) {
@@ -22,14 +39,22 @@ class EffectRunner {
             }
             else throw new Error(`EffectRunner: couldn't find method '${method}'`);
         } else if (typeof effect[symbolObservable] == 'function') {
-            effect[symbolObservable]().subscribe(cb);
+            effect[symbolObservable]().subscribe({
+                next: (v) => {
+                    console.log("$I$$I$I$I O OOOO", v)
+                    cb(v);
+                },
+                complete: () => {
+                    
+                }
+            });
         } else if (typeof effect == 'function') {
-            const result = effect();
+            const result = effect(...params);
             if (result) {
                 if (typeof result.then == 'function') {
                     result.then(cb);
                 } else {
-                    cb(result);
+                    this.run(result, cb);
                 }
             }
 
@@ -45,5 +70,6 @@ class EffectRunner {
 }
 
 EffectRunner.CALL = Symbol('EffectRunner/CALL');
+EffectRunner.FLOW = Symbol('EffectRunner/FLOW');
 
 module.exports = EffectRunner;
