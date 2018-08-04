@@ -6,6 +6,7 @@ import * as Rx from 'rxjs';
 import { map, take } from 'rxjs/operators';
 
 const now = new Date;
+const currentDate = { day: now.getDate(), month: now.getMonth() + 1, year: now.getFullYear() }
 
 const getKeyByDate = (params) => {
     return `${params.year}-${params.month}-${params.day}`;
@@ -13,19 +14,19 @@ const getKeyByDate = (params) => {
 
 const doLoad = ac('load');
 const blueprint = {
-    month: init(1)
+    month: init(currentDate.month)
         .on(forward({ target: 'month' }), v => v + 1)
         .on(backward({ target: 'month' }), v => v - 1),
 
     language: 'iconic',
 
-    year: init(2018)
+    year: init(currentDate.year)
         .on(forward({ target: 'year' }), v => v + 1)
         .on(forward({ target: 'year' }), v => v + 1)
         .on(backward({ target: 'year' }), v => v - 1),
 
     detail: {
-        date: init({ day: now.getDate(), month: now.getMonth() + 1, year: now.getFullYear() })
+        date: init(currentDate)
             .on(showDetail(), (_, { payload }) => payload),
         note: init({text: '....'})
             .on(showDetail(), (_, { payload }) => fx.effect(doLoad(payload)))
