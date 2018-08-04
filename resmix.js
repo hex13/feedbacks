@@ -308,6 +308,7 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
     let customEffectHandlers = [];
     const middleware = store => next => {
         _store = store;
+
         const finalEffectHandlers = {};
         for (let k in effectHandlers) {
             finalEffectHandlers[k] = function (...args) {
@@ -347,6 +348,10 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
         
     
         return action => {
+            if (action.type == '@@feedbacks/store') {
+                _store = action.payload;
+                return;
+            }
             if (action.type == OPEN_CHANNEL) {
                 channels[action.payload.id] = (value) => {
                     update(action.payload.property, value);
@@ -482,7 +487,8 @@ exports.createEngine = (blueprint, ...rest) => {
 
 function createEngine(Redux, blueprint, ...rest) {
     const engine = exports.createEngine(blueprint, ...rest);
-    Redux.createStore(engine.reducer, Redux.applyMiddleware(engine.middleware));
+    const store = Redux.createStore(engine.reducer, Redux.applyMiddleware(engine.middleware));
+    store.dispatch({type: '@@feedbacks/store', payload: store});
     return engine;
 
 }
