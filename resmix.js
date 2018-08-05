@@ -501,4 +501,6 @@ exports.withRedux = (Redux) => ({
     createEngine: createEngine.bind(null, Redux)
 });
 
-exports.ac = require('./ac');
+const creators = require('./creators.js');
+exports.defineAction = creators.defineAction;
+exports.defineEffect = creators.defineEffect;

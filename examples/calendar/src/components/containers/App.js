@@ -5,11 +5,13 @@ import Detail from './Detail';
 
 import { connect } from './common';
 
-function App({ notesByDay }) {
+function App({ notesByDay, dispatch }) {
     return <div>
         <Calendar />
         <Detail />
+        <button onClick={() => dispatch({type: 'ask'})}>ask</button>
         <h4>notesByDay</h4>
+
         <div>
             {
                 Object.keys(notesByDay).map(k => {

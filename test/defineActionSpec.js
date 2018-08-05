@@ -1,12 +1,12 @@
 'use strict';
 
-const { ac } = require('..');
+const { defineAction } = require('..');
 const { expect } = require('chai');
 
-describe('action creator created via ac()', () => {
+describe('action creator created via defineAction()', () => {
     let createAction;
     beforeEach(() => {
-        createAction = ac('foo');
+        createAction = defineAction('foo');
     });
     it('when calling without parameters should return an object with the correct type (and without other fields)', () => {
         const action = createAction();
@@ -21,7 +21,7 @@ describe('action creator created via ac()', () => {
             type: 'foo',
             payload: {
                 bar: 3
-            }
+            },
         });
     });
 

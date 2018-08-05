@@ -1,5 +1,5 @@
 import * as Redux from 'redux';
-import { withRedux, init, ac } from 'feedbacks';
+import { withRedux, init, defineEffect } from 'feedbacks';
 import * as fx from 'feedbacks/fx';
 import { forward, backward, showDetail, addNote } from './actions';
 import * as Rx from 'rxjs';
@@ -12,7 +12,8 @@ const getKeyByDate = (params) => {
     return `${params.year}-${params.month}-${params.day}`;
 };
 
-const doLoad = ac('load');
+const doAsk = defineEffect('ask');
+const doLoad = defineEffect('load');
 const blueprint = {
     month: init(currentDate.month)
         .on(forward({ target: 'month' }), v => v + 1)
@@ -40,7 +41,7 @@ const blueprint = {
                     text: 'new item'
                 }
             }
-        })
+        }),
 }; 
 
 const delay = (t,v) => {
@@ -62,6 +63,9 @@ export default function configureStore() {
             delay(500, note),
         ]);
     })
+        // .onAction(doAsk(), () => {
+        //     alert("ask!");
+        // })
     .getStore();
 
     return store;
