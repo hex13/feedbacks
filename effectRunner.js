@@ -43,7 +43,6 @@ class EffectRunner {
         } else if (typeof effect[symbolObservable] == 'function') {
             effect[symbolObservable]().subscribe({
                 next: (v) => {
-                    console.log("$I$$I$I$I O OOOO", v)
                     cb(v);
                 },
                 complete: () => {
