@@ -9,7 +9,7 @@ const Redux = require('redux');
 const { Observable, interval, Subscription, of } = require('rxjs');
 const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
-const { createEngine, withRedux, init } = require('..');
+const { createEngine, withRedux, init, defineEffect, defineAction } = require('..');
 
 const fx = require('../fx');
 
@@ -683,6 +683,46 @@ describe('[resmix]', () => {
         });
 
     })
+
+    describe('[dispatching effects]', () => {
+        let store;
+        const doSomething = defineEffect('doSomething');
+        let whatHappened;
+        beforeEach(() => {
+            whatHappened = [];
+            store = withRedux(Redux).createEngine({
+                foo: init(0)
+                    .on(doSomething(), () => 'wrong 1')
+                    .on({type: 'doSomething'}, () => 'wrong 2'),
+                bar: init('').on({type: 'bar'}, state => state + 'good')
+            })
+                .onEffect(doSomething(), (dispatch, getState, effect) => {
+                    assert.deepStrictEqual(getState(), {foo: 0, bar: ''});
+                    assert.deepStrictEqual(effect, doSomething());
+                    dispatch({type: 'bar'});
+                    whatHappened.push('effect');
+                })
+                .getStore();
+
+            assert.deepStrictEqual(store.getState(), {foo: 0, bar: ''});
+            store.dispatch(doSomething());
+        });
+
+
+        it('should not trigger action reducer', () => {
+            assert.strictEqual(store.getState().foo, 0);
+        });
+
+        it('should trigger effect handler', () => {
+            assert.deepStrictEqual(whatHappened, [
+                'effect'
+            ]);
+        });
+
+        it('should pass `dispatch` function which can dispatch an action', () => {
+            assert.deepStrictEqual(store.getState().bar, 'good')
+        });
+    });
 
     describe('[flow]', () => {
         it('should run flow from effect handler', (done) => {

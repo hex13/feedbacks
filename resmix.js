@@ -16,7 +16,8 @@ const { MUTATION } = require('transmutable/symbols');
 const { applyPatch } = require('transmutable/transform');
 
 const EffectRunner = require('./effectRunner');
-const { createEffect, EFFECT, spawn } = require('./fx');
+const fx = require('./fx');
+const { createEffect, EFFECT, spawn } = fx;
 const nop = ()=>{};
 
 const raw = value => ({
@@ -348,6 +349,10 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
         
     
         return action => {
+            if (action.meta && action.meta.feedbacks && action.meta.feedbacks.isEffect) {
+                effectRunner.run(fx.effect(action), null, { loader, customEffectHandlers });
+                return;
+            }
             if (action.type == '@@feedbacks/store') {
                 _store = action.payload;
                 return;
