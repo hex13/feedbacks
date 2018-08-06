@@ -16,6 +16,7 @@ Reducers in Feedbacks can return both normal values and side-effects. And side-e
 
 Observables and promises are auto-resolved, and owner property is auto-updated.
 
+![feedbacks-resolving.png](feedbacks-resolving.png)
 
 Feedbacks will:
 ---
