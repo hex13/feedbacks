@@ -1,5 +1,6 @@
 'use strict';
 
+const { isMatch } = require('./matching');
 const symbolObservable = require('symbol-observable').default;
 
 const nop = () => {};
@@ -7,6 +8,7 @@ const nop = () => {};
 class EffectRunner {
     constructor(api) {
         this.api = api;
+        this.waitingList = [];
     }
     // TODO make run recursive
     run(effect, cb, ctx, params = []) {
@@ -14,6 +16,9 @@ class EffectRunner {
         if (!effect) {
             // if (effect !== undefined)
                 cb(effect);
+        } else if (effect[EffectRunner.WAIT_FOR]) {
+            const { pattern, mapper } = effect[EffectRunner.WAIT_FOR];
+            this.waitingList.push({ pattern, resolve: cb, mapper });
         } else if (effect[EffectRunner.EFFECT]) {
             this.run(effect[EffectRunner.EFFECT], cb, ctx, params);
         } else if (effect[EffectRunner.FLOW]) {
@@ -68,9 +73,22 @@ class EffectRunner {
             cb(effect)
         }
     }
+    notify(action) {
+        const items = this.waitingList;
+
+        for (let i = items.length - 1; i >= 0; i--) {
+            const { pattern, resolve, mapper } = items[i];
+            if (isMatch(pattern, action)) {
+                items.splice(i, 1);
+                this.run(mapper(action), resolve);
+            }
+        }
+
+    }
 }
 
 EffectRunner.CALL = Symbol('EffectRunner/CALL');
+EffectRunner.WAIT_FOR = Symbol('EffectRunner/WAIT_FOR');
 EffectRunner.FLOW = Symbol('EffectRunner/FLOW');
 EffectRunner.EFFECT = Symbol('effect');
 

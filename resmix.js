@@ -14,7 +14,7 @@ const symbolObservable = require('symbol-observable').default;
 const { get, set } = require('transmutable/get-set');
 const { MUTATION } = require('transmutable/symbols');
 const { applyPatch } = require('transmutable/transform');
-
+const { isMatch } = require('./matching');
 const EffectRunner = require('./effectRunner');
 const fx = require('./fx');
 const { createEffect, EFFECT, spawn } = fx;
@@ -349,6 +349,8 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
         
     
         return action => {
+            effectRunner.notify(action);
+
             if (action.meta && action.meta.feedbacks && action.meta.feedbacks.isEffect) {
                 effectRunner.run(fx.effect(action), null, { loader, customEffectHandlers });
                 return;
@@ -452,28 +454,6 @@ function resolveInitialState(blueprint) {
     return { initialState, observables } ;
 }
 
-function isMatch(pattern, object) {
-    let equal = true;
-    if (typeof pattern == 'string') return pattern == object.type;
-    if (typeof pattern == 'object' && typeof object == 'object') {
-        for (let patternKey in pattern) {
-            if (object[patternKey] == undefined) {
-                equal = false;
-            } else if (typeof pattern[patternKey] == 'function') {
-                equal = equal && pattern[patternKey](object[patternKey]);
-            }
-            else if (pattern[patternKey] && typeof pattern[patternKey] == 'object') {
-                equal = equal && isMatch(pattern[patternKey], object[patternKey]);
-            }
-            else {
-                equal = equal && pattern[patternKey] == object[patternKey];
-            }
-            if (!equal) return false;
-        }
-    } else
-        return pattern === object;
-    return equal;
-};
 
 exports.OPEN_CHANNEL = OPEN_CHANNEL;
 

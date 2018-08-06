@@ -783,6 +783,33 @@ describe('[resmix]', () => {
     
     });
 
+    describe('[waitFor]', () => {
+        it('should wait for action and then resolved using mapper', () => {
+            const store = withRedux(Redux).createEngine({
+                a: init(0).on('doSomething', () => (
+                    // wrap in Promise to check if recursive effect resolving is performed
+                    fx.waitFor({type: 'wow'}, action => Promise.resolve(action.payload))
+                ))
+            }).getStore();
+            store.dispatch({type: 'doSomething'});
+
+            return Promise.resolve().then(() => {
+                assert.strictEqual(store.getState().a, 0);
+
+                store.dispatch({type: 'doNothing'});
+            }).then(() => {
+                assert.strictEqual(store.getState().a, 0);
+
+                store.dispatch({type: 'wow', payload: 1234});
+                store.dispatch({type: 'wow', payload: 'only first should count'});
+
+            }).then(() => {
+                assert.strictEqual(store.getState().a, 1234);
+            });
+
+        });
+    });
+
     describe('[observables]', () => {
         let store;
         let subscriptionCount;;

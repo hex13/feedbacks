@@ -31,6 +31,10 @@ const flow = (list) => {
     return createEffect({[EffectRunner.FLOW]: list});
 };
 
+const waitFor = (actionPattern, mapper) => {
+    return createEffect({[EffectRunner.WAIT_FOR]: { pattern: actionPattern, mapper }});
+};
+
 module.exports = {
     createEffect, 
     EFFECT,
@@ -39,6 +43,7 @@ module.exports = {
     load,
     effect,
     flow,
+    waitFor,
 };
 
 
