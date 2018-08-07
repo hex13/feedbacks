@@ -10,10 +10,10 @@ class EffectRunner {
         this.api = api;
         this.waitingList = [];
     }
-    run(effect, cb, ctx, params = []) {
+    run(effect, cb, ctx = {path: []}, params = []) {
         // console.log("run", effect, params)
         const emitValue = (v) => {
-            cb({value: v});
+            cb({value: v, path: ctx.path});
         };
         if (!cb) cb = nop;
         if (!effect) {
@@ -21,7 +21,7 @@ class EffectRunner {
             emitValue(effect);
         } else if (effect[EffectRunner.WAIT_FOR]) {
             const { pattern, mapper } = effect[EffectRunner.WAIT_FOR];
-            this.waitingList.push({ pattern, resolve: cb, mapper });
+            this.waitingList.push({ pattern, resolve: cb, mapper, path: ctx.path });
         } else if (effect[EffectRunner.EFFECT]) {
             this.run(effect[EffectRunner.EFFECT], cb, ctx, params);
         } else if (effect.$$iterator) {
@@ -34,38 +34,38 @@ class EffectRunner {
                         cb(result);
                         lastResult = result;
                         iterate();
-                    }, null, [lastResult && lastResult.value]);
+                    }, ctx, [lastResult && lastResult.value]);
                 }
             };
             iterate();
         } else if (effect[EffectRunner.FLOW]) {
             const flow = effect[EffectRunner.FLOW];
             const iter = flow[Symbol.iterator]();
-            this.run({$$iterator: iter}, cb);
+            this.run({$$iterator: iter}, cb, ctx);
         } else if (effect[EffectRunner.CALL]) {
             const [method, ...args] = effect[EffectRunner.CALL];
             const handle = typeof method == 'function'? method : this.api[method];
             if (handle) {
                 const callResult  = handle.apply(ctx, args);
                 if (callResult !== undefined) {
-                    this.run(callResult, cb);
+                    this.run(callResult, cb, ctx);
                 }
             }
             else throw new Error(`EffectRunner: couldn't find method '${method}'`);
         } else if (typeof effect[symbolObservable] == 'function') {
             effect[symbolObservable]().subscribe({
                 next: (v) => {
-                    emitValue(v);
+                    this.run(v, cb, ctx)
                 },
                 complete: () => {
                     
                 }
             });
         } else if (typeof effect == 'function') {
-            this.run(effect(...params), cb);
+            this.run(effect(...params), cb, ctx);
         } else if (typeof effect.then == 'function') {
             effect.then(v => {
-                this.run(v, cb);
+                this.run(v, cb, ctx);
             });
 
         } else {
@@ -76,10 +76,10 @@ class EffectRunner {
         const items = this.waitingList;
 
         for (let i = items.length - 1; i >= 0; i--) {
-            const { pattern, resolve, mapper } = items[i];
+            const { pattern, resolve, mapper, path } = items[i];
             if (isMatch(pattern, action)) {
                 items.splice(i, 1);
-                this.run(mapper(action), resolve);
+                this.run(mapper(action), resolve, { path });
             }
         }
 

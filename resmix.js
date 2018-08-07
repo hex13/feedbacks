@@ -341,9 +341,9 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
         next({type: UPDATE_ROOT, payload: initialState});
 
         observables.forEach(({observable, path}) => {
-            observable.subscribe(value => {
-                update(path, value);
-            });
+            effectRunner.run(observable, (result) => {
+                update(result.path, result.value);
+            }, { path })
         })
 
         
@@ -372,9 +372,8 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
                 const effectPatch = effects;
                 function visitNode(node, path) {
                     if (node[EFFECT]) {
-                        const updateProperty = update.bind(null, path);
                         effectRunner.run(node[EFFECT], (result) => {
-                            updateProperty(result.value);
+                            update(result.path, result.value)
                         }, { path, loader, customEffectHandlers });
                     } else {
                         for (let k in node) {
@@ -427,9 +426,6 @@ function resolveInitialState(blueprint) {
 
         if (toObservable) {
             const observable = toObservable.call(desc);
-            // observable.subscribe(value => {
-            //     setValue(value);
-            // });
             observables.push({
                 path,
                 observable

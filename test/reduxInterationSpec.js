@@ -121,6 +121,22 @@ describe('[resmix]', () => {
     });
 
 
+    xit('should allow for declare observables in init', (done) => {
+        const someSymbol = Symbol();
+        const createBlueprint = () => ({
+            a: init(of(10))
+        });
+        const resmix = Resmix.Resmix(createBlueprint());
+        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+
+        setTimeout(() => {
+            assert.deepStrictEqual(store.getState(), {a: 10});
+            done();
+        }, 0);
+        
+    });
+
+
 
     it('should allow reducers for returning objects', () => {
         const someSymbol = Symbol();
@@ -820,7 +836,7 @@ describe('[resmix]', () => {
                         observer.next(100);
                         subscriptionCount++;
                         setTimeout(() => {
-                            observer.next(123);
+                            observer.next(of(123));
                         }, 200);
                     }),    
                 }
