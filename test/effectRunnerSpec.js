@@ -13,10 +13,9 @@ const deferChecking = (func) => {
     });
 };
 
-const Result1 = v => ({
+const Result = v => ({
     value: v
 });
-const Result = v => v;
 
 describe('EffectRunner', () => {
     let er, whatHappened;
@@ -143,9 +142,9 @@ describe('EffectRunner', () => {
 
             return deferChecking(() => {
                 assert.deepStrictEqual(result, [
-                    ['callback called', ['abc']],
-                    ['callback called', ['def']],
-                    ['callback called', ['ghi']],
+                    ['callback called', [Result('abc')]],
+                    ['callback called', [Result('def')]],
+                    ['callback called', [Result('ghi')]],
                 ]);    
             });
         });
@@ -182,10 +181,12 @@ describe('EffectRunner', () => {
         it('should subscribe to the Observable and invoke the callback for each value', () => {
             er.run(new Observable(observer => {
                 observer.next('whatever');
+                observer.next('woo');
             }), next);
 
             assert.deepStrictEqual(whatHappened, [
-                ['next', 'whatever'],
+                ['next', Result('whatever')],
+                ['next', Result('woo')],
             ]);    
         });
     });
@@ -222,7 +223,7 @@ describe('EffectRunner', () => {
             setTimeout(() => {
                 assert.deepStrictEqual(whatHappened, [
                     ['effect'],
-                    ['next', 'whatever'],
+                    ['next', Result('whatever')],
                 ]);
                 done();
             }, 0);
@@ -235,10 +236,10 @@ describe('EffectRunner', () => {
             er.run(() => null, next);
 
             assert.deepStrictEqual(whatHappened, [
-                ['next', 0],
-                ['next', ''],
-                ['next', false],
-                ['next', null],
+                ['next', Result(0)],
+                ['next', Result('')],
+                ['next', Result(false)],
+                ['next', Result(null)],
             ]);
         });
 
@@ -299,11 +300,11 @@ describe('EffectRunner', () => {
                     ['next', Result(123)],
                     ['next', Result(246)],
                     ['next', Result(456)],
-                    ['next', undefined],
-                    ['next', 'Inception'],
-                    ['next', 10],
-                    ['next', 20],
-                    ['next', 30],
+                    ['next', Result(undefined)],
+                    ['next', Result('Inception')],
+                    ['next', Result(10)],
+                    ['next', Result(20)],
+                    ['next', Result(30)],
                     // ['next', 31],
                 ]);    
             })

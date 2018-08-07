@@ -373,7 +373,9 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
                 function visitNode(node, path) {
                     if (node[EFFECT]) {
                         const updateProperty = update.bind(null, path);
-                        effectRunner.run(node[EFFECT], updateProperty, { path, loader, customEffectHandlers });
+                        effectRunner.run(node[EFFECT], (result) => {
+                            updateProperty(result.value);
+                        }, { path, loader, customEffectHandlers });
                     } else {
                         for (let k in node) {
                             visitNode(node[k], path.concat(k));

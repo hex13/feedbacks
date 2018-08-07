@@ -12,10 +12,13 @@ class EffectRunner {
     }
     run(effect, cb, ctx, params = []) {
         // console.log("run", effect, params)
+        const emitValue = (v) => {
+            cb({value: v});
+        };
         if (!cb) cb = nop;
         if (!effect) {
             // if (effect !== undefined)
-            cb(effect);
+            emitValue(effect);
         } else if (effect[EffectRunner.WAIT_FOR]) {
             const { pattern, mapper } = effect[EffectRunner.WAIT_FOR];
             this.waitingList.push({ pattern, resolve: cb, mapper });
@@ -23,15 +26,15 @@ class EffectRunner {
             this.run(effect[EffectRunner.EFFECT], cb, ctx, params);
         } else if (effect.$$iterator) {
             const iter = effect.$$iterator;
-            let lastResolvedValue;
+            let lastResult;
             const iterate = () => {
                 let iterResult = iter.next();
                 if (!iterResult.done) {
-                    this.run(iterResult.value, (resolvedValue) => {
-                        cb(resolvedValue);
-                        lastResolvedValue = resolvedValue;
+                    this.run(iterResult.value, (result) => {
+                        cb(result);
+                        lastResult = result;
                         iterate();
-                    }, null, [lastResolvedValue]);
+                    }, null, [lastResult && lastResult.value]);
                 }
             };
             iterate();
@@ -52,7 +55,7 @@ class EffectRunner {
         } else if (typeof effect[symbolObservable] == 'function') {
             effect[symbolObservable]().subscribe({
                 next: (v) => {
-                    cb(v);
+                    emitValue(v);
                 },
                 complete: () => {
                     
@@ -66,7 +69,7 @@ class EffectRunner {
             });
 
         } else {
-            cb(effect)
+            emitValue(effect)
         }
     }
     notify(action) {
