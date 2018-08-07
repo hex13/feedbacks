@@ -10,34 +10,38 @@ class EffectRunner {
         this.api = api;
         this.waitingList = [];
     }
-    // TODO make run recursive
     run(effect, cb, ctx, params = []) {
+        // console.log("run", effect, params)
         if (!cb) cb = nop;
         if (!effect) {
             // if (effect !== undefined)
-                cb(effect);
+            cb(effect);
         } else if (effect[EffectRunner.WAIT_FOR]) {
             const { pattern, mapper } = effect[EffectRunner.WAIT_FOR];
             this.waitingList.push({ pattern, resolve: cb, mapper });
         } else if (effect[EffectRunner.EFFECT]) {
             this.run(effect[EffectRunner.EFFECT], cb, ctx, params);
+        } else if (effect.$$iterator) {
+            const iter = effect.$$iterator;
+            let lastResolvedValue;
+            const iterate = () => {
+                let iterResult = iter.next();
+                if (!iterResult.done) {
+                    this.run(iterResult.value, (resolvedValue) => {
+                        cb(resolvedValue);
+                        lastResolvedValue = resolvedValue;
+                        iterate();
+                    }, null, [lastResolvedValue]);
+                }
+            };
+            iterate();
         } else if (effect[EffectRunner.FLOW]) {
             const flow = effect[EffectRunner.FLOW];
-            let last = Promise.resolve();
-            flow.forEach(item => {
-                last = last.then((value) => {
-                    return new Promise(resolve => {
-                        this.run(item, (v)=> {
-                            cb(v);
-                            resolve(v)
-                        }, null, [value]);
-                    });
-                });
-
-            })
+            const iter = flow[Symbol.iterator]();
+            this.run({$$iterator: iter}, cb);
         } else if (effect[EffectRunner.CALL]) {
             const [method, ...args] = effect[EffectRunner.CALL];
-            const handle = this.api[method];
+            const handle = typeof method == 'function'? method : this.api[method];
             if (handle) {
                 const callResult  = handle.apply(ctx, args);
                 if (callResult !== undefined) {
@@ -55,15 +59,7 @@ class EffectRunner {
                 }
             });
         } else if (typeof effect == 'function') {
-            const result = effect(...params);
-            if (result) {
-                if (typeof result.then == 'function') {
-                    result.then(cb);
-                } else {
-                    this.run(result, cb);
-                }
-            }
-
+            this.run(effect(...params), cb);
         } else if (typeof effect.then == 'function') {
             effect.then(v => {
                 this.run(v, cb);

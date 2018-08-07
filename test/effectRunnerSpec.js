@@ -13,6 +13,10 @@ const deferChecking = (func) => {
     });
 };
 
+const Result1 = v => ({
+    value: v
+});
+const Result = v => v;
 
 describe('EffectRunner', () => {
     let er, whatHappened;
@@ -93,7 +97,7 @@ describe('EffectRunner', () => {
 
             return deferChecking(() => {
                 assert.deepStrictEqual(result, [
-                    ['callback called', ['Squirrel']],
+                    ['callback called', [Result('Squirrel')]],
                 ]);
             });
         });
@@ -111,7 +115,7 @@ describe('EffectRunner', () => {
 
             return deferChecking(() => {
                 assert.deepStrictEqual(result, [
-                    ['callback called', ['Chipmunk']],
+                    ['callback called', [Result('Chipmunk')]],
                 ]);    
             });
         });
@@ -156,7 +160,7 @@ describe('EffectRunner', () => {
 
             return deferChecking(() => {
                 assert.deepStrictEqual(whatHappened, [
-                    ['next', 'some scalar'],
+                    ['next', Result('some scalar')],
                 ]);    
             });
         });
@@ -168,7 +172,7 @@ describe('EffectRunner', () => {
 
             return deferChecking(() => {
                 assert.deepStrictEqual(whatHappened, [
-                    ['next', 42],
+                    ['next', Result(42)],
                 ]);    
             });
         });
@@ -192,7 +196,7 @@ describe('EffectRunner', () => {
                 [EffectRunner.EFFECT]: 'efekt'
             }, next); 
             assert.deepStrictEqual(whatHappened, [
-                ['next', 'efekt'],
+                ['next', Result('efekt')],
             ]);
         });
     });
@@ -205,7 +209,7 @@ describe('EffectRunner', () => {
             }, next); 
             assert.deepStrictEqual(whatHappened, [
                 ['effect'],
-                ['next', 'whatever'],
+                ['next', Result('whatever')],
             ]);
         });
 
@@ -224,13 +228,39 @@ describe('EffectRunner', () => {
             }, 0);
         });
 
-        it('should run the functions recursively until result', () => {
-            const result = er.run(() => () => () => () => 98765, next);
-            
+        it('should resolve functions which return falsy values (without undefined)', () => {
+            er.run(() => 0, next);
+            er.run(() => '', next);
+            er.run(() => false, next);
+            er.run(() => null, next);
+
             assert.deepStrictEqual(whatHappened, [
-                ['next', 98765],
+                ['next', 0],
+                ['next', ''],
+                ['next', false],
+                ['next', null],
             ]);
         });
+
+        it('should run the functions recursively until result', () => {
+            const result = er.run(() => () => () => () => 98765, next);
+
+            assert.deepStrictEqual(whatHappened, [
+                ['next', Result(98765)],
+            ]);
+        });
+
+        it('should run the functions recursively until result (with promises)', (done) => {
+            const result = er.run(() => () => Promise.resolve(() => Promise.resolve(98765)), next);
+
+            setTimeout(() => {
+                assert.deepStrictEqual(whatHappened, [
+                    ['next', Result(98765)],
+                ]);
+                done();
+            }, 0);
+        });
+
 
     });
 
@@ -259,16 +289,16 @@ describe('EffectRunner', () => {
             return deferChecking(() => {
                 console.log("\n\n\n\n\n", JSON.stringify(whatHappened,0,2));
                 assert.deepEqual(whatHappened, [
-                    ['next', 'Hey'],
-                    ['next', 'You!'],
-                    ['next', {name: 'Pink Floyd'}],
-                    ['next', 1],
-                    ['next', 0],
-                    ['next', ''],
-                    ['next', null],
-                    ['next', 123],
-                    ['next', 246],
-                    ['next', 456],
+                    ['next', Result('Hey')],
+                    ['next', Result('You!')],
+                    ['next', Result({name: 'Pink Floyd'})],
+                    ['next', Result(1)],
+                    ['next', Result(0)],
+                    ['next', Result('')],
+                    ['next', Result(null)],
+                    ['next', Result(123)],
+                    ['next', Result(246)],
+                    ['next', Result(456)],
                     ['next', undefined],
                     ['next', 'Inception'],
                     ['next', 10],
