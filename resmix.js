@@ -178,7 +178,7 @@ const reducerFor = () => {
         const checkMatchAndHandleAction = (parent, k, cursor) => {
             const field = parent[k];
 
-            if (field instanceof Recipe) {
+            if (field instanceof Formula) {
                 field.doMatch(action, (reducer) => {
 
                     const reducerResult = reducer(cursor.get(), action);
@@ -223,14 +223,14 @@ const reducerFor = () => {
     };
 };
 
-class Recipe {
+class Formula {
     constructor(recipe) {
         if (recipe) {
             Object.assign(this, recipe);
         }
     }
     init(value) {
-        const recipe = new Recipe(this);
+        const recipe = new Formula(this);
         recipe.initialState = value;
         recipe.hasInitialState = true;
         return recipe;
@@ -240,7 +240,7 @@ class Recipe {
         return this.match(...args);
     }
     match(...args) {
-        const recipe = new Recipe(this);
+        const recipe = new Formula(this);
         recipe.hasMatchPairs = true;
 
         if (args.length == 2) {
@@ -268,7 +268,7 @@ class Recipe {
         } else console.log("####^", this);
 
         function search(node) {
-            if (node instanceof Recipe) {
+            if (node instanceof Formula) {
                 node.doMatch(action, onMatch);
                 return;
             }
@@ -281,7 +281,7 @@ class Recipe {
         }
     }
     itemsLike(itemBlueprint, mapActionToKey) {
-        const recipe = new Recipe(this);
+        const recipe = new Formula(this);
         recipe.itemBlueprint = itemBlueprint;
         recipe.mapActionToKey = mapActionToKey;
         return recipe;
@@ -289,16 +289,16 @@ class Recipe {
 };
 
 exports.match = (...args) => {
-    return new Recipe().match(...args);
+    return new Formula().match(...args);
 };
 
 exports.on = (...args) => {
-    return new Recipe().match(...args);
+    return new Formula().match(...args);
 };
 
 
 exports.init = (value) => {
-    return new Recipe().init(value);
+    return new Formula().init(value);
 };
 
 
@@ -417,7 +417,7 @@ function resolveInitialState(blueprint) {
             setValue(desc);
             return;
         }
-        if (desc instanceof Recipe) {
+        if (desc instanceof Formula) {
             if (desc.hasInitialState)
                 setValue(resolveInitialState(desc.initialState).initialState);
             return;
