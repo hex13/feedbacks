@@ -61,6 +61,15 @@ describe('[resmix]', () => {
         assert.deepStrictEqual(store.getState(), {a: {}})
 
     });
+
+    it('should allow for create array as value of property', () => {
+        const store = prepareStore({
+            a: []
+        });
+        assert.deepStrictEqual(store.getState(), {a: [] })
+
+    });
+
     // it('should allow for declare Recipe with primitive as initial state', () => {
     //     const someSymbol = Symbol();
     //     const resmix = Resmix.Resmix(Resmix.init(10));
@@ -170,6 +179,29 @@ describe('[resmix]', () => {
             }
         });
 
+    });
+
+    it('should allow reducers for returning arrays', () => {
+        const arr = [10, 20, 30];
+        const store = prepareStore({
+            a: init(arr)
+                .on('foo', state => state.concat(40))
+        });
+        assert.deepStrictEqual(store.getState(), {a: [10, 20, 30] })
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), {a: [10, 20, 30, 40] })
+    });
+
+    xit('should allow arrays to contain formulas', () => {
+        const arr = [10, 20, 30];
+        const store = prepareStore({
+            a: [10, 20, init(30)],
+            b: [6, 5, {foo: init(4)}]
+        });
+        assert.deepStrictEqual(store.getState(), {
+            a: [10, 20, 30],
+            b: [6, 5, {foo: 4}] 
+        })
     });
 
     it('should allow for declare deep matchings', (done) => {

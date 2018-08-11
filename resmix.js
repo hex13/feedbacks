@@ -369,7 +369,10 @@ function resolveInitialState(blueprint) {
             return;
         }
         if (desc && typeof desc == 'object') {
-
+            if (Array.isArray(desc)) {
+                setValue(desc);
+                return
+            }
             let computedCurrentObjectValue = {};
             Object.keys(desc).forEach(function goDeeper(k) {
                 visitProperty(desc[k], (v) => {
