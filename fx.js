@@ -35,6 +35,15 @@ const waitFor = (actionPattern, mapper) => {
     return createEffect({[EffectRunner.WAIT_FOR]: { pattern: actionPattern, mapper }});
 };
 
+const addItem = (item) => {
+    return createEffect({[EffectRunner.CALL]: ['addItem', item]});
+};
+
+const removeItem = (item) => {
+    return createEffect({[EffectRunner.CALL]: ['removeItem', item]});
+};
+
+
 module.exports = {
     createEffect, 
     EFFECT,
@@ -44,6 +53,8 @@ module.exports = {
     effect,
     flow,
     waitFor,
+    addItem,
+    removeItem,
 };
 
 

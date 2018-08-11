@@ -61,6 +61,14 @@ const effectHandlers = {
                 return run(dispatch, getState, effect);
             }
         }
+    },
+    addItem(dispatch, getState, item) {
+        const state = get(getState(), this.path);
+        return state.concat(item);
+    },
+    removeItem(dispatch, getState, index) {
+        const state = get(getState(), this.path);
+        return state.slice(0, index).concat(state.slice(index + 1));
     }
 };
 

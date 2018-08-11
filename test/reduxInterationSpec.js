@@ -831,6 +831,8 @@ describe('[resmix]', () => {
     
     });
 
+
+
     describe('[waitFor]', () => {
         it('should wait for action and then resolved using mapper', () => {
             const store = withRedux(Redux).createEngine({
@@ -1070,4 +1072,52 @@ describe('[namespaced actions]', () => {
         assert.deepStrictEqual(store.getState(), {foo: 1, bar: 10, deep: {deeper:{baz: 200, qux: 1000}} });
 
     });
+});
+
+describe('[collection effects]', () => {
+    it('should add item to array', () => {
+        const store = prepareStore({
+            todos: init([])
+                .on('addTodo', (_, action) => {
+                    return fx.addItem({text: action.payload});
+                })
+        });
+        assert.deepStrictEqual(store.getState(), {todos: []});
+        store.dispatch({type: 'addTodo', payload: 'Hello world!'});
+        store.dispatch({type: 'addTodo', payload: 'Wlazł kotek na płotek.'});
+        assert.deepStrictEqual(store.getState(), {
+            todos: [
+               {text: 'Hello world!'},
+               {text: 'Wlazł kotek na płotek.'},
+            ]
+        });
+    });
+
+    it('should remove item from array', () => {
+        const createInitialTodos = () => ([
+            {text: 'zero'},
+            {text: 'one'},
+            {text: 'two'},
+            {text: 'three'},
+            {text: 'four'},
+        ]);
+
+        const store = prepareStore({
+            todos: init(createInitialTodos())
+                .on('removeTodo', (_, action) => {
+                    return fx.removeItem(action.payload);
+                })
+        });
+        assert.deepStrictEqual(store.getState(), {todos: createInitialTodos()});
+        store.dispatch({type: 'removeTodo', payload: 1});
+        assert.deepStrictEqual(store.getState(), {
+            todos: [
+                {text: 'zero'},
+                {text: 'two'},
+                {text: 'three'},
+                {text: 'four'},    
+            ]
+        });
+    });
+    
 });
