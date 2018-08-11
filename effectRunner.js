@@ -13,6 +13,8 @@ const isPlainObject = v => isObject(v)
     && typeof v.then != 'function'
     && !(v instanceof Formula);
 
+const isGenerator = v => v && typeof v.next == 'function';
+
 class EffectRunner {
     constructor(api) {
         this.api = api;
@@ -36,6 +38,19 @@ class EffectRunner {
             this.waitingList.push({ pattern, resolve: cb, mapper, path: ctx.path });
         } else if (effect[EffectRunner.EFFECT]) {
             this.run(effect[EffectRunner.EFFECT], cb, ctx, params);
+        } else if (isGenerator(effect)) {
+            let lastResult;
+            const iterate = () => {
+                let iterResult = effect.next(lastResult && lastResult.value);
+                if (!iterResult.done) {
+                    this.run(iterResult.value, (result) => {
+                        lastResult = result;
+                       iterate();
+                    }, ctx, [lastResult && lastResult.value]);
+                } else
+                    emitValue(iterResult.value);
+            };
+            iterate();
         } else if (effect.$$iterator) {
             const iter = effect.$$iterator;
             let lastResult;

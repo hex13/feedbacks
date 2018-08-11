@@ -354,6 +354,28 @@ describe('EffectRunner', () => {
         });
     });
 
+
+    describe('[generators as effects]', () => {
+
+        it( '1. should resolve yielded values and pass them back to the generator 2. should emit returned value of generator', () => {
+            er.run(function* () {
+                const a = yield () => 'hello';
+                whatHappened.push(['received', a]);
+                const b = yield () => Promise.resolve('world');
+                whatHappened.push(['received', b]);
+                return a + ' ' + b;
+            }, next);
+
+            return deferChecking(() => {
+                assert.deepStrictEqual(whatHappened, [
+                    ['received', 'hello'],
+                    ['received', 'world'],
+                    ['next', Result('hello world')],
+                ]);    
+            });
+        });
+    });
+
     describe('[effect tagged as EffectRunner.EFFECT]', () => {
         it('should detect effect', () => {
             const result = er.run({
