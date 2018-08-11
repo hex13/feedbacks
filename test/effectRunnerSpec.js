@@ -2,6 +2,7 @@
 const assert = require('assert');
 const EffectRunner = require('../effectRunner');
 const { of, Observable } = require('rxjs');
+const Formula = require('../formula');
 const _it = it;
 
 const deferChecking = (func) => {
@@ -164,6 +165,143 @@ describe('EffectRunner', () => {
                 ]);    
             });
         });
+
+        it('should resolve an object', () => {
+            er.run({a: 3, b: {c: 4}}, next);
+
+            return deferChecking(() => {
+                assert.deepStrictEqual(whatHappened, [
+                    ['next', Result({a: 3, b: {c: 4}})],
+                ]);    
+            });
+        });
+    });
+
+    describe('[returning result]', () => {
+        it('should return a result when a primitive is passed', () => {
+            assert.deepStrictEqual(er.run(0, next), Result(0));
+            assert.deepStrictEqual(er.run(3, next), Result(3));
+            assert.deepStrictEqual(er.run('', next), Result(''));
+            assert.deepStrictEqual(er.run('kotek', next), Result('kotek'));
+            assert.deepStrictEqual(er.run(false, next), Result(false));
+            assert.deepStrictEqual(er.run(true, next), Result(true));
+        });    
+       
+        it('should return a result when an object is passed', () => {
+            const Obj = () => ({a: 3, b: {c: 4}});
+            assert.deepStrictEqual(er.run(Obj(), next), Result(Obj()));
+        });
+        xit('should return a result when synchronous effect is passed', () => {
+            assert.deepStrictEqual(er.run(() => 32, next), Result(32));
+        });
+        
+        it('should not return a result when asynchronous effect is passed', () => {
+            assert.deepStrictEqual(er.run(Promise.resolve(1), next), undefined);
+        });
+        
+        it('should return a result when a primitive as a recursive effect is passed', () => {
+            const Recursive = (v) => ({
+                [EffectRunner.RECURSIVE]: v
+            })
+            assert.deepStrictEqual(er.run(Recursive(0), next), Result(0));
+            assert.deepStrictEqual(er.run(Recursive(3), next), Result(3));
+            assert.deepStrictEqual(er.run(Recursive(''), next), Result(''));
+            assert.deepStrictEqual(er.run(Recursive('kotek'), next), Result('kotek'));
+            assert.deepStrictEqual(er.run(Recursive(false), next), Result(false));
+            assert.deepStrictEqual(er.run(Recursive(true), next), Result(true));
+        });
+
+        it('should return a result when a fully-resolved flat object as a recursive effect is passed', () => {
+            const Recursive = (v) => ({
+                [EffectRunner.RECURSIVE]: v
+            })
+            const Obj = () => ({
+                a: 123
+            });
+            assert.deepStrictEqual(er.run(Recursive(Obj()), next), Result(Obj()));
+        });
+        
+
+        it('should return a result when a fully-resolved nested object as a recursive effect is passed', () => {
+            const Recursive = (v) => ({
+                [EffectRunner.RECURSIVE]: v
+            })
+            const Obj = () => ({
+                a: {
+                    b: 19,
+                    c: {
+                        d: 10
+                    }
+                }
+            });
+            assert.deepStrictEqual(er.run(Recursive(Obj()), next), Result(Obj()));
+        });
+
+        it('should return a partial result when a partially-resolved nested object as a recursive effect is passed', () => {
+            const Recursive = (v) => ({
+                [EffectRunner.RECURSIVE]: v
+            })
+
+            const Obj = () => ({
+                a: {
+                    b: undefined,
+                    c: {
+                        d: undefined
+                    }
+                }
+            });
+            const obj = Obj();
+            obj.a.b = Promise.resolve(10);
+            obj.a.c.d = Promise.resolve(11);
+            assert.deepStrictEqual(er.run(Recursive(obj), next), Result(Obj()));
+        });
+
+    });
+    
+
+    describe('[formulas as effects]', () => {
+        it('should resolve initial state of formula (scalars)', () => {
+            er.run(new Formula().init(124), next);
+            er.run(new Formula().init('abc'), next);
+
+            assert.deepStrictEqual(whatHappened, [
+                ['next', Result(124)],
+                ['next', Result('abc')],
+            ]);    
+        });
+
+        it('should resolve initial state of formula (objects without formulas inside)', () => {
+            const Obj = () => ({
+                a: 1,
+                b: {
+                    c: 3
+                }
+            });
+            er.run(new Formula().init(Obj()), next);
+
+            assert.deepStrictEqual(whatHappened, [
+                ['next', Result(Obj())],
+            ]);    
+        });
+
+        it('should resolve initial state of formula (objects with formulas inside)', () => {
+            er.run(new Formula().init({
+                a: 1,
+                b: {
+                    c: new Formula().init(3)
+                }
+            }), next);
+
+            assert.deepStrictEqual(whatHappened, [
+                ['next', Result({
+                    a: 1,
+                    b: {
+                        c: 3
+                    }
+                })],
+            ]);    
+        });
+
     });
  
     describe('[promises as effects]', () => {

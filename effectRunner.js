@@ -2,8 +2,16 @@
 
 const { isMatch } = require('./matching');
 const symbolObservable = require('symbol-observable').default;
+const Formula = require('./formula');
+const { set } = require('transmutable/get-set');
 
 const nop = () => {};
+
+const isObject = v => v && typeof v == 'object';
+
+const isPlainObject = v => isObject(v) 
+    && typeof v.then != 'function'
+    && !(v instanceof Formula);
 
 class EffectRunner {
     constructor(api) {
@@ -12,8 +20,12 @@ class EffectRunner {
     }
     run(effect, cb, ctx = {path: []}, params = []) {
         // console.log("run", effect, params)
+        let result;
         const emitValue = (v) => {
-            cb({value: v, path: ctx.path});
+
+            result = {value: v, path: ctx.path};
+            cb(result);
+            return result;
         };
         if (!cb) cb = nop;
         if (!effect) {
@@ -67,10 +79,37 @@ class EffectRunner {
             effect.then(v => {
                 this.run(v, cb, ctx);
             });
+        } else if (typeof effect == 'object' && EffectRunner.RECURSIVE in effect) {
+            const obj = effect[EffectRunner.RECURSIVE];
+            
+    
+            if (!isObject(obj))
+                return this.run(obj, cb, ctx);  
 
+                const resultTree = {};
+
+            const visit = (effectNode, path) => {
+                if (isPlainObject(effectNode)) {
+                    for (let k in effectNode) {
+                        visit(effectNode[k], path.concat(k));                        
+                    }
+                } else {
+                    const resolvingResult =  this.run(effectNode);
+                    set(resultTree, path, resolvingResult && resolvingResult.value);
+                }
+            };
+            visit(obj, []);
+
+            return emitValue(resultTree);
+
+        } else if (effect instanceof Formula) {
+
+            const result = this.run({[EffectRunner.RECURSIVE]: effect.initialState}, cb);
+            return result;            
         } else {
             emitValue(effect)
         }
+        return result;
     }
     notify(action) {
         const items = this.waitingList;
@@ -90,5 +129,7 @@ EffectRunner.CALL = Symbol('EffectRunner/CALL');
 EffectRunner.WAIT_FOR = Symbol('EffectRunner/WAIT_FOR');
 EffectRunner.FLOW = Symbol('EffectRunner/FLOW');
 EffectRunner.EFFECT = Symbol('effect');
+EffectRunner.RECURSIVE = Symbol('EffectRunner/RECURSIVE');
+
 
 module.exports = EffectRunner;
