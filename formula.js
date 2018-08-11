@@ -44,7 +44,7 @@ class Formula {
                 onMatch(reducer);
                 matched = true;
             }
-        } else console.log("####^", this);
+        }
 
         function search(node) {
             if (node instanceof Formula) {
