@@ -74,7 +74,7 @@ class EffectRunner {
                 }
             });
         } else if (typeof effect == 'function') {
-            this.run(effect(...params), cb, ctx);
+            return this.run(effect(...params), cb, ctx);
         } else if (typeof effect.then == 'function') {
             effect.then(v => {
                 this.run(v, cb, ctx);
@@ -89,12 +89,13 @@ class EffectRunner {
                 const resultTree = {};
 
             const visit = (effectNode, path) => {
-                if (isPlainObject(effectNode)) {
-                    for (let k in effectNode) {
-                        visit(effectNode[k], path.concat(k));                        
+                const resolvingResult =  this.run(effectNode);
+                const value = resolvingResult && resolvingResult.value;
+                if (isPlainObject(value)) {
+                    for (let k in value) {
+                        visit(value[k], path.concat(k));
                     }
                 } else {
-                    const resolvingResult =  this.run(effectNode);
                     set(resultTree, path, resolvingResult && resolvingResult.value);
                 }
             };

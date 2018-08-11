@@ -191,7 +191,7 @@ describe('EffectRunner', () => {
             const Obj = () => ({a: 3, b: {c: 4}});
             assert.deepStrictEqual(er.run(Obj(), next), Result(Obj()));
         });
-        xit('should return a result when synchronous effect is passed', () => {
+        it('should return a result when a synchronous function as effect is passed', () => {
             assert.deepStrictEqual(er.run(() => 32, next), Result(32));
         });
         
@@ -219,6 +219,23 @@ describe('EffectRunner', () => {
                 a: 123
             });
             assert.deepStrictEqual(er.run(Recursive(Obj()), next), Result(Obj()));
+        });
+
+        it('should return a result when a nested object as a recursive effect (but resolvable in sync) is passed', () => {
+
+            const Recursive = (v) => ({
+                [EffectRunner.RECURSIVE]: v
+            })
+            const Obj = () => ({
+                a: () => ({
+                    b: () => 123
+                })
+            });
+            assert.deepStrictEqual(er.run(Recursive(Obj()), next), Result({
+                a: {
+                    b: 123
+                }
+            }));
         });
         
 
