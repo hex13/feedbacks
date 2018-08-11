@@ -23,6 +23,7 @@ function isMatch(pattern, object) {
     return equal;
 };
 
+
 module.exports = {
-    isMatch
-}
+    isMatch,
+};
