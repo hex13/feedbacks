@@ -221,6 +221,13 @@ describe('EffectRunner', () => {
             assert.deepStrictEqual(er.run(Recursive(Obj()), next), Result(Obj()));
         });
 
+        // description of this `it` is weird.
+        // but it just tests if you can:
+        // 1. pass a nested object which contains some effects (but only effects that could be resolved in synchronous way, like plain functions)
+        // 2. have completely resolved object
+        // This demands rencursiveness on the implementation side. 
+        // look on effectRunner.js:92 in commit 631a9fb6 
+
         it('should return a result when a nested object as a recursive effect (but resolvable in sync) is passed', () => {
 
             const Recursive = (v) => ({
