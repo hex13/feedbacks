@@ -1,5 +1,5 @@
 import React from 'react';
-import Navigation from '../containers/Navigation';
+import Navigation from '../Navigation';
 
 
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];

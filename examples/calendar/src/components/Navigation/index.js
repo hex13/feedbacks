@@ -1,5 +1,5 @@
-import Navigation from '../views/Navigation';
-import { getLabel, connect } from './common';
+import Navigation from './Navigation';
+import { getLabel, connect } from '../common';
 import { forward, backward} from '../../actions';
 
 export default connect((state, ownProps) => {

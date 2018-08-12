@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { connect } from 'react-redux';
-import Calendar from '../views/Calendar';
+import Calendar from './Calendar';
 
 export default connect(({ year, month }) => {
     return { year, month };

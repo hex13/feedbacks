@@ -1,9 +1,9 @@
 import React from 'react';
 
-import Calendar from './Calendar';
-import Detail from './Detail';
+import Calendar from '../Calendar';
+import Detail from '../Detail';
 
-import { connect } from './common';
+import { connect } from '../common';
 import { changeTheme } from '../../actions';
 import { changeThemeOk } from '../../actions';
 

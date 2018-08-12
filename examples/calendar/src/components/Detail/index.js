@@ -1,6 +1,6 @@
-import { connect } from './common';
+import { connect } from '../common';
 
-import Detail from '../views/Detail';
+import Detail from './Detail';
 export default connect(state => state.detail, dispatch => {
     return {
         actions: {
