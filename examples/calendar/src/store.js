@@ -31,17 +31,19 @@ const blueprint = {
     detail: {
         date: init(currentDate)
             .on(showDetail(), (_, { payload }) => payload),
-        note: init({text: '....'})
+        notes: init([{text: '....'}])
             .on(showDetail(), (_, { payload }) => fx.effect(doLoad(payload)))
     },
-        
-    notesByDay: init({ a: { text: 'something' } })
+
+    notesByDay: init({})
         .on(addNote(), (state, { payload }) => {
+            const key = getKeyByDate(payload);
+            const notes = state[key] || [];
             return {
                 ...state,
-                [getKeyByDate(payload)]: {
+                [key]: notes.concat({
                     text: 'new item'
-                }
+                })
             }
         }),
     themeDialog: init({visible: false})
@@ -70,11 +72,11 @@ export default function configureStore() {
     
     const store = withRedux(Redux).createEngine(blueprint)
     .onEffect(doLoad(), (dispatch, getState, {payload:date}) => {
-        const note = getState().notesByDay[getKeyByDate(date)] || {text: '???'};
+        const notes = getState().notesByDay[getKeyByDate(date)] || [{text: '???'}];
         
         return fx.flow([
-            {text: '...loading...'},
-            delay(500, note),
+            [{text: '...loading...'}],
+            delay(300, notes),
         ]);
     })
     .getStore();

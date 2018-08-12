@@ -52,8 +52,9 @@ function App({ notesByDay, waiting, text, theme, dispatch }) {
         { <div>
             {
                 Object.keys(notesByDay).map(k => {
+                    console.log(notesByDay[k])
                     return <div>
-                        { k } : { notesByDay[k].text }
+                        { k } : { (notesByDay[k] || []).map(n => n.text).join('; ') }
                     </div>
                 })
             }

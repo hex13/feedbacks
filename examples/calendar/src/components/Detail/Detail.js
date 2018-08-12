@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Detail({ note, date: { day, month, year }, actions, notesByDay }) {
+export default function Detail({ notes, date: { day, month, year }, actions, notesByDay }) {
     //const note = notesByDay[year + '-' + month + '-' + day] || {text: '???'};
     //const note = {text: '???'}
     return <div>
@@ -9,7 +9,7 @@ export default function Detail({ note, date: { day, month, year }, actions, note
             add
         </button>
         {
-            note.text
+            notes.map(note => <li>{note.text}</li>)
         }
     </div>
 };
