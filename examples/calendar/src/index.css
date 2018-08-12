@@ -1,5 +1,57 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+}
+
+body, button, fieldset {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 16px;
+}
+
+.theme-dark label:hover, .theme-dark input:focus {
+  background: #0000ff;
+}
+
+.theme-light label:hover, .theme-light input:focus {
+  background: #00ff00;
+}
+
+.theme-dark, .theme-dark button, .theme-dark fieldset {
+  background: black;
+  color: white;
+  box-shadow: 1px 1px 3px white;
+  transition: 0.5s all;
+}
+
+.theme-light, .theme-light button, .theme-light fieldset {
+  background: white;
+  color: black;
+  box-shadow: 1px 1px 3px black;
+  transition: 0.5s all;
+}
+
+
+
+button {
+  border-radius: 4px;
+  margin: 2px;
+}
+
+.theme-light button {
+  border: 1px solid black;
+}
+
+.theme-light button:hover, .theme-light button:focus {
+  background: #444;
+  color: white;
+}
+
+
+.theme-dark button {
+  border: 1px solid white;
+}
+
+.theme-dark button:hover, .theme-dark button:focus {
+  background: #bbb;
+  color: black;
 }

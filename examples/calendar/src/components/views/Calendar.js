@@ -4,7 +4,7 @@ import Navigation from '../containers/Navigation';
 
 const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 export default function Calendar({ year, month, actions }) {
-    
+
     const date = new Date(year, month - 1, 5);
     const name = monthNames[date.getMonth()];
     const days = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -14,7 +14,7 @@ export default function Calendar({ year, month, actions }) {
     
     let week = [];
     const offset = ((new Date(date.getFullYear(), date.getMonth(), 1).getDay() - 1) + 7) % 7;
-    console.log({days, offset});
+
     const start = 1 - offset;
     const getDayNumber = (i) => {
         if (i >= 1 && i <= days) {
@@ -24,10 +24,10 @@ export default function Calendar({ year, month, actions }) {
     };
     for (let i = start; i <= days + (7 - days % 7); i++) {
         const day = getDayNumber(i);
-        week.push(<Calendar.Day day={day} onClick={() => actions.showDetail({ day, month, year}) }/>);
+        week.push(<Calendar.Day key={i} day={day} onClick={() => actions.showDetail({ day, month, year}) }/>);
 
         if ((i + offset) % 7 == 0) {
-            els.push(<div>{week}</div>);
+            els.push(<div key={i}>{week}</div>);
             week = [];
         } 
     }
@@ -45,7 +45,7 @@ export default function Calendar({ year, month, actions }) {
 
 Calendar.Day = ({ day, onClick }) => {
     return <button 
-        style={{display:'inline-block', background: 'none', border: 'none', width: 40, height: 40,margin: 10}}
+        style={{display:'inline-block', border: 'none', width: 40, height: 40,margin: 10}}
         onClick={onClick}
     >
         { day }

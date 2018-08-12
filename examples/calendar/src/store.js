@@ -1,7 +1,7 @@
 import * as Redux from 'redux';
 import { withRedux, init, defineEffect } from 'feedbacks';
 import * as fx from 'feedbacks/fx';
-import { forward, backward, showDetail, addNote } from './actions';
+import { forward, backward, showDetail, addNote, changeTheme, changeThemeOk } from './actions';
 import * as Rx from 'rxjs';
 import { map, take } from 'rxjs/operators';
 
@@ -14,6 +14,8 @@ const getKeyByDate = (params) => {
 
 const doAsk = defineEffect('ask');
 const doLoad = defineEffect('load');
+const themes = ['theme-light', 'theme-dark'];
+
 const blueprint = {
     month: init(currentDate.month)
         .on(forward({ target: 'month' }), v => v + 1)
@@ -42,6 +44,18 @@ const blueprint = {
                 }
             }
         }),
+    themeDialog: init({visible: false})
+        .on(changeTheme(), () => {
+            return fx.flow([
+                {visible: true},
+                fx.waitFor(changeThemeOk(), x => x),
+                {visible: false},
+            ]);
+        }),
+    theme: init({idx: 0, name: themes[0]})
+        .on(changeThemeOk(), (state, action) => {
+            return {idx:0, name: action.payload};
+        })
 }; 
 
 const delay = (t,v) => {
@@ -63,10 +77,7 @@ export default function configureStore() {
             delay(500, note),
         ]);
     })
-        // .onAction(doAsk(), () => {
-        //     alert("ask!");
-        // })
     .getStore();
-
+    store.dispatch({type: 'ask'});
     return store;
 }
