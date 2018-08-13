@@ -48,7 +48,7 @@ class EffectRunner {
                        iterate();
                     }, ctx, [lastResult && lastResult.value]);
                 } else
-                    emitValue(iterResult.value);
+                    this.run(iterResult.value, cb, ctx)
             };
             iterate();
         } else if (effect.$$iterator) {

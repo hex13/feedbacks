@@ -363,7 +363,7 @@ describe('EffectRunner', () => {
                 whatHappened.push(['received', a]);
                 const b = yield () => Promise.resolve('world');
                 whatHappened.push(['received', b]);
-                return a + ' ' + b;
+                return Promise.resolve(a + ' ' + b); // wrap in promise to check if returned value is also resolved to scalar
             }, next);
 
             return deferChecking(() => {
