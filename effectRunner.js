@@ -49,14 +49,12 @@ class EffectRunner {
             iterate();
         } else if (effect.$$iterator) {
             const iter = effect.$$iterator;
-            let lastResult;
-            const iterate = () => {
+            const iterate = (lastResult) => {
                 let iterResult = iter.next();
                 if (!iterResult.done) {
                     this.run(iterResult.value, (result) => {
                         cb(result);
-                        lastResult = result;
-                        iterate();
+                        iterate(result);
                     }, ctx, [lastResult && lastResult.value]);
                 }
             };
