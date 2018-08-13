@@ -39,14 +39,10 @@ class EffectRunner {
         } else if (effect[EffectRunner.EFFECT]) {
             this.run(effect[EffectRunner.EFFECT], cb, ctx, params);
         } else if (isGenerator(effect)) {
-            let lastResult;
-            const iterate = () => {
+            const iterate = (lastResult) => {
                 let iterResult = effect.next(lastResult && lastResult.value);
                 if (!iterResult.done) {
-                    this.run(iterResult.value, (result) => {
-                        lastResult = result;
-                       iterate();
-                    }, ctx, [lastResult && lastResult.value]);
+                    this.run(iterResult.value, iterate, ctx, [lastResult && lastResult.value]);
                 } else
                     this.run(iterResult.value, cb, ctx)
             };
