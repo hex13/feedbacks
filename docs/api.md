@@ -58,7 +58,7 @@ store.dispatch(doSomething(effectPayload));
 
 function reducer() {
     // as well as returning them from reducers
-    return doSomething(effectPayload);
+    return fx.effect(doSomething(effectPayload));
 }
 
 // or intercept them: 
