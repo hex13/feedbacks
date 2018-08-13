@@ -29,9 +29,16 @@ const prepareEngine = (blueprint) => {
 global.assert = assert;
 
 describe('[creating store (smoke test)]', () => {
-    it('should be possible to create store', () => {
-        const store = withRedux(Redux).createEngine().getStore();
+    let store;
+    beforeEach(() => {
+        store = withRedux(Redux).createEngine().getStore();
+    });
+
+    it('should be possible to call getState', () => {
         store.getState();
+    });
+
+    it('should be possible to call dispatch', () => {
         store.dispatch({type: 'not very important'});
     });
 });
