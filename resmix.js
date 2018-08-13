@@ -19,7 +19,8 @@ const Formula = require('./formula');
 const fx = require('./fx');
 const { createEffect, EFFECT, spawn } = fx;
 const nop = ()=>{};
-
+// const { Graph } = require('transmutable/src/normalization/graph');
+// console.log(Graph);
 const raw = value => ({
     [MUTATION]: {
         value
@@ -79,7 +80,7 @@ const effectHandlers = {
 
 
 class State {
-    constructor(state, trees) {
+    constructor(state, normalized) {
         this._state = state;
         this._trees = {updates:{}, effects:{}};
     }
@@ -167,9 +168,8 @@ const reducerFor = () => {
         if (state && state[SMART_STATE]) {
             smartState = state[SMART_STATE].clean();
         } else {
-            smartState = new State(state);
+            smartState = new State(state, false);
         }
-        
         let isSpecialAction = true;
         if (action.type == UPDATE_BLUEPRINT) {
             const finalPath = action.payload.path? [BLUEPRINT].concat(action.payload.path) : [BLUEPRINT];
