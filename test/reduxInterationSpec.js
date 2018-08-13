@@ -1121,3 +1121,17 @@ describe('[collection effects]', () => {
     });
     
 });
+
+describe('[random effects]', () => {
+    it('fx.random should generate a number )', () => {
+        const store = prepareStore({
+            a: init('foo')
+                .on('foo', () => {
+                    return fx.random();
+                })
+        });
+        assert.deepStrictEqual(store.getState(), {a: 'foo'});
+        store.dispatch({type: 'foo'});
+        assert.strictEqual(typeof store.getState().a, 'number');
+    });
+});

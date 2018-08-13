@@ -43,6 +43,9 @@ const removeItem = (item) => {
     return createEffect({[EffectRunner.CALL]: ['removeItem', item]});
 };
 
+const random = (item) => {
+    return createEffect({[EffectRunner.CALL]: ['random', item]});
+};
 
 module.exports = {
     createEffect, 
@@ -55,6 +58,7 @@ module.exports = {
     waitFor,
     addItem,
     removeItem,
+    random,
 };
 
 
