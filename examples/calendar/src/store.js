@@ -1,7 +1,7 @@
 import * as Redux from 'redux';
 import { withRedux, init, defineEffect } from 'feedbacks';
 import * as fx from 'feedbacks/fx';
-import { forward, backward, showDetail, addNote, changeTheme, changeThemeOk } from './actions';
+import { forward, backward, showDetail, addNote, removeNote, changeTheme, changeThemeOk } from './actions';
 import * as Rx from 'rxjs';
 import { map, take } from 'rxjs/operators';
 
@@ -42,9 +42,18 @@ const blueprint = {
             return {
                 ...state,
                 [key]: notes.concat({
-                    text: 'new item'
+                    text: 'new item',
+                    id: Math.random()
                 })
             }
+        })
+        .on(removeNote(), (state, { payload }) => {      
+            const key = getKeyByDate(payload);  
+            const notes = state[key] || [];
+            return {
+                ...state,
+                [key]: notes.filter(x => x.id !== payload.id),
+            };
         }),
     themeDialog: init({visible: false})
         .on(changeTheme(), () => {

@@ -20,3 +20,13 @@ const texts = {
 export function getLabel(kind, lang) {
     return texts.navigation[kind][lang];
 }
+
+export function inject(mapStateToProps, mapDispatchToActions) {
+    return connect(mapStateToProps, mapDispatchToActions, (state, actions) => {
+            return {
+                ...state,
+                actions
+            }
+        }
+    );
+}

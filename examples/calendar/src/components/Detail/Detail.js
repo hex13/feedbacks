@@ -1,5 +1,9 @@
 import React from 'react';
 
+function Note({ note, removeNote, day, month, year }) {
+    return <li>{note.text}#{note.id}<button onClick={() => removeNote({ day, month, year, id: note.id}) }>remove</button></li>
+}
+
 export default function Detail({ notes, date: { day, month, year }, actions, notesByDay }) {
     //const note = notesByDay[year + '-' + month + '-' + day] || {text: '???'};
     //const note = {text: '???'}
@@ -9,7 +13,7 @@ export default function Detail({ notes, date: { day, month, year }, actions, not
             add
         </button>
         {
-            notes.map(note => <li>{note.text}</li>)
+            notes.map(note => <Note note={note} removeNote={actions.removeNote} day={day} month={month} year={year} />)
         }
     </div>
 };

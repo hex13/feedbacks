@@ -1,10 +1,5 @@
-import { connect } from '../common';
+import { inject } from '../common';
 
 import Detail from './Detail';
-export default connect(state => state.detail, dispatch => {
-    return {
-        actions: {
-            addNote: (payload) => dispatch({type: 'addNote', payload})
-        }
-    }
-})(Detail);
+import { addNote, removeNote } from '../../actions';
+export default inject(state => state.detail, { addNote, removeNote })(Detail);
