@@ -1127,7 +1127,7 @@ describe('[random effects]', () => {
         const store = prepareStore({
             a: init('foo')
                 .on('foo', () => {
-                    return fx.random();
+                    return fx.random({min: 0, max: 10});
                 })
         });
         assert.deepStrictEqual(store.getState(), {a: 'foo'});
