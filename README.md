@@ -26,9 +26,12 @@ Feedbacks will:
 
 ## Online examples
 
-Live example on Codesandbox: https://codesandbox.io/s/6zzrnwq63w
+* Live example on Codesandbox: https://codesandbox.io/s/6zzrnwq63w
 
-Calendar example on Github: https://github.com/hex13/feedbacks/tree/master/examples/calendar
+* Calendar example on Github: https://github.com/hex13/feedbacks/tree/master/examples/calendar
+
+    * Especially this file which contains all store logic: https://github.com/hex13/feedbacks/blob/master/examples/calendar/src/store.js
+
 
 If you have a problem feel free to create an issue: https://github.com/hex13/feedbacks/issues 
 
