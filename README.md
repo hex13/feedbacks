@@ -13,12 +13,15 @@ Observables and promises are auto-resolved, and owner property is auto-updated.
 
 ![feedbacks-resolving.png](feedbacks-resolving.png)
 
-Feedbacks will:
+Feedbacks:
 ---
-- match actions automatically (powerful DSL with pattern matching capabilities)
-- allow for working on individual properties 
-- resolve promises and observables and feed it back to given property in the state
-- give you a nice reactive state tree instead of just ugly shapeless state
+- matches actions automatically (powerful DSL with pattern matching capabilities)
+- allows for working on individual properties / slices of state
+- resolves promises and observables and feeds it back to given property in the state
+- enables to return declarative effects from reducers
+    - allows you to handle custom effects in services (`onEffect`)
+    - provides you with some standard effects (like `fx.waitFor` for waiting for specific actions)
+
 
 # API 
 
