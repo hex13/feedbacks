@@ -13,7 +13,7 @@ const getKeyByDate = (params) => {
 };
 
 const doAsk = defineEffect('ask');
-const doLoad = defineEffect('load');
+const doComputeNotes = defineEffect('load');
 const themes = ['theme-light', 'theme-dark'];
 
 const blueprint = {
@@ -32,7 +32,7 @@ const blueprint = {
         date: init(currentDate)
             .on(showDetail(), (_, { payload }) => payload),
         notes: init([{text: '....'}])
-            .on(showDetail(), (_, { payload }) => fx.compute(doLoad(payload)))
+            .on(showDetail(), (_, { payload }) => fx.compute(doComputeNotes(payload)))
     },
 
     notesByDay: init({})
@@ -80,7 +80,7 @@ const delay = (t,v) => {
 export default function configureStore() {
     
     const store = withRedux(Redux).createEngine(blueprint)
-    .onEffect(doLoad(), (dispatch, getState, {payload:date}) => {
+    .onEffect(doComputeNotes(), (dispatch, getState, {payload:date}) => {
         const notes = getState().notesByDay[getKeyByDate(date)] || [{text: '???'}];
         
         return notes;
