@@ -294,8 +294,7 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
             }, { path })
         })
 
-        
-    
+        let permanentEffects = [];
         return action => {
             effectRunner.notify(action);
 
@@ -320,7 +319,15 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
                 const effectPatch = effects;
                 function visitNode(node, path) {
                     if (node[EFFECT]) {
-                        effectRunner.run(node[EFFECT], (result) => {
+                        const effect = node[EFFECT];
+                        if (effect[EFFECT] && effect.permanent) {
+                            permanentEffects = permanentEffects.filter(({path: ePath}) => path.join('.') != ePath.join('.') );
+                            permanentEffects.push({
+                                path, effect: effect[EFFECT]
+                            })
+                            return;
+                        }
+                        effectRunner.run(effect[EFFECT] || effect, (result) => {
                             update(result.path, result.value)
                         }, { path, loader, customEffectHandlers });
                     } else {
@@ -332,6 +339,12 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
                 visitNode(effectPatch, []);
 
             }
+            permanentEffects.forEach(({ effect, path}) => {
+                effectRunner.run(effect, (result) => {
+                    update(result.path, result.value)
+                }, { path, loader, customEffectHandlers });
+            });
+
         }    
     }
     return {

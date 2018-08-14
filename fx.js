@@ -47,6 +47,13 @@ const random = (item) => {
     return createEffect({[EffectRunner.CALL]: ['random', item]});
 };
 
+const compute = (params) => {
+    return createEffect({
+        [EFFECT]: {[EffectRunner.CALL]: ['effect', params]},
+        permanent: true,
+    });
+};
+
 module.exports = {
     createEffect, 
     EFFECT,
@@ -59,6 +66,7 @@ module.exports = {
     addItem,
     removeItem,
     random,
+    compute,
 };
 
 

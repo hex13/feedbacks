@@ -1142,3 +1142,68 @@ describe('[random effects]', () => {
         assert.strictEqual(typeof store.getState().a, 'number');
     });
 });
+
+
+describe('[computed values]', () => {
+    it('fx.compute should update property after each action', () => {
+        let c = 0;
+        const store = withRedux(Redux).createEngine({
+            a: init('?')
+                .on('foo', () => {
+                    return fx.compute({'type': 'plum'})
+                }),
+        })
+        .onEffect({type: 'plum'}, () => {
+            return c++;
+        })
+        .getStore();
+        assert.deepStrictEqual(store.getState(), {a: '?'});
+        store.dispatch({type: 'aaaaaaa'});
+        assert.deepStrictEqual(store.getState(), {a: '?'});
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), {a: 0});
+        store.dispatch({type: 'qwerty'});
+        assert.deepStrictEqual(store.getState(), {a: 1});
+        store.dispatch({type: 'asdfq'});
+        assert.deepStrictEqual(store.getState(), {a: 2});
+    });
+
+    it('fx.compute should remove previous effects', () => {
+        let c = 0;
+        const whatHappened = [];
+        const store = withRedux(Redux).createEngine({
+            a: init('?')
+                .on('foo', (state, action) => {
+                    return fx.compute({'type': action.payload})
+                }),
+        })
+        .onEffect({type: 'plum'}, () => {
+            whatHappened.push('plum');
+        })
+        .onEffect({type: 'cherry'}, () => {
+            whatHappened.push('cherry');
+        })
+        .onEffect({type: 'strawberry'}, () => {
+            whatHappened.push('strawberry');
+        })
+        .getStore();
+        assert.deepStrictEqual(store.getState(), {a: '?'});
+        store.dispatch({type: 'foo', payload: 'plum'});
+        assert.deepStrictEqual(whatHappened, [
+            'plum'
+        ]);
+        store.dispatch({type: 'foo', payload: 'cherry'});
+        assert.deepStrictEqual(whatHappened, [
+            'plum',
+            'cherry'
+        ]);
+
+        store.dispatch({type: 'foo', payload: 'strawberry'});
+        assert.deepStrictEqual(whatHappened, [
+            'plum',
+            'cherry',
+            'strawberry',
+        ]);
+    });
+
+});
