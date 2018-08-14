@@ -1144,8 +1144,8 @@ describe('[random effects]', () => {
 });
 
 
-describe('[computed values]', () => {
-    it('fx.compute should update property after each action', () => {
+describe('[computed values - fx.compute]', () => {
+    it('should update property after each action', () => {
         let c = 0;
         const store = withRedux(Redux).createEngine({
             a: init('?')
@@ -1168,7 +1168,7 @@ describe('[computed values]', () => {
         assert.deepStrictEqual(store.getState(), {a: 2});
     });
 
-    it('fx.compute should remove previous effects', () => {
+    it('should remove previous effects', () => {
         let c = 0;
         const whatHappened = [];
         const store = withRedux(Redux).createEngine({
