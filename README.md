@@ -1,11 +1,6 @@
 Feedbacks - reactive blueprints for your Redux apps
 ===
 
-Live example: https://codesandbox.io/s/6zzrnwq63w
-
-*(Note that it's an early version, if you stumble upon some problems, feel free to file an issue:
-https://github.com/hex13/feedbacks/issues )*
-
 No more wiring manually your actions, reducers, thunks etc. 
 
 Just create a "blueprint" which will define a shape of state and define how it should react on incoming actions (pattern-matching: action -> reducer). 
@@ -27,6 +22,16 @@ Feedbacks will:
 
 
 # Let's see some examples:
+
+
+## Online examples
+
+Live example on Codesandbox: https://codesandbox.io/s/6zzrnwq63w
+
+Calendar example on Github: https://github.com/hex13/feedbacks/tree/master/examples/calendar
+
+If you have a problem feel free to create an issue: https://github.com/hex13/feedbacks/issues 
+
 
 ## Counter (increments automatically each 1000 milliseconds):
 
