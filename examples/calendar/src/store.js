@@ -32,7 +32,7 @@ const blueprint = {
         date: init(currentDate)
             .on(showDetail(), (_, { payload }) => payload),
         notes: init([{text: '....'}])
-            .on(showDetail(), (_, { payload }) => fx.effect(doLoad(payload)))
+            .on(showDetail(), (_, { payload }) => fx.compute(doLoad(payload)))
     },
 
     notesByDay: init({})
@@ -83,10 +83,7 @@ export default function configureStore() {
     .onEffect(doLoad(), (dispatch, getState, {payload:date}) => {
         const notes = getState().notesByDay[getKeyByDate(date)] || [{text: '???'}];
         
-        return fx.flow([
-            [{text: '...loading...'}],
-            delay(300, notes),
-        ]);
+        return notes;
     })
     .getStore();
     store.dispatch({type: 'ask'});
