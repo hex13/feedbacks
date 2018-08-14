@@ -20,6 +20,9 @@ Feedbacks will:
 - resolve promises and observables and feed it back to given property in the state
 - give you a nice reactive state tree instead of just ugly shapeless state
 
+# API 
+
+Click this link to read [Feedbacks API guide](docs/api.md).
 
 # Let's see some examples:
 
@@ -62,25 +65,6 @@ const store = withRedux(Redux).createStore({
 });
 // ...
 ```
-
-Fetching resources
----
-
-
-```javascript
-// ...
-const fetchData = (url) => fetch(url).then(r => r.json());
-
-const store = withRedux(Redux).createStore({
-    todos: init([])
-        .on('fetchTodos', () => () => fetchData('todos.json'))
-        .on('addTodo', (value, action) => value.concat(action.payload))        
-});
-// ...
-```
-Two gotchas:
-- Don't return directly a Promise from the reducer. You should wrap it in additional function (like in example above) to keep reducer pure.
-- The good practice is separate low level API infrastructure from business logic. So don't put `fetch`, `axios`, `firebase` API etc. directly to reducers to avoid coupling them with external APIs. It's better to make some wrapper/service which will isolate application logic from data fetching details.
 
 # Power of declarativeness
 
