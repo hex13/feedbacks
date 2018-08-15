@@ -293,14 +293,18 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
             }
         });
 
-        const { initialState, observables } = resolveInitialState(blueprint);
-        next({type: UPDATE_ROOT, payload: initialState});
-
-        observables.forEach(({observable, path}) => {
-            effectRunner.run(observable, (result) => {
+        const { initialState, observables } = resolveInitialState(blueprint, effectRunner);
+        
+        const blueprintResult = effectRunner.run({[EffectRunner.RECURSIVE]: blueprint}, (result) => {
+            //if (result.path.length)
                 update(result.path, result.value);
-            }, { path })
-        })
+        });
+        // console.log("A======", result1.value);
+        // console.log("B======", initialState);
+        //require('assert').deepEqual(result1.value, initialState);
+
+        
+        next({type: UPDATE_ROOT, payload: initialState});
 
         let permanentEffects = [];
         return action => {

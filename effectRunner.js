@@ -9,11 +9,16 @@ const nop = () => {};
 
 const isObject = v => v && typeof v == 'object';
 
-const isPlainObject = v => isObject(v) 
+const isPlainObject = v => (
+    isObject(v) 
     && typeof v.then != 'function'
-    && !(v instanceof Formula);
+    && !(v instanceof Formula)
+    && !v[symbolObservable]
+)
 
 const isGenerator = v => v && typeof v.next == 'function';
+
+const isObservable = v => v && typeof v[symbolObservable] == 'function';
 
 class EffectRunner {
     constructor(api) {
@@ -23,9 +28,9 @@ class EffectRunner {
     run(effect, cb, ctx = {path: []}, params = []) {
         // console.log("run", effect, params)
         let result;
-        const emitValue = (v) => {
+        const emitValue = (v, path = ctx.path) => {
 
-            result = {value: v, path: ctx.path};
+            result = {value: v, path };
             cb(result);
             return result;
         };
@@ -98,14 +103,23 @@ class EffectRunner {
                 const resultTree = {};
 
             const visit = (effectNode, path) => {
-                const resolvingResult =  this.run(effectNode);
+                let handled = false;
+                const resolvingResult = this.run(effectNode, v => {
+                    if (isObservable(effectNode)) {
+                        setTimeout(() => {
+                            cb(v);
+                        }, 0);   
+                    }
+                }, { path });
                 const value = resolvingResult && resolvingResult.value;
+
                 if (isPlainObject(value)) {
                     for (let k in value) {
                         visit(value[k], path.concat(k));
                     }
                 } else {
-                    set(resultTree, path, resolvingResult && resolvingResult.value);
+                    const val = resolvingResult && resolvingResult.value;
+                    set(resultTree, path, val);
                 }
             };
             visit(obj, []);

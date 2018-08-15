@@ -508,17 +508,18 @@ describe('[resmix]', () => {
         const INC = 'inc';
         const DEC = 'dec';
         const blueprint = {
-            counter: Resmix.match([
+            counter: Resmix.init(0).on([
                 [INC, v => v + 1],
                 [INC, v => 'second match should have not effect'],
                 [DEC, v => v - 1],
             ]),
             counterX2: Resmix
-                .match(INC, v => v + 2)
-                .match(DEC, v => v - 2)
+                .init(0)
+                .on(INC, v => v + 2)
+                .on(DEC, v => v - 2)
         };
         const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, {counter: 0, counterX2: 0}, applyMiddleware(resmix.middleware));
+        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
         assert.deepStrictEqual(store.getState(), {counter: 0, counterX2: 0});
         store.dispatch({type: INC});
         store.dispatch({type: INC});
@@ -532,7 +533,7 @@ describe('[resmix]', () => {
         const INC = 'inc';
         const DEC = 'dec';
         const blueprint = {
-            counter: Resmix.match([
+            counter: Resmix.init(0).on([
                 [{type: INC, amount: {
                     name: 'dozen'
                 }}, v => v + 12],
@@ -544,7 +545,7 @@ describe('[resmix]', () => {
             ]),
         };
         const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, {counter: 0}, applyMiddleware(resmix.middleware));
+        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
         assert.deepStrictEqual(store.getState(), {counter: 0});
         store.dispatch({type: INC});
         assert.deepStrictEqual(store.getState(), {counter: 1});
@@ -562,7 +563,7 @@ describe('[resmix]', () => {
     it('should match nested matching action pattern', () => {
         const FOO = 'foo';
         const blueprint = {
-            counter: Resmix.match([
+            counter: Resmix.init(0).on([
                 [{type: FOO, a: {
                     b: 'bear',
                     c: {
@@ -572,7 +573,7 @@ describe('[resmix]', () => {
             ]),
         };
         const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, {counter: 0}, applyMiddleware(resmix.middleware));
+        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
         assert.deepStrictEqual(store.getState(), {counter: 0});
         store.dispatch({
             type: FOO, 
@@ -590,7 +591,7 @@ describe('[resmix]', () => {
     it('should not match non matching nested action pattern', () => {
         const FOO = 'foo';
         const blueprint = {
-            counter: Resmix.match([
+            counter: Resmix.init(0).on([
                 [{type: FOO, a: {
                     b: 'bear',
                     c: {
@@ -600,7 +601,7 @@ describe('[resmix]', () => {
             ]),
         };
         const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, {counter: 0}, applyMiddleware(resmix.middleware));
+        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
         assert.deepStrictEqual(store.getState(), {counter: 0});
         store.dispatch({type: FOO, a:{b: 'dog'}});
         assert.deepStrictEqual(store.getState(), {counter: 0});
@@ -620,12 +621,12 @@ describe('[resmix]', () => {
         let promise = Promise.resolve(124);
         beforeEach(() => {
             const blueprint = {
-                future: Resmix.match([
+                future: Resmix.init(null).on([
                     ['fetch', (state, action) => () => promise]
                 ])
             };
             const resmix = Resmix.Resmix(blueprint);
-            store = createStore(resmix.reducer, {future: null}, applyMiddleware(resmix.middleware));
+            store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
         });
 
         it('should init to the correct state', () => {
@@ -895,7 +896,7 @@ describe('[resmix]', () => {
                     deep: {a: 100}
                 });                
                 done();
-            }, 100)
+            }, 30)
         });
 
         it('should resolve asynchronous updates from observable', (done) => {
