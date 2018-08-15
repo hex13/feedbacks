@@ -5,10 +5,8 @@ const debug = console.log.bind(console);
 const EFFECTS = Symbol('effects');
 
 const BLUEPRINT = Symbol('blueprint');
-const { isMatch } = require('./matching');
-const UPDATE = '@@resmix/update';
 const UPDATE_ROOT = '@@resmix/updateRoot';
-const UPDATE_BLUEPRINT = '@@resmix/updateBlueprint';
+const { UPDATE_BLUEPRINT, UPDATE } = require('./constants');
 const OPEN_CHANNEL = '@@resmix/openChannel';
 const symbolObservable = require('symbol-observable').default;
 const { get, set } = require('transmutable/get-set');
@@ -18,6 +16,7 @@ const EffectRunner = require('./effectRunner');
 const Formula = require('./formula');
 const fx = require('./fx');
 const { createEffect, EFFECT, spawn } = fx;
+const resolveInitialState = require('./resolveInitialState');
 const nop = ()=>{};
 // const { Graph } = require('transmutable/src/normalization/graph');
 // console.log(Graph);
@@ -27,71 +26,7 @@ const raw = value => ({
     }
 });
 
-const effectHandlers = {
-    spawn(dispatch, getState, action) {
-        action.meta = {owner: this.path};
-        dispatch(action);
-    },
-    dispatch(dispatch, getState, action) {
-        dispatch(action);
-        return true;
-    },
-
-    mount(dispatch, getState, blueprint) {
-        const { path } = this;
-        dispatch({
-            type: UPDATE_BLUEPRINT,
-            payload: {
-                path,
-                blueprint
-            }
-        });
-        const { initialState } = resolveInitialState(blueprint);
-        if (initialState != undefined) dispatch({
-            type: UPDATE,
-            payload: {
-                name: path,
-                value: initialState,
-            }
-        })
-    },
-    load(dispatch, getState, params) {
-        return this.loader(params, getState());
-    },
-    effect(dispatch, getState, effect) {
-        const pairs =  this.customEffectHandlers;
-        for (let i = 0; i < pairs.length; i++) {
-            const [pattern, run] = pairs[i];
-
-            if (isMatch(pattern, effect)) {
-                return run(effect);
-            }
-        }
-    },
-    addItem(dispatch, getState, item) {
-        const state = get(getState(), this.path);
-        return state.concat(item);
-    },
-    removeItem(dispatch, getState, index) {
-        const state = get(getState(), this.path);
-        return state.slice(0, index).concat(state.slice(index + 1));
-    },
-    random(dispatch, getState, {min, max}) {
-        const range = max - min;
-        return Math.random() * range + min;
-    },
-    getState(dispatch, getState, selector) {
-        return getState();
-    },
-    delay(dispatch, getState, ms, value) {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                resolve(value)
-            }, ms)
-        });
-    }
-};
-
+const effectHandlers = require('./effectHandlers');
 
 
 class State {
@@ -387,54 +322,6 @@ function isPlainValue(desc) {
     const t = typeof desc;
     return !desc || t == 'number' || t == 'string' || t == 'boolean' || t == 'symbol';
 }
-
-function resolveInitialState(blueprint) {
-    const observables = [];
-    const visitProperty = (desc, setValue, path = []) => {
-        const t = typeof desc;
-        const isPlainValue = !desc || t == 'number' || t == 'string' || t == 'boolean' || t == 'symbol';
-        if (isPlainValue) {
-            setValue(desc);
-            return;
-        }
-        if (desc instanceof Formula) {
-            if (desc.hasInitialState)
-                setValue(resolveInitialState(desc.initialState).initialState);
-            return;
-        }
-        const toObservable = desc && desc[symbolObservable];
-
-        if (toObservable) {
-            const observable = toObservable.call(desc);
-            observables.push({
-                path,
-                observable
-            })
-            return;
-        }
-        if (desc && typeof desc == 'object') {
-            if (Array.isArray(desc)) {
-                setValue(desc);
-                return
-            }
-            let computedCurrentObjectValue = {};
-            Object.keys(desc).forEach(function goDeeper(k) {
-                visitProperty(desc[k], (v) => {
-                    computedCurrentObjectValue[k] = v;
-                }, path.concat(k));
-            });
-            setValue(computedCurrentObjectValue);
-            return;
-        }
-    };
-    let initialState;
-    visitProperty(blueprint, (v) => {
-        initialState = v;
-    });
-
-    return { initialState, observables } ;
-}
-
 
 exports.OPEN_CHANNEL = OPEN_CHANNEL;
 
