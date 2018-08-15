@@ -80,7 +80,7 @@ const delay = (t,v) => {
 export default function configureStore() {
     
     const store = withRedux(Redux).createEngine(blueprint)
-    .onEffect(doComputeNotes(), (dispatch, getState, {payload:date}) => {
+    .onEffect(doComputeNotes(), (getState, {payload:date}) => {
         const notes = getState().notesByDay[getKeyByDate(date)] || [{text: '???'}];
         
         return notes;
