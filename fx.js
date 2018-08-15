@@ -15,6 +15,10 @@ const spawn = (action) => {
 };
 
 
+const dispatch = (action) => {
+    return createEffect({ [EffectRunner.CALL]: ['dispatch', action] });
+};
+
 const mount = (blueprint) => {
     return createEffect({[EffectRunner.CALL]: ['mount', blueprint]});
 };
@@ -67,6 +71,7 @@ module.exports = {
     removeItem,
     random,
     compute,
+    dispatch,
 };
 
 

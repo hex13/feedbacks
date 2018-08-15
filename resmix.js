@@ -32,6 +32,11 @@ const effectHandlers = {
         action.meta = {owner: this.path};
         dispatch(action);
     },
+    dispatch(dispatch, getState, action) {
+        dispatch(action);
+        return true;
+    },
+
     mount(dispatch, getState, blueprint) {
         const { path } = this;
         dispatch({
@@ -59,7 +64,7 @@ const effectHandlers = {
             const [pattern, run] = pairs[i];
 
             if (isMatch(pattern, effect)) {
-                return run(dispatch, getState, effect);
+                return run(getState, effect);
             }
         }
     },
