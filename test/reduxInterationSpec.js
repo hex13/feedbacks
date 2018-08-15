@@ -716,9 +716,10 @@ describe('[resmix]', () => {
                 }
             })
             .onEffect({type: 'abc'}, () => 'aaaaa')
-            .onEffect({type: 'someEffect'}, function *(getState, effect)  {
+            .onEffect({type: 'someEffect'}, function *(effect)  {
                 assert.deepStrictEqual(effect, {type: 'someEffect', params: 'blah'});
-                assert.deepStrictEqual(getState(), {
+                const state = yield fx.getState();
+                assert.deepStrictEqual(state, {
                     a: {
                         b: 123,
                         c: 100
@@ -751,8 +752,8 @@ describe('[resmix]', () => {
                     .on({type: 'doSomething'}, () => 'wrong 2'),
                 bar: init('').on({type: 'bar'}, state => state + 'good')
             })
-                .onEffect(doSomething(), function* (getState, effect) {
-                    assert.deepStrictEqual(getState(), {foo: 0, bar: ''});
+                .onEffect(doSomething(), function* (effect) {
+                    assert.deepStrictEqual(yield fx.getState(), {foo: 0, bar: ''});
                     assert.deepStrictEqual(effect, doSomething());
                     yield fx.dispatch({type: 'bar'});
                     whatHappened.push('effect');
@@ -786,7 +787,7 @@ describe('[resmix]', () => {
                     b: init(123).on('loadThis', () => fx.effect({type: 'someEffect'}))
                 }
             })
-            .onEffect({type: 'someEffect'}, (getState, effect) => {
+            .onEffect({type: 'someEffect'}, (effect) => {
                 return fx.flow([
                     10,
                     x => x * 10, 

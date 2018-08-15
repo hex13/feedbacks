@@ -19,6 +19,10 @@ const dispatch = (action) => {
     return createEffect({ [EffectRunner.CALL]: ['dispatch', action] });
 };
 
+const getState = () => {
+    return createEffect({ [EffectRunner.CALL]: ['getState'] });
+};
+
 const mount = (blueprint) => {
     return createEffect({[EffectRunner.CALL]: ['mount', blueprint]});
 };
@@ -72,6 +76,7 @@ module.exports = {
     random,
     compute,
     dispatch,
+    getState,
 };
 
 

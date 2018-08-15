@@ -64,7 +64,7 @@ const effectHandlers = {
             const [pattern, run] = pairs[i];
 
             if (isMatch(pattern, effect)) {
-                return run(getState, effect);
+                return run(effect);
             }
         }
     },
@@ -79,6 +79,9 @@ const effectHandlers = {
     random(dispatch, getState, {min, max}) {
         const range = max - min;
         return Math.random() * range + min;
+    },
+    getState(dispatch, getState, selector) {
+        return getState();
     }
 };
 
