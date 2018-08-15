@@ -82,6 +82,13 @@ const effectHandlers = {
     },
     getState(dispatch, getState, selector) {
         return getState();
+    },
+    delay(dispatch, getState, ms, value) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve(value)
+            }, ms)
+        });
     }
 };
 

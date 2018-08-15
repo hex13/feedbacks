@@ -35,6 +35,10 @@ const effect = (params) => {
     return createEffect({[EffectRunner.CALL]: ['effect', params]});
 };
 
+const delay = (ms, value) => {
+    return createEffect({[EffectRunner.CALL]: ['delay', ms, value]});
+};
+
 const flow = (list) => {
     return createEffect({[EffectRunner.FLOW]: list});
 };
@@ -77,6 +81,7 @@ module.exports = {
     compute,
     dispatch,
     getState,
+    delay
 };
 
 

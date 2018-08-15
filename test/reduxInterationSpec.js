@@ -1145,6 +1145,32 @@ describe('[random effects]', () => {
     });
 });
 
+describe('[time effects]', () => {
+    it('fx.delay should call setTimeout', (done) => {
+        const sT = global.setTimeout;
+        let whatHappened = [];
+        global.setTimeout = (func, time) => {
+            whatHappened.push(['setTimeout', time])
+            func();
+        };
+        const store = prepareStore({
+            a: init('foo')
+                .on('breakfast', () => {
+                    return fx.delay(100, 'kanapka');
+                })
+        });
+        assert.deepStrictEqual(store.getState(), {a: 'foo'});
+        store.dispatch({type: 'breakfast'});
+        assert.deepStrictEqual(whatHappened, [
+            ['setTimeout', 100]
+        ]);
+        sT(() => {
+            assert.deepStrictEqual(store.getState(), {a: 'kanapka'});
+            done();
+        }, 0);
+        global.setTimeout = sT;
+    });
+});
 
 describe('[computed values - fx.compute]', () => {
     it('should update property after each action', () => {
