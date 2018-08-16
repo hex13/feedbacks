@@ -971,11 +971,11 @@ describe('[resmix]', () => {
         });
     });
 
-    describe('[generators]', () => {
+    describe('[generators as reducers]', () => {
         let store, engine;
         beforeEach(() => {
             ({ store, engine } = prepareEngine({
-                counter: Resmix.init(0).match([
+                counter: Resmix.init(0).on([
                     ['gen', function* (v) {
                         yield 'not a right value';
                         return v + 100;
@@ -988,7 +988,6 @@ describe('[resmix]', () => {
             store.dispatch({type: 'gen'});
             assert.deepStrictEqual(store.getState(), {counter: 100});
         });
-
     });
 
 
@@ -1162,6 +1161,39 @@ describe('[random effects]', () => {
         assert.deepStrictEqual(store.getState(), {a: 'foo'});
         store.dispatch({type: 'foo'});
         assert.strictEqual(typeof store.getState().a, 'number');
+    });
+});
+
+describe('[fx.current]', () => {
+    it('should resolve to current prop value', () => {
+        const whatHappened = [];
+        const store = withRedux(Redux).createEngine({
+            counter: init(100)
+                .on('foo', () => {
+                    return fx.effect({type: 'foo'})
+                })
+                .on('inc', (state) => state + 1)
+        })
+        .onEffect('foo', function* () {
+            whatHappened.push(['yielded', yield fx.current()]);
+            return yield fx.current();
+        })
+        .getStore();
+        assert.deepStrictEqual(store.getState(), {counter: 100});
+
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(whatHappened, [
+            ['yielded', 100]
+        ]);
+
+        store.dispatch({type: 'inc'});
+        assert.deepStrictEqual(store.getState(), {counter: 101});
+
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(whatHappened, [
+            ['yielded', 100],
+            ['yielded', 101]
+        ]);        
     });
 });
 

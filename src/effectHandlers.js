@@ -66,5 +66,9 @@ module.exports = {
                 resolve(value)
             }, ms)
         });
+    },
+    current(dispatch, getState) {
+        const curr = get(getState(), this.path);
+        return curr;
     }
 };

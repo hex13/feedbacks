@@ -59,6 +59,10 @@ const random = (item) => {
     return createEffect({[EffectRunner.CALL]: ['random', item]});
 };
 
+const current = (item) => {
+    return createEffect({[EffectRunner.CALL]: ['current', item]});
+};
+
 const compute = (params) => {
     return createEffect({
         [EFFECT]: {[EffectRunner.CALL]: ['effect', params]},
@@ -81,7 +85,8 @@ module.exports = {
     compute,
     dispatch,
     getState,
-    delay
+    delay,
+    current,
 };
 
 
