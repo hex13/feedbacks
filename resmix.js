@@ -206,6 +206,16 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
     let _store;
     let customEffectHandlers = [];
     const middleware = store => next => {
+        let permanentEffects = [];
+        let afterUpdatePerforming = 0;
+        function performAfterUpdate() {
+                permanentEffects.forEach(({ effect, path}) => {
+                    effectRunner.run(effect, (result) => {
+                        update(result.path, result.value, false)
+                    }, { path, loader, customEffectHandlers });
+                });
+        }
+
         _store = store;
 
         const finalEffectHandlers = {};
@@ -219,13 +229,14 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
         if (!store || !store.getState) {
             throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);
         }
-        const update = (path, value) => {
+        const update = (path, value, shouldPerformAfterUpdate = true) => {
             if (!(path instanceof Array)) {
                 path = [path];
             }
             next({type: UPDATE, payload: {
                 name: path, value
             }});
+            if (shouldPerformAfterUpdate) performAfterUpdate();
         };
 
         next({
@@ -248,7 +259,7 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
         
         next({type: UPDATE_ROOT, payload: initialState});
 
-        let permanentEffects = [];
+        
         return action => {
             effectRunner.notify(action);
 
@@ -293,11 +304,7 @@ exports.Resmix = (blueprint, { loader } = {} ) => {
                 visitNode(effectPatch, []);
 
             }
-            permanentEffects.forEach(({ effect, path}) => {
-                effectRunner.run(effect, (result) => {
-                    update(result.path, result.value)
-                }, { path, loader, customEffectHandlers });
-            });
+            performAfterUpdate();
 
         }    
     }

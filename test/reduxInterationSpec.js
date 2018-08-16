@@ -1196,6 +1196,35 @@ describe('[computed values - fx.compute]', () => {
         assert.deepStrictEqual(store.getState(), {a: 2});
     });
 
+    it('should update computed property after each asynchronous change', (done) => {
+        let c = 0;
+        const store = withRedux(Redux).createEngine({
+            a: init(0)
+                .on('foo', (state) => {
+                    return () => Promise.resolve(state + 10);
+                }),
+            derived: init(0)
+                .on({type: 'init'}, () => fx.compute({type: 'doCompute'}))
+        })
+            .onEffect({type: 'doCompute'}, function* () {
+                return (yield fx.getState()).a * 2;
+            })
+            .getStore();
+
+        assert.deepStrictEqual(store.getState(), {a: 0, derived: 0});
+
+        store.dispatch({type: 'init'});
+
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), {a: 0, derived: 0});
+        setTimeout(() => {
+            assert.deepStrictEqual(store.getState(), {a: 10, derived: 20});
+            done();
+        }, 0);
+
+
+    });
+
     it('should remove previous effects', () => {
         let c = 0;
         const whatHappened = [];
