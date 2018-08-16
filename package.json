@@ -3,7 +3,7 @@
   "repository": "https://github.com/hex13/feedbacks",
   "version": "0.2.2",
   "description": "Feedbacks - reactive blueprints for your Redux apps",
-  "main": "resmix.js",
+  "main": "src/resmix.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -26,6 +26,7 @@
     "redux": "^4.0.0",
     "redux-observable": "^1.0.0",
     "redux-saga": "^0.16.0",
+    "redux-thunk": "^2.3.0",
     "rxjs": "^6.2.1",
     "typescript": "^2.9.2"
   },
