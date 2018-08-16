@@ -308,7 +308,7 @@ describe('[resmix]', () => {
                 }
             }
         });
-        const resmix = createEngine(a => createBlueprint(a));
+        const resmix = createEngine(createBlueprint());
         const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
 
        assert.deepStrictEqual(store.getState(), {

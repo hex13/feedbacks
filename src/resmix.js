@@ -3,7 +3,7 @@ const DEBUG = false;
 const debug = console.log.bind(console);
 
 const EFFECTS = Symbol('effects');
-
+const creators = require('./creators.js');
 const BLUEPRINT = Symbol('blueprint');
 const UPDATE_ROOT = '@@resmix/updateRoot';
 const { UPDATE_BLUEPRINT, UPDATE } = require('./constants');
@@ -206,7 +206,7 @@ exports.init = (value) => {
 };
 
 
-function Resmix(blueprint, { loader } = {} ) {
+function createEngine(blueprint, { loader } = {} ) {
     const channels = {};
 
     let _store;
@@ -338,43 +338,24 @@ function isPlainValue(desc) {
 
 exports.OPEN_CHANNEL = OPEN_CHANNEL;
 
-// TODO remove indirections 
-// now there are 5 ways to create an engine. This is serious WTF
-
-exports.createEngine = (blueprint, ...rest) => {
-    const finalBlueprint = (
-        typeof blueprint == 'function'? 
-        blueprint({
-            init: exports.init
-        }) : blueprint
-    );
-    return Resmix(finalBlueprint, ...rest);
-}
-
-function createEngine(Redux, blueprint, ...rest) {
-    const engine = exports.createEngine(blueprint, ...rest);
-    const store = Redux.createStore(engine.reducer, Redux.applyMiddleware(engine.middleware));
-    store.dispatch({type: '@@feedbacks/store', payload: store});
-    return engine;
-
-}
+exports.createEngine = createEngine;
 
 exports.withRedux = (Redux) => ({
-    createStore(blueprint) {
-        const engine = createEngine(Redux, blueprint);
-        return engine.getStore();
-    },
-    createEngine: createEngine.bind(null, Redux)
+    createEngine(blueprint, ...rest) {
+        const engine = createEngine(blueprint, ...rest);
+        const store = Redux.createStore(engine.reducer, Redux.applyMiddleware(engine.middleware));
+        store.dispatch({type: '@@feedbacks/store', payload: store});
+        return engine;    
+    }
 });
 
-const creators = require('./creators.js');
 exports.defineAction = creators.defineAction;
 exports.defineEffect = creators.defineEffect;
 
 
 exports.feedbacksEnhancer = (createStore) => {
     return (blueprint) => {
-        const engine = Resmix(blueprint);
+        const engine = createEngine(blueprint);
         const store = createStore(engine.reducer);
 
         return Object.assign({}, store, {
