@@ -23,7 +23,7 @@ const blueprint = {
 
 You then pass such blueprint to `createEngine` function.
 
-Creating engine and store
+Initialization - creating engine, assign effect handlers and get store
 ====
 
 example:
