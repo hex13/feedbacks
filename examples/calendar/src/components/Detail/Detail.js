@@ -13,7 +13,7 @@ export default function Detail({ notes, date: { day, month, year }, actions, not
             add
         </button>
         {
-            notes.map(note => <Note note={note} removeNote={actions.removeNote} day={day} month={month} year={year} />)
+            notes.map((note, i) => <Note key={i} note={note} removeNote={actions.removeNote} day={day} month={month} year={year} />)
         }
     </div>
 };

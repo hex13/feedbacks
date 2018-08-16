@@ -39,13 +39,16 @@ const blueprint = {
         .on(addNote(), (state, { payload }) => {
             const key = getKeyByDate(payload);
             const notes = state[key] || [];
-            return {
-                ...state,
-                [key]: notes.concat({
-                    text: 'new item',
-                    id: Math.random()
-                })
-            }
+            return fx.flow([
+                delay(200, state), // simulate network delay
+                {
+                    ...state,
+                    [key]: notes.concat({
+                        text: 'new item',
+                        id: Math.random()
+                    })
+                }
+            ]);
         })
         .on(removeNote(), (state, { payload }) => {      
             const key = getKeyByDate(payload);  
@@ -66,7 +69,8 @@ const blueprint = {
     theme: init({idx: 0, name: themes[0]})
         .on(changeThemeOk(), (state, action) => {
             return {idx:0, name: action.payload};
-        })
+        }),
+    })
 }; 
 
 const delay = (t,v) => {
