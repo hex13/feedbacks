@@ -227,6 +227,11 @@ function reducer() {
 
 This effect can be then handled in effect handler (via `engine.onEffect`)
 
+fx.getState()
+---
+Get the root state of store. 
+
+
 fx.waitFor(actionPattern, mapper)
 ----
 It allows for waiting for actions. 
