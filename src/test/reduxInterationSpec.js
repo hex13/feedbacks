@@ -21,9 +21,9 @@ const prepareStore = (blueprint) => {
 };
 
 const prepareEngine = (blueprint) => {
-    const resmix = Resmix.Resmix(blueprint);
-    const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
-    return { store, engine: resmix };
+    const engine = withRedux(Redux).createEngine(blueprint);
+    const store = engine.getStore();
+    return { store, engine };
 };
 
 global.assert = assert;
@@ -56,8 +56,7 @@ describe('[resmix]', () => {
             n: null,
             s: someSymbol,
         });
-        const resmix = Resmix.Resmix(createBlueprint());
-        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+        const store = prepareStore(createBlueprint());
         assert.deepStrictEqual(store.getState(), createBlueprint());
     });
 
@@ -97,12 +96,12 @@ describe('[resmix]', () => {
     describe('init',() => {
         it('should treat first argument as a blueprint', () => {
             const someSymbol = Symbol();
-            const resmix = Resmix.Resmix({
-                a: Resmix.init({
-                    b: Resmix.init(10).on('foo', () => 3)
+            const store = prepareStore({
+                a: init({
+                    b: init(10).on('foo', () => 3)
                 })
             });
-            const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+
             assert.deepStrictEqual(store.getState(), {a: {b: 10}})
             
             store.dispatch({type: 'foo'});
@@ -131,8 +130,7 @@ describe('[resmix]', () => {
                 }
             }
         });
-        const resmix = Resmix.Resmix(createBlueprint());
-        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+        const store = prepareStore(createBlueprint());
         assert.deepStrictEqual(store.getState(), createBlueprint());
     });
 
@@ -538,8 +536,8 @@ describe('[resmix]', () => {
                 .on(INC, v => v + 2)
                 .on(DEC, v => v - 2)
         };
-        const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+        const store = prepareStore(blueprint);
+
         assert.deepStrictEqual(store.getState(), {counter: 0, counterX2: 0});
         store.dispatch({type: INC});
         store.dispatch({type: INC});
@@ -564,8 +562,7 @@ describe('[resmix]', () => {
                 [{type: DEC}, v => v - 1],
             ]),
         };
-        const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+        const store = prepareStore(blueprint);
         assert.deepStrictEqual(store.getState(), {counter: 0});
         store.dispatch({type: INC});
         assert.deepStrictEqual(store.getState(), {counter: 1});
@@ -592,8 +589,7 @@ describe('[resmix]', () => {
                 }}, (v, a) => -2],
             ]),
         };
-        const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+        const store = prepareStore(blueprint);
         assert.deepStrictEqual(store.getState(), {counter: 0});
         store.dispatch({
             type: FOO, 
@@ -620,8 +616,7 @@ describe('[resmix]', () => {
                 }}, (v, a) => -2],
             ]),
         };
-        const resmix = Resmix.Resmix(blueprint);
-        const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+        const store = prepareStore(blueprint);
         assert.deepStrictEqual(store.getState(), {counter: 0});
         store.dispatch({type: FOO, a:{b: 'dog'}});
         assert.deepStrictEqual(store.getState(), {counter: 0});
@@ -645,8 +640,8 @@ describe('[resmix]', () => {
                     ['fetch', (state, action) => () => promise]
                 ])
             };
-            const resmix = Resmix.Resmix(blueprint);
-            store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+            store = prepareStore(blueprint);
+
         });
 
         it('should init to the correct state', () => {
@@ -904,9 +899,8 @@ describe('[resmix]', () => {
                     }),    
                 }
             };
-            const resmix = Resmix.Resmix(blueprint);
             subscriptionCount = 0;
-            store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+            store = prepareStore(blueprint);
         });
 
         it('should resolve observable', (done) => {

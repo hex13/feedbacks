@@ -206,7 +206,7 @@ exports.init = (value) => {
 };
 
 
-exports.Resmix = (blueprint, { loader } = {} ) => {
+function Resmix(blueprint, { loader } = {} ) {
     const channels = {};
 
     let _store;
@@ -348,7 +348,7 @@ exports.createEngine = (blueprint, ...rest) => {
             init: exports.init
         }) : blueprint
     );
-    return exports.Resmix(finalBlueprint, ...rest);
+    return Resmix(finalBlueprint, ...rest);
 }
 
 function createEngine(Redux, blueprint, ...rest) {
