@@ -162,16 +162,35 @@ fx
 Helpers for side-effects. 
 You can return a side-effect from your reducer e.g.
 
+import:
 ```javascript
 import * as fx from 'feedbacks/fx';
+```
 
-// ... 
+
+fx.effect(effectObject)
+----
+It runs an effect.
+
+```javascript
+const doSomething = createEffect('doSomething');
+function reducer() {
+    return fx.effect(doSomething());
+}
+```
+
+This effect can be then handled in effect handler (via `engine.onEffect`)
+
+fx.waitFor(actionPattern, mapper)
+----
+It allows for waiting for actions. 
+```javascript
 function reducer() {
     const mapActionToState = (action) {
         return action.payload;
     };
     return fx.waitFor({type: 'action-for-wait'}, mapActionToState);
 }
-
 ```
+
 
