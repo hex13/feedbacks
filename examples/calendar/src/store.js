@@ -9,6 +9,7 @@ const now = new Date;
 const currentDate = { day: now.getDate(), month: now.getMonth() + 1, year: now.getFullYear() }
 
 const getKeyByDate = (params) => {
+    if (!params) return;
     return `${params.year}-${params.month}-${params.day}`;
 };
 
@@ -38,17 +39,18 @@ const blueprint = {
     notesByDay: init({})
         .on(addNote(), (state, { payload }) => {
             const key = getKeyByDate(payload);
-            const notes = state[key] || [];
-            return fx.flow([
-                delay(200, state), // simulate network delay
-                {
-                    ...state,
+            return function* () {
+                const res = yield delay(400, () => {}); // simulate network delay
+                const current = yield fx.current();
+                const notes = current[key] || [];
+                return {
+                    ...current,
                     [key]: notes.concat({
                         text: 'new item',
                         id: Math.random()
                     })
                 }
-            ]);
+            }
         })
         .on(removeNote(), (state, { payload }) => {      
             const key = getKeyByDate(payload);  
