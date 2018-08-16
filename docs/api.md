@@ -1,10 +1,52 @@
-Creating engine and store
-====
-TODO
-
 Blueprints
 ====
-TODO
+
+What are blueprints? Well, if you use Redux you probably are familiar with concept of "initial state" i.e. object which represents how the store state will look in the beginning. Blueprints take this idea further and not only represent **initial** state, but also all future states of your application. This means you can match specific actions (look at`.on` from Formulas) into specific properties of the state and associate them with specific reducer.
+
+This effectively would slice your state into individual properties with own property matchers and own reducers. Something similar to nested `combineReducers` but with pattern-matching. 
+
+example of blueprint: 
+
+```javascript
+const blueprint = {
+    foo: {
+        bar: init(10) // initial state of property foo.bar
+            .on({type: 'increment'} /*pattern matching */ , (state, action) => {
+                return state + 1;
+            })
+            .on({type: 'decrement'}, (state, action) => {
+                return state - 1;
+            })
+    },
+}
+```
+
+You then pass such blueprint to `createEngine` function.
+
+Creating engine and store
+====
+
+example:
+```javascript
+import { withRedux } from 'feedbacks';
+import * as fx from 'feedbacks/fx';
+
+const someEffect = createEffect('someEffect');
+const someOtherEffect = createEffect('someOtherEffect');
+
+const store = withRedux(Redux).createEngine(blueprint)
+    // effect handlers are responsible for performing side-effects (e.g. AJAX calls)
+    .onEffect(someEffect(), function* (effect) {
+        return fetch(effect.payload.url).then(r => r.json()); 
+    })
+    // you can yield effects to be resolved:
+    .onEffect(someOtherEffect(), function* (effect) {
+        const state = yield fx.getState();
+        const answer = yield () => Promise.resolve(42);
+        return state.foo.bar + state.baz + answer; // perform some calculations
+    })
+    .getStore();
+```
 
 Formulas - init() and .on()
 ====
