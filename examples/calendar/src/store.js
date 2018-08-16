@@ -70,7 +70,6 @@ const blueprint = {
         .on(changeThemeOk(), (state, action) => {
             return {idx:0, name: action.payload};
         }),
-    })
 }; 
 
 const delay = (t,v) => {
