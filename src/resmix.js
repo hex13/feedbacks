@@ -370,3 +370,15 @@ exports.withRedux = (Redux) => ({
 const creators = require('./creators.js');
 exports.defineAction = creators.defineAction;
 exports.defineEffect = creators.defineEffect;
+
+
+exports.feedbacksEnhancer = (createStore) => {
+    return (blueprint) => {
+        const engine = Resmix(blueprint);
+        const store = createStore(engine.reducer);
+
+        return Object.assign({}, store, {
+            dispatch: engine.middleware(store)(store.dispatch)
+        });
+    };
+}

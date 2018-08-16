@@ -4,20 +4,24 @@ const assert = require('assert');
 const Resmix = require('../resmix');
 
 require('symbol-observable');
-const { createStore, applyMiddleware } = require('redux');
+const { createStore, applyMiddleware, compose } = require('redux');
+const thunk = require('redux-thunk').default;
 const Redux = require('redux');
 const { Observable, interval, Subscription, of } = require('rxjs');
 const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
-const { createEngine, withRedux, init, defineEffect, defineAction } = require('..');
+const { createEngine, withRedux, init, defineEffect, defineAction, feedbacksEnhancer } = require('..');
 
 const fx = require('../fx');
 
 const prepareStore = (blueprint) => {
-    return withRedux(Redux).createStore(blueprint);
-    const resmix = createEngine(blueprint);
-    const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
-    return store;
+    return createStore(blueprint, feedbacksEnhancer)
+
+    // return withRedux(Redux).createStore(blueprint);
+
+    // const resmix = createEngine(blueprint);
+    // const store = createStore(resmix.reducer, applyMiddleware(resmix.middleware));
+    // return store;
 };
 
 const prepareEngine = (blueprint) => {
@@ -27,6 +31,45 @@ const prepareEngine = (blueprint) => {
 };
 
 global.assert = assert;
+
+
+describe('[experiments :) ]', () => {
+    let store;
+
+    it('experiment: enhancer', () => {
+        let initialState;
+        const reducer = (state = initialState, action) => {
+            switch (action.type) {
+                case 'inc': return state + 1;
+                case 'dec': return state - 1;
+            }
+            return state;
+        };
+        console.log("THUNK", thunk)
+        const enhancer = (createStore) => {
+
+            return (initial) => {
+                initialState = initial;
+                return createStore(reducer);
+            }
+        }
+        
+        const store = createStore(10, compose(
+            enhancer,
+            applyMiddleware(thunk),
+        ));
+        console.log(store);
+        for (let i = 0; i < 3; i++)
+            store.dispatch({type: 'inc'});
+        assert.deepStrictEqual(store.getState(), 13);
+        store.dispatch(dispatch => {
+            dispatch({type: 'dec'})
+        });
+        assert.deepStrictEqual(store.getState(), 12);
+    });
+
+});
+
 
 describe('[creating store (smoke test)]', () => {
     let store;
@@ -42,6 +85,26 @@ describe('[creating store (smoke test)]', () => {
         store.dispatch({type: 'not very important'});
     });
 });
+
+describe('[creating store via enhancer (smoke test)]', () => {
+    let store;
+    beforeEach(() => {
+        store = createStore({
+            a: init(130).on('foo', state => state - 100)
+        }, feedbacksEnhancer);
+    });
+
+    it('should be possible to call getState', () => {
+        assert.deepStrictEqual(store.getState(), {a: 130});
+    });
+
+    it('should be possible to call dispatch and state should chnge', () => {
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), {a: 30});
+    });
+});
+
+
 
 describe('[resmix]', () => {
     it('should allow for declare plain values', () => {
@@ -477,17 +540,6 @@ describe('[resmix]', () => {
 
 
     describe('init', () => {
-        const blueprint = ({ init }) => ({
-            a: init(2)
-        });
-
-        beforeEach(() => {
-        });
-
-        it('should allow for define initial state by using init()', () => {
-            const store = prepareStore(blueprint);
-            assert.deepStrictEqual(store.getState(), {a:2});
-        });
 
         it('should allow for use chaining: first init(), then match()', () => {
             const store = prepareStore({
@@ -1015,16 +1067,16 @@ describe('[resmix]', () => {
 describe('[immutability]', () => {
     it('should keep immutability', () => {
         const foo = {a: 123};
-        const store = prepareStore(({init}) => ({
+        const store = prepareStore({
             foo: {
-                a: Resmix.init(123).match('foo', v => 456)
+                a: init(123).on('foo', v => 456)
             },
             deep: {
                 foo,
                 a: init(0)
-                    .match('inc', v => v + 1)
+                    .on('inc', v => v + 1)
             }
-        }));
+        });
 
         const state1 = store.getState();
         assert.deepStrictEqual(state1.foo, {a: 123});
