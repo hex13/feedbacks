@@ -82,7 +82,13 @@ function Cursor(metadata, state, path = []) {
 
 function mapReducerResultToEffectOrUpdate(result, causingAction) {
     const output = {};
-    if (result[EFFECT]) {
+    if (result === undefined) {
+        // this is for preventing running code in `else` blocks
+        // `undefined` in Feedbacks means: don't change a property value
+        // so nothing more to do
+    } else if (result === null) {
+        output.update = raw(result);
+    } else if (result[EFFECT]) {
         output.effect = result;
     } else if (typeof result == 'function'
         || (result && typeof result[symbolObservable] == 'function')

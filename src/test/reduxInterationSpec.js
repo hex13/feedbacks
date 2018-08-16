@@ -152,7 +152,27 @@ describe('[resmix]', () => {
         
     });
 
+    it('should allow reducers for returning null. Then null should be assigned to property', () => {
+        const store = withRedux(Redux).createEngine({
+            foo: init(2)
+                .on('someAction', () => null)
+        }).getStore();
 
+        assert.deepStrictEqual(store.getState(), {foo: 2});
+        store.dispatch({type: 'someAction'});
+        assert.deepStrictEqual(store.getState(), {foo: null});
+    });
+
+    it('should allow reducers for returning undefined. Then value of property should remain the same', () => {
+        const store = withRedux(Redux).createEngine({
+            foo: init(2)
+                .on('someAction', () => undefined)
+        }).getStore();
+
+        assert.deepStrictEqual(store.getState(), {foo: 2});
+        store.dispatch({type: 'someAction'});
+        assert.deepStrictEqual(store.getState(), {foo: 2});
+    });
 
     it('should allow reducers for returning objects', () => {
         const someSymbol = Symbol();
