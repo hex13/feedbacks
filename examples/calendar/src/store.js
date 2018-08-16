@@ -1,7 +1,7 @@
 import * as Redux from 'redux';
 import { withRedux, init, defineEffect } from 'feedbacks';
 import * as fx from 'feedbacks/fx';
-import { forward, backward, showDetail, addNote, removeNote, changeTheme, changeThemeOk } from './actions';
+import { forward, backward, showDetail, addNote, removeNote, changeTheme, changeThemeOk, updateNote } from './actions';
 import * as Rx from 'rxjs';
 import { map, take } from 'rxjs/operators';
 
@@ -55,7 +55,20 @@ const blueprint = {
             const notes = state[key] || [];
             return {
                 ...state,
-                [key]: notes.filter(x => x.id !== payload.id),
+                [key]: notes.filter(note => note.id !== payload.id),
+            };
+        })
+        .on(updateNote(), (state, { payload}) => {
+            const key = getKeyByDate(payload);  
+            const notes = state[key] || [];
+            return {
+                ...state,
+                [key]: notes.map(note => {
+                    if (note.id == payload.id) {
+                        return { ...note, text: payload.text};
+                    }
+                    return note;
+                }),
             };
         }),
     themeDialog: init({visible: false})

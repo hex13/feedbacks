@@ -1,7 +1,24 @@
 import React from 'react';
 
-function Note({ note, removeNote, day, month, year }) {
-    return <li>{note.text}#{note.id}<button onClick={() => removeNote({ day, month, year, id: note.id}) }>remove</button></li>
+function Note({ note, actions, day, month, year }) {
+    const textRef = React.createRef();
+    return <li>#{note.id} 
+        <input 
+            type="text" 
+            ref={textRef} 
+            defaultValue={note.text}
+            onKeyUp={
+                e => {
+                    if (e.keyCode == 27) e.target.value = note.text;
+                    if (e.keyCode == 13) actions.updateNote({ text: e.target.value, day, month, year, id: note.id})
+                }
+            }
+            onBlur={
+                (e) => actions.updateNote({ text: e.target.value, day, month, year, id: note.id})
+            }
+        />
+        <button onClick={() => actions.removeNote({ day, month, year, id: note.id}) }>remove</button>
+    </li>
 }
 
 export default function Detail({ notes, date: { day, month, year }, actions, notesByDay }) {
@@ -13,7 +30,7 @@ export default function Detail({ notes, date: { day, month, year }, actions, not
             add
         </button>
         {
-            notes.map((note, i) => <Note key={i} note={note} removeNote={actions.removeNote} day={day} month={month} year={year} />)
+            notes.map((note, i) => <Note key={i} note={note} actions={actions} day={day} month={month} year={year} />)
         }
     </div>
 };
