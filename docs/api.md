@@ -213,6 +213,10 @@ import:
 import * as fx from 'feedbacks/fx';
 ```
 
+fx.current()
+---
+Get the current value of current property (current property = property that triggered effect)
+
 
 fx.effect(effectObject)
 ----
