@@ -59,8 +59,8 @@ const random = (item) => {
     return createEffect({[EffectRunner.CALL]: ['random', item]});
 };
 
-const current = (item) => {
-    return createEffect({[EffectRunner.CALL]: ['current', item]});
+const current = () => {
+    return createEffect({[EffectRunner.CALL]: ['current']});
 };
 
 const next = (value) => {
