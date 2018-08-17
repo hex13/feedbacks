@@ -20,6 +20,8 @@ const isGenerator = v => v && typeof v.next == 'function';
 
 const isObservable = v => v && typeof v[symbolObservable] == 'function';
 
+const isVoidValue = v => v === undefined;
+
 class EffectRunner {
     constructor(api) {
         this.api = api;
@@ -48,8 +50,10 @@ class EffectRunner {
                 let iterResult = effect.next(lastResult && lastResult.value);
                 if (!iterResult.done) {
                     this.run(iterResult.value, iterate, ctx, [lastResult && lastResult.value]);
-                } else
-                    this.run(iterResult.value, cb, ctx)
+                } else {
+                    if (!isVoidValue(iterResult.value))
+                        this.run(iterResult.value, cb, ctx)
+                }
             };
             iterate();
         } else if (effect.$$iterator) {

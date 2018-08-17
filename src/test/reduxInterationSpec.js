@@ -1245,6 +1245,7 @@ describe('[fx.current]', () => {
 
 describe('[fx.next]', () => {
     it('should trigger next update', () => {
+        const whatHappened = [];
         const store = withRedux(Redux).createEngine({
             counter: init(100)
                 .on('foo', () => {
@@ -1252,14 +1253,27 @@ describe('[fx.next]', () => {
                 })
         })
         .onEffect('foo', function* () {
-
+            whatHappened.push(['generator entered']);
             yield fx.next(200);
+            whatHappened.push(['emitted 200']);
+            whatHappened.push(['store', store.getState()]);
+            yield fx.next(300);
+            whatHappened.push(['emitted 300']);
+            whatHappened.push(['store', store.getState()]);
         })
         .getStore();
 
         assert.deepStrictEqual(store.getState(), {counter: 100});
         store.dispatch({type: 'foo'});
-        assert.deepStrictEqual(store.getState(), {counter: 200});
+        assert.deepStrictEqual(store.getState(), {counter: 300});
+        assert.deepStrictEqual(whatHappened, [
+            ['generator entered'],
+            ['emitted 200'],
+            ['store', {counter: 200}],
+            ['emitted 300'],
+            ['store', {counter: 300}],
+
+        ]);
     });
 });
     

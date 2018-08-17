@@ -374,6 +374,18 @@ describe('EffectRunner', () => {
                 ]);    
             });
         });
+
+        it( 'should not emit value if it is undefined', () => {
+            er.run(function* () {
+                return undefined;
+            }, next);
+
+            return deferChecking(() => {
+                assert.deepStrictEqual(whatHappened, [
+                ]);
+            });
+        });
+
     });
 
     describe('[effect tagged as EffectRunner.EFFECT]', () => {
