@@ -1,7 +1,7 @@
 {
   "name": "feedbacks",
   "repository": "https://github.com/hex13/feedbacks",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Feedbacks - reactive blueprints for your Redux apps",
   "main": "src/resmix.js",
   "scripts": {
