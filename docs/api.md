@@ -215,7 +215,7 @@ import * as fx from 'feedbacks/fx';
 
 fx.current()
 ---
-Get the current value of current property (current property = property that triggered effect). Look also on to [fx.next()](#fx.next())
+Get the current value of current property (current property = property that triggered effect). Look also on to [fx.next()](#fx.next)
 
 
 fx.effect(effectObject)
@@ -237,7 +237,7 @@ Get the root state of store.
 
 fx.next()
 ---
-Emit next value of current property (current property = property that triggered effect). Look also on to [fx.current()](#fx.current())
+Emit next value of current property (current property = property that triggered effect). Look also on to [fx.current()](#fx.current)
 
 
 fx.waitFor(actionPattern, mapper)
