@@ -22,55 +22,53 @@ Feedbacks:
     - allows you to handle custom effects in services (`onEffect`)
     - provides you with some standard effects (like `fx.waitFor` for waiting for specific actions)
 
+Blueprints
+====
+
+What are blueprints? Well, if you use Redux you probably are familiar with concept of "initial state" i.e. object which represents how the store state will look in the beginning. Blueprints take this idea further and not only represent **initial** state, but also all future states of your application. This means you can match specific actions (look at`.on` from Formulas) into specific properties of the state and associate them with specific reducer.
+
+This effectively would slice your state into individual properties with own property matchers and own reducers. Something similar to nested `combineReducers` but with pattern-matching. 
+
+example of blueprint: 
+
+```javascript
+const blueprint = {
+    foo: {
+        bar: init(10) // initial state of property foo.bar
+            .on({type: 'increment'} /*pattern matching */ , (state, action) => {
+                return state + 1;
+            })
+            .on({type: 'decrement'}, (state, action) => {
+                return state - 1;
+            })
+    },
+}
+```
+
+Reducers
+===
+
+In previous example reducers returned just a plain value but they may return various effects as well:
+
+```javascript
+const reducerA = (state, action) => () => Promise.resolve('future value');
+const reducerB = (state, action) => Rx.interval(1000);
+const reducerC = (state, action) => function *() {
+    let counter = 0;
+    while (true) { 
+        yield fx.delay(1000); 
+        yield fx.next(counter++)
+    }
+}
+```
+
+Reducers stay pure because they return only description of "what should happen" and not really change anything. 
 
 # API 
 
-Click this link to read [Feedbacks API guide](docs/api.md).
-
-# Let's see some examples:
-
-
-## Online examples
-
-* Live example on Codesandbox: https://codesandbox.io/s/6zzrnwq63w
-
-* Calendar example on Github: https://github.com/hex13/feedbacks/tree/master/examples/calendar
-
-    * Especially this file which contains all store logic: https://github.com/hex13/feedbacks/blob/master/examples/calendar/src/store.js
-
-
-If you have a problem feel free to create an issue: https://github.com/hex13/feedbacks/issues 
-
-
-## Counter (increments automatically each 1000 milliseconds):
-
-```javascript
-import { withRedux } from 'feedbacks';
-import * as Redux from 'redux';
-import Rx from 'rxjs'; 
-
-const store = withRedux(Redux).createStore({
-    // Feedbacks will subscribe to the Observable and auto-update property:
-    counter: Rx.interval(1000) 
-});
-```
-Notice that you don't need Rx (or any kind of Observables to use Feedbacks. This is just one of use cases)
-
-## Counter (can be incremented / decremented):
-
-
-```javascript
-// ...
-const store = withRedux(Redux).createStore({
-    counter: init(0)
-        .on('increment', value => value + 1)
-        .on('decrement', value => value - 1)
-});
-// ...
-```
-
+Click this link to read more detailed [Feedbacks API guide](docs/api.md).
+ 
 # Power of declarativeness
-
 
 ## Traditional Redux:
 
@@ -159,6 +157,16 @@ this way in one line of code you express:
 2. which action you want to handle (`FETCH_TODOS` but you're not limited to just matching by type. Read more about [advanced pattern matching](#Pattern-Matching))
 3. how value will change including asynchronous changes via observables or function-wrapped promises. You could also spawn another action (and reducer of the next action could send values back to previous property by using `yield` statement). TODO: example
 
+# Online examples
+
+* Live example on Codesandbox: https://codesandbox.io/s/6zzrnwq63w
+
+* Calendar example on Github: https://github.com/hex13/feedbacks/tree/master/examples/calendar
+
+    * Especially this file which contains all store logic: https://github.com/hex13/feedbacks/blob/master/examples/calendar/src/store.js
+
+
+If you have a problem feel free to create an issue: https://github.com/hex13/feedbacks/issues 
 
 # Tips & Tricks
 
