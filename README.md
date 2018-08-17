@@ -206,11 +206,11 @@ But it up to you. Something may also change when React suspense will come to pla
 
 ## React
 
-You can use [https://github.com/reduxjs/react-redux](react-redux) (Official React bindings for Redux)
+You can use [react-redux](https://github.com/reduxjs/react-redux) (Official React bindings for Redux)
 
 ## Rx.js
 
-No need for special preparations. Just import your Rx.js as usual and at this point you can use it with Feedbacks. For example you can return Observables from reducers
+No need for special preparations. Just import [Rx.js](https://github.com/Reactive-Extensions/RxJS) as usual and at this point you can use it with Feedbacks. For example you can return Observables from reducers.
 
 
 # But Feedbacks is not even correct word...
