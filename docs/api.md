@@ -155,7 +155,7 @@ import { defineAction } from 'feedbacks';
 ```
 
 `defineAction` returns an action creator, i.e. function you call to create an action.
-Action creator is FSA-complaint. Created action will have a `payload` property set to whatever you pass as an argument.
+Action creator is [FSA-complaint](https://github.com/redux-utilities/flux-standard-action). Created action will have a `payload` property set to whatever you pass as an argument.
 
 
 example:
