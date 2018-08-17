@@ -217,6 +217,15 @@ fx.current()
 ---
 Get the current value of current property (current property = property that triggered effect). Look also on to [fx.next()](#fxnext)
 
+example:
+```javascript
+function* () {
+    const current = yield fx.current();
+    // ....
+}
+```
+
+
 
 fx.effect(effectObject)
 ----
@@ -238,6 +247,13 @@ Get the root state of store.
 fx.next()
 ---
 Emit next value of current property (current property = property that triggered effect). Look also on to [fx.current()](#fxcurrent)
+
+example:
+```javascript
+function* () {
+    yield fx.next('next value');
+}
+```
 
 
 fx.waitFor(actionPattern, mapper)
