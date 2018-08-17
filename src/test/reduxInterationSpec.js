@@ -1254,11 +1254,12 @@ describe('[fx.next]', () => {
         })
         .onEffect('foo', function* () {
             whatHappened.push(['generator entered']);
-            yield fx.next(200);
-            whatHappened.push(['emitted 200']);
+            let valueFromNext;
+            valueFromNext = yield fx.next(200);
+            whatHappened.push(['emitted', valueFromNext]);
             whatHappened.push(['store', store.getState()]);
-            yield fx.next(300);
-            whatHappened.push(['emitted 300']);
+            valueFromNext = yield fx.next(300);
+            whatHappened.push(['emitted', valueFromNext]);
             whatHappened.push(['store', store.getState()]);
         })
         .getStore();
@@ -1268,9 +1269,9 @@ describe('[fx.next]', () => {
         assert.deepStrictEqual(store.getState(), {counter: 300});
         assert.deepStrictEqual(whatHappened, [
             ['generator entered'],
-            ['emitted 200'],
+            ['emitted', 200],
             ['store', {counter: 200}],
-            ['emitted 300'],
+            ['emitted', 300],
             ['store', {counter: 300}],
 
         ]);

@@ -81,6 +81,6 @@ module.exports = {
                 value: value
             }
         })
-        return true;
+        return value;
     }
 };
