@@ -63,6 +63,10 @@ const current = (item) => {
     return createEffect({[EffectRunner.CALL]: ['current', item]});
 };
 
+const next = (value) => {
+    return createEffect({[EffectRunner.CALL]: ['next', value]});
+};
+
 const compute = (params) => {
     return createEffect({
         [EFFECT]: {[EffectRunner.CALL]: ['effect', params]},
@@ -87,6 +91,7 @@ module.exports = {
     getState,
     delay,
     current,
+    next,
 };
 
 

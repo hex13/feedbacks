@@ -1,3 +1,5 @@
+'use strict';
+
 const { isMatch } = require('./matching');
 const { get } = require('transmutable/get-set');
 const { UPDATE, UPDATE_BLUEPRINT } = require('./constants');
@@ -70,5 +72,14 @@ module.exports = {
     current(dispatch, getState) {
         const curr = get(getState(), this.path);
         return curr;
+    },
+    next(dispatch, getState, value) {
+        dispatch({
+            type: UPDATE,
+            payload: {
+                name: this.path,
+                value: value
+            }
+        })
     }
 };

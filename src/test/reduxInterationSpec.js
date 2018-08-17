@@ -1243,6 +1243,26 @@ describe('[fx.current]', () => {
     });
 });
 
+describe('[fx.next]', () => {
+    it('should trigger next update', () => {
+        const store = withRedux(Redux).createEngine({
+            counter: init(100)
+                .on('foo', () => {
+                    return fx.effect({type: 'foo'})
+                })
+        })
+        .onEffect('foo', function* () {
+
+            yield fx.next(200);
+        })
+        .getStore();
+
+        assert.deepStrictEqual(store.getState(), {counter: 100});
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), {counter: 200});
+    });
+});
+    
 describe('[time effects]', () => {
     it('fx.delay should call setTimeout', (done) => {
         const sT = global.setTimeout;
