@@ -154,7 +154,7 @@ In Feedbacks library you are encouraged to write more direct code. Let's rewrite
 
 this way in one line of code you express:
 1. what should be target property of state change (`todos`)
-2. which action you want to handle (`FETCH_TODOS` but you're not limited to just matching by type. Read more about [advanced pattern matching](#Pattern-Matching))
+2. which action you want to handle (`FETCH_TODOS` but you're not limited to just matching by type. Read more about [advanced pattern matching](#pattern-matching))
 3. how value will change including asynchronous changes via observables or function-wrapped promises. You could also spawn another action (and reducer of the next action could send values back to previous property by using `yield` statement). TODO: example
 
 # Online examples
