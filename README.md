@@ -202,12 +202,15 @@ Well, in current version of Feedbacks there is no one and only recommended way t
 
 But it up to you. Something may also change when React suspense will come to play (assuming you use React). Though Feedbacks are not dependent of React and they shoudn't be coupled with React-only features. So in future versions there will be probably the idiomatic "Feedbacky" way to make this (maybe alternative to so called createFetcher/simple-cache-provider from future React? Or extension to it?)
 
-# Glossary (TODO):
+# Integration with other libraries
 
-* blueprint
-* immediate vs. deferred values
-* pattern-matching
-* mounting
+## React
+
+You can use [https://github.com/reduxjs/react-redux](react-redux) (Official React bindings for Redux)
+
+## Rx.js
+
+No need for special preparations. Just import your Rx.js as usual and at this point you can use them with Feedbacks. For example you can return them from reducers
 
 
 # But Feedbacks is not even correct word...
