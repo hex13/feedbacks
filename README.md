@@ -3,13 +3,13 @@ Feedbacks - reactive blueprints for your Redux apps
 
 No more wiring manually your actions, reducers, thunks etc. 
 
-Just create a "blueprint" which will define a shape of state and define how it should react on incoming actions (pattern-matching: action -> reducer). 
+Just create a "blueprint" which will define a **shape of state** and define how it should **react on incoming actions** (pattern-matching: action -> reducer). 
 
-You can hook into individual properties even in deep in the state (and wire up a property to the reducer via pattern-matching mechanism)
+You can hook into **individual properties** even deep in the state (and wire up a property to the reducer via **pattern-matching** mechanism)
 
-Reducers in Feedbacks can return both normal values and side-effects. And side-effects represent future value(s) of given property. 
+**Reducers** in Feedbacks can **return both normal values and effects**. And **effects represent future value(s) of property**. 
 
-Observables and promises are auto-resolved, and owner property is auto-updated.
+Observables and promises are **auto-resolved**, and owner property is auto-updated.
 
 ![feedbacks-resolving.png](feedbacks-resolving.png)
 
@@ -25,7 +25,7 @@ Feedbacks:
 Blueprints
 ====
 
-What are blueprints? Well, if you use Redux you probably are familiar with concept of "initial state" i.e. object which represents how the store state will look in the beginning. Blueprints take this idea further and not only represent **initial** state, but also all future states of your application. This means you can match specific actions (look at`.on` from Formulas) into specific properties of the state and associate them with specific reducer.
+What are blueprints? Well, if you use Redux you probably are familiar with concept of "initial state" i.e. object which represents how the store state will look in the beginning. Blueprints take this idea further and represent **not only initial state**, but also **all future states** of your application. This means you can match specific actions (look at`.on` from Formulas) into specific properties of the state and associate them with specific reducer.
 
 This effectively would slice your state into individual properties with own property matchers and own reducers. Something similar to nested `combineReducers` but with pattern-matching. 
 
