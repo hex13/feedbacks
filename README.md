@@ -210,7 +210,7 @@ You can use [https://github.com/reduxjs/react-redux](react-redux) (Official Reac
 
 ## Rx.js
 
-No need for special preparations. Just import your Rx.js as usual and at this point you can use them with Feedbacks. For example you can return them from reducers
+No need for special preparations. Just import your Rx.js as usual and at this point you can use it with Feedbacks. For example you can return Observables from reducers
 
 
 # But Feedbacks is not even correct word...
