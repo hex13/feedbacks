@@ -26,6 +26,13 @@ const raw = value => ({
     }
 });
 
+// we can't just join('.') because properties with dots "."  in keys would be confused with nesting
+// e.g. ["foo.bar", "baz"] vs. ["foo", "bar", "baz"]
+const SEP = '.$SEP$' + Math.random() + '##';
+const samePaths = (a, b) => {
+    return a.join(SEP) === b.join(SEP);
+}
+
 const effectHandlers = require('./effectHandlers');
 
 
@@ -208,6 +215,7 @@ exports.init = (value) => {
 
 function createEngine(blueprint, { loader } = {} ) {
     const channels = {};
+    const ongoingEffects = [];
 
     let _store;
     let customEffectHandlers = [];
@@ -298,9 +306,21 @@ function createEngine(blueprint, { loader } = {} ) {
                             })
                             return;
                         }
-                        effectRunner.run(effect[EFFECT] || effect, (result) => {
+
+                        for (let i = ongoingEffects.length - 1; i >= 0; i--) {
+                            const eff = ongoingEffects[i];
+
+                            if (samePaths(eff.path, path)) {
+                                eff.cancel();
+                                ongoingEffects.splice(i, 1);
+                            }
+                        }
+                        const ongoingEffect = effectRunner.run(effect[EFFECT] || effect, (result) => {
                             update(result.path, result.value)
                         }, { path, loader, customEffectHandlers });
+                        if (ongoingEffect) {
+                            ongoingEffects.push({ path, cancel: ongoingEffect.cancel})
+                        }
                     } else {
                         for (let k in node) {
                             visitNode(node[k], path.concat(k));
@@ -327,6 +347,9 @@ function createEngine(blueprint, { loader } = {} ) {
         onEffect(pattern, runEffect) {
             customEffectHandlers.push([pattern, runEffect]);
             return this;
+        },
+        getOngoingEffects() {
+            return ongoingEffects;
         }
     }
 };

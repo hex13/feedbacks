@@ -745,6 +745,39 @@ describe('[resmix]', () => {
 
     });
 
+    describe('[cancelling effects', () => {
+        it('should cancel observable when other observable is assigned to the same property', () => {
+            let n = 0;
+            const nexts = [];
+            const observables = [0, 1, 2].map(n => new Observable(observer => {
+                observer.next('o ' + n)
+                nexts.push((v) => observer.next(v));
+            }));
+            let lastN = 0;
+            const engine = withRedux(Redux).createEngine({
+                foo: {
+                    bar: init(0).on('nextObservable', () => observables[lastN++])
+                }
+            });
+            const store = engine.getStore();
+
+            assert.deepStrictEqual(store.getState(), {foo: { bar: 0 }});
+            assert.deepStrictEqual(engine.getOngoingEffects(), []);
+
+            store.dispatch({type: 'nextObservable'});
+
+            assert.deepStrictEqual(store.getState(), {foo: { bar: 'o 0' }});
+            assert.deepStrictEqual(engine.getOngoingEffects().length, 1);
+
+            store.dispatch({type: 'nextObservable'});
+            nexts[0]('should be cancelled!')
+
+            assert.deepStrictEqual(store.getState(), {foo: { bar: 'o 1'}});
+            assert.deepStrictEqual(engine.getOngoingEffects().length, 1);
+
+        });
+    })
+
     describe('[effect - load]', () => {
         it('should load via provided loader', () => {
             //const 

@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('assert');
 const EffectRunner = require('../effectRunner');
-const { of, Observable } = require('rxjs');
+const { of, Observable, Subject } = require('rxjs');
 const Formula = require('../formula');
 const _it = it;
 
@@ -351,6 +351,23 @@ describe('EffectRunner', () => {
                 ['next', Result('whatever')],
                 ['next', Result('woo')],
             ]);    
+        });
+    });
+
+    describe('[cancellation]', () => {
+        it('should cancel Observable', () => {
+            let publish;
+            const result = er.run(new Observable(observer => {
+                publish = v => observer.next(v);
+            }), next);
+            publish('bear');
+            publish('fish');
+            result.cancel();
+            publish('waterfall');
+            assert.deepStrictEqual(whatHappened, [
+                ['next', Result('bear')],
+                ['next', Result('fish')],
+            ]);
         });
     });
 

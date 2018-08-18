@@ -83,7 +83,7 @@ class EffectRunner {
             }
             else throw new Error(`EffectRunner: couldn't find method '${method}'`);
         } else if (typeof effect[symbolObservable] == 'function') {
-            effect[symbolObservable]().subscribe({
+            const subscription = effect[symbolObservable]().subscribe({
                 next: (v) => {
                     this.run(v, cb, ctx)
                 },
@@ -91,6 +91,11 @@ class EffectRunner {
                     
                 }
             });
+            return {
+                cancel() {
+                    subscription.unsubscribe();
+                }
+            }
         } else if (typeof effect == 'function') {
             return this.run(effect(...params), cb, ctx);
         } else if (typeof effect.then == 'function') {
