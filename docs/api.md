@@ -192,7 +192,7 @@ function reducer() {
 
 // or intercept them: 
 
-createEngine(blueprint).onEffect(doSomething, () => {
+createEngine(blueprint).onEffect(doSomething(), () => {
     return Promise.resolve('result of effect');
 })
 
