@@ -198,18 +198,6 @@ You can do it in either way:
 Whatever will make more sense to what you want to achieve.
 
 
-## Showing spinners:
-
-What about data-fetching-status and all this science of when to show a spinner and when to hide it?
-
-Well, in current version of Feedbacks there is no one and only recommended way to do it. Though you could achieve this e.g. by doing this:
-
-```javascript
-// TODO write example 
-```
-
-But it up to you. Something may also change when React suspense will come to play (assuming you use React). Though Feedbacks are not dependent of React and they shoudn't be coupled with React-only features. So in future versions there will be probably the idiomatic "Feedbacky" way to make this (maybe alternative to so called createFetcher/simple-cache-provider from future React? Or extension to it?)
-
 # Integration with other libraries
 
 ## React
