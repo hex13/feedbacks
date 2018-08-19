@@ -243,13 +243,18 @@ function createEngine(blueprint, { loader } = {} ) {
         if (!store || !store.getState) {
             throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);
         }
-        const update = (path, value, shouldPerformAfterUpdate = true) => {
+        const update = (path, value, shouldPerformAfterUpdate = true, meta) => {
             if (!(path instanceof Array)) {
                 path = [path];
             }
-            next({type: UPDATE, payload: {
-                name: path, value
-            }});
+            const action = {type: UPDATE, 
+                payload: {
+                    name: path, value,
+                },
+            };
+            action.meta = meta;
+            next(action);
+
             if (shouldPerformAfterUpdate) performAfterUpdate();
         };
 
@@ -315,8 +320,13 @@ function createEngine(blueprint, { loader } = {} ) {
                                 ongoingEffects.splice(i, 1);
                             }
                         }
+                        const meta = {
+                            cause: {
+                                type: action.type
+                            }
+                        }
                         const ongoingEffect = effectRunner.run(effect[EFFECT] || effect, (result) => {
-                            update(result.path, result.value)
+                            update(result.path, result.value, undefined, meta)
                         }, { path, loader, customEffectHandlers, update });
                         if (ongoingEffect) {
                             ongoingEffects.push(Object.assign({ id: Math.random(), path}, ongoingEffect));
