@@ -319,7 +319,7 @@ function createEngine(blueprint, { loader } = {} ) {
                             update(result.path, result.value)
                         }, { path, loader, customEffectHandlers });
                         if (ongoingEffect) {
-                            ongoingEffects.push({ path, cancel: ongoingEffect.cancel})
+                            ongoingEffects.push(Object.assign({ id: Math.random(), path}, ongoingEffect));
                         }
                     } else {
                         for (let k in node) {

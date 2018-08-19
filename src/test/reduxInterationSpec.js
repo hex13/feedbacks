@@ -769,6 +769,8 @@ describe('[resmix]', () => {
 
             assert.deepStrictEqual(store.getState(), {foo: { bar: 'o 0' }});
             assert.deepStrictEqual(engine.getOngoingEffects().length, 1);
+            assert.deepStrictEqual(engine.getOngoingEffects()[0].path, ['foo', 'bar']);
+            assert.deepStrictEqual(engine.getOngoingEffects()[0].kind, 'observable');
 
             store.dispatch({type: 'nextObservable'});
             nexts[0]('should be cancelled!')
@@ -796,12 +798,23 @@ describe('[resmix]', () => {
                 }
             });
             const store = engine.getStore();
+            const inspector = engine;
 
             assert.deepStrictEqual(store.getState(), {foo: { bar: 0 }});
-            assert.deepStrictEqual(engine.getOngoingEffects(), []);
+            let ongoingEffects;
+
+            ongoingEffects = inspector.getOngoingEffects();
+            assert.deepStrictEqual(ongoingEffects, []);
 
             store.dispatch({type: 'foo'});
+            
+            ongoingEffects = inspector.getOngoingEffects();
+            assert.deepStrictEqual(ongoingEffects.length, 1);
+            assert.deepStrictEqual(ongoingEffects[0].path, ['foo', 'bar']);
+            assert.deepStrictEqual(ongoingEffects[0].kind, 'generator');
+            
             store.dispatch({type: 'foo'});
+            assert.deepStrictEqual(inspector.getOngoingEffects().length, 1);
             nexts[0]();
             nexts[1]();
             setTimeout(() => {

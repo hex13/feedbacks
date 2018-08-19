@@ -61,7 +61,8 @@ class EffectRunner {
             return {
                 cancel() {
                     cancelled = true;
-                }
+                },
+                kind: 'generator'
             }
         } else if (effect.$$iterator) {
             const iter = effect.$$iterator;
@@ -101,7 +102,8 @@ class EffectRunner {
             return {
                 cancel() {
                     subscription.unsubscribe();
-                }
+                },
+                kind: 'observable'
             }
         } else if (typeof effect == 'function') {
             return this.run(effect(...params), cb, ctx);
