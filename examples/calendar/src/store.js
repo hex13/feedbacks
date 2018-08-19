@@ -26,7 +26,6 @@ const blueprint = {
 
     year: init(currentDate.year)
         .on(forward({ target: 'year' }), v => v + 1)
-        .on(forward({ target: 'year' }), v => v + 1)
         .on(backward({ target: 'year' }), v => v - 1),
 
     detail: {
