@@ -74,13 +74,7 @@ module.exports = {
         return curr;
     },
     next(dispatch, getState, value) {
-        dispatch({
-            type: UPDATE,
-            payload: {
-                name: this.path,
-                value: value
-            }
-        })
+        this.update(this.path, value, undefined);
         return value;
     }
 };

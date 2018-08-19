@@ -317,7 +317,7 @@ function createEngine(blueprint, { loader } = {} ) {
                         }
                         const ongoingEffect = effectRunner.run(effect[EFFECT] || effect, (result) => {
                             update(result.path, result.value)
-                        }, { path, loader, customEffectHandlers });
+                        }, { path, loader, customEffectHandlers, update });
                         if (ongoingEffect) {
                             ongoingEffects.push(Object.assign({ id: Math.random(), path}, ongoingEffect));
                         }
