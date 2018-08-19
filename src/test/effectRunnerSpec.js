@@ -369,6 +369,31 @@ describe('EffectRunner', () => {
                 ['next', Result('fish')],
             ]);
         });
+
+        it('should cancel generator', () => {
+            let publish = () => {};
+            let resolve;
+            const p = new Promise(r => {
+                resolve = r;
+            });
+            const result = er.run(function *() {
+                whatHappened.push(['generator']);
+                const v = yield p;
+                whatHappened.push(['generator continues']);
+                return v;
+            }, next);
+
+            result.cancel();
+            resolve('kot');
+
+            return deferChecking(() => {
+                assert.deepStrictEqual(whatHappened, [
+                    ['generator'],
+                ]);
+
+            })
+        });
+
     });
 
 

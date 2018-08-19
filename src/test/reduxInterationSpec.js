@@ -756,7 +756,8 @@ describe('[resmix]', () => {
             let lastN = 0;
             const engine = withRedux(Redux).createEngine({
                 foo: {
-                    bar: init(0).on('nextObservable', () => observables[lastN++])
+                    bar: init(0)
+                        .on('nextObservable', () => observables[lastN++])
                 }
             });
             const store = engine.getStore();
@@ -776,6 +777,43 @@ describe('[resmix]', () => {
             assert.deepStrictEqual(engine.getOngoingEffects().length, 1);
 
         });
+
+        it('should cancel generator when other generator is assigned to the same property', (done) => {
+            const whatHappened = [];
+            let c = 0;
+            let nexts = [];
+            const engine = withRedux(Redux).createEngine({
+                foo: {
+                    bar: init(0).on('foo', () => {
+                        const n = c++;
+                        return function *() {
+                            yield new Promise((resolve) => {
+                                nexts[n] = resolve;
+                            });
+                            whatHappened.push(['gen' + n])
+                        }
+                    })
+                }
+            });
+            const store = engine.getStore();
+
+            assert.deepStrictEqual(store.getState(), {foo: { bar: 0 }});
+            assert.deepStrictEqual(engine.getOngoingEffects(), []);
+
+            store.dispatch({type: 'foo'});
+            store.dispatch({type: 'foo'});
+            nexts[0]();
+            nexts[1]();
+            setTimeout(() => {
+                nexts[1]();
+                assert.deepStrictEqual(whatHappened, [
+                    ['gen1']
+                ]);
+
+                done();
+            }, 0);
+        });
+
     })
 
     describe('[effect - load]', () => {

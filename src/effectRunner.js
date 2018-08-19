@@ -46,7 +46,9 @@ class EffectRunner {
         } else if (effect[EffectRunner.EFFECT]) {
             this.run(effect[EffectRunner.EFFECT], cb, ctx, params);
         } else if (isGenerator(effect)) {
+            let cancelled = false;
             const iterate = (lastResult) => {
+                if (cancelled) return;
                 let iterResult = effect.next(lastResult && lastResult.value);
                 if (!iterResult.done) {
                     this.run(iterResult.value, iterate, ctx, [lastResult && lastResult.value]);
@@ -56,6 +58,11 @@ class EffectRunner {
                 }
             };
             iterate();
+            return {
+                cancel() {
+                    cancelled = true;
+                }
+            }
         } else if (effect.$$iterator) {
             const iter = effect.$$iterator;
             const iterate = (lastResult) => {
