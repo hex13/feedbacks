@@ -1,1 +1,1 @@
-module.exports = require('./src/fx');
+module.exports = require('./lib/fx');

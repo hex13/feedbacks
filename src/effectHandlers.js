@@ -1,7 +1,7 @@
 'use strict';
 
 const { isMatch } = require('./matching');
-const { get } = require('transmutable/get-set');
+const { get } = require('transmutable/lib/get-set');
 const { UPDATE, UPDATE_BLUEPRINT } = require('./constants');
 const resolveInitialState = require('./resolveInitialState');
 

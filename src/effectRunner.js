@@ -3,7 +3,7 @@
 const { isMatch } = require('./matching');
 const symbolObservable = require('symbol-observable').default;
 const Formula = require('./formula');
-const { set } = require('transmutable/get-set');
+const { set } = require('transmutable/lib/get-set');
 
 const nop = () => {};
 
