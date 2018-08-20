@@ -25,7 +25,7 @@ Feedbacks:
 Blueprints
 ====
 
-What are blueprints? Well, if you use Redux you probably are familiar with concept of "initial state" i.e. object which represents how the store state will look in the beginning. Blueprints take this idea further and represent **not only initial state**, but also **all future states** of your application. This means you can match specific actions (look at`.on` from Formulas) into specific properties of the state and associate them with specific reducer.
+What are blueprints? Well, if you use Redux you probably are familiar with concept of "initial state" i.e. object which represents how the store state will look in the beginning. Blueprints take this idea further and represent **not only initial state**, but also **all future states** of your application. This means you can match specific actions ([read more about matching actions](docs/api.md#formulas---init-and-on)) into specific properties of the state and associate them with specific reducer.
 
 This effectively would slice your state into individual properties with own property matchers and own reducers. Something similar to nested `combineReducers` but with pattern-matching. 
 
