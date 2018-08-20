@@ -163,9 +163,10 @@ this way in one line of code you express:
 
 * Live example on Codesandbox: https://codesandbox.io/s/6zzrnwq63w
 
-* Calendar example on Github: https://github.com/hex13/feedbacks/tree/master/examples/calendar
-
-    * Especially this file which contains all store logic: https://github.com/hex13/feedbacks/blob/master/examples/calendar/src/store.js
+* Calendar example
+    * on Github: https://github.com/hex13/feedbacks/tree/master/examples/calendar
+        * Especially this file which contains all store logic: https://github.com/hex13/feedbacks/blob/master/examples/calendar/src/store.js
+    * online demo version: http://hex13.github.io/apps/feedbacks
 
 
 If you have a problem feel free to create an issue: https://github.com/hex13/feedbacks/issues 
