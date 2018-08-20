@@ -386,13 +386,14 @@ exports.defineAction = creators.defineAction;
 exports.defineEffect = creators.defineEffect;
 
 
-exports.feedbacksEnhancer = (createStore) => {
+exports.createFeedbacks = () => (createStore) => {
     return (blueprint) => {
         const engine = createEngine(blueprint);
         const store = createStore(engine.reducer);
 
         return Object.assign({}, store, {
-            dispatch: engine.middleware(store)(store.dispatch)
+            dispatch: engine.middleware(store)(store.dispatch),
+            engine,
         });
     };
 }

@@ -11,12 +11,12 @@ const { Observable, interval, Subscription, of } = require('rxjs');
 const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
 const { UPDATE } = require('../constants');
-const { createEngine, withRedux, init, defineEffect, defineAction, feedbacksEnhancer } = require('..');
+const { createEngine, withRedux, init, defineEffect, defineAction, createFeedbacks } = require('..');
 
 const fx = require('../fx');
 
 const prepareStore = (blueprint) => {
-    return createStore(blueprint, feedbacksEnhancer)
+    return createStore(blueprint, createFeedbacks())
 
     // return withRedux(Redux).createStore(blueprint);
 
@@ -92,9 +92,9 @@ describe('[creating store via enhancer (smoke test)]', () => {
     beforeEach(() => {
         store = createStore({
             a: init(130).on('foo', state => state - 100)
-        }, feedbacksEnhancer);
+        }, createFeedbacks());
     });
-
+    
     it('should be possible to call getState', () => {
         assert.deepStrictEqual(store.getState(), {a: 130});
     });
@@ -1494,7 +1494,7 @@ describe('[inspection]', () => {
                 bar: init(123).on('sth', () => () => Promise.resolve(1234))
             }
         }, compose(
-            feedbacksEnhancer,
+            createFeedbacks(),
             createStore => {
                 return (...args) => {
                     const store = createStore(...args);
