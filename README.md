@@ -51,9 +51,11 @@ Reducers
 In previous example reducers returned just a plain value but they may return various effects as well:
 
 ```javascript
-const reducerA = (state, action) => () => Promise.resolve('future value');
-const reducerB = (state, action) => Rx.interval(1000);
-const reducerC = (state, action) => function *() {
+const promiseReducer = (state, action) => () => Promise.resolve('future value');
+
+const rxCounter = (state, action) => Rx.interval(1000);
+
+const generatorCounter = (state, action) => function *() {
     let counter = 0;
     while (true) { 
         yield fx.delay(1000); 
