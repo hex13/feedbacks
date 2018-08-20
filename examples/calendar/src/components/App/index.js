@@ -6,6 +6,7 @@ import Detail from '../Detail';
 import { connect } from '../common';
 import { changeTheme } from '../../actions';
 import { changeThemeOk } from '../../actions';
+import { DevTools } from '../../store';
 
 function _ThemeDialog({ onChange, theme, hidden, onOpen }) {
     if (hidden) return <button onClick={ onOpen }>
@@ -44,6 +45,7 @@ const ThemeDialog = connect(state => {
 
 function App({ notesByDay, waiting, text, theme, dispatch }) {
     return <div id="theme" className={theme.name}>
+        <DevTools />
         <ThemeDialog />
         <Calendar />
         <Detail />

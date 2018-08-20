@@ -1,5 +1,9 @@
+import React from 'react';
 import * as Redux from 'redux';
-import { withRedux, init, defineEffect } from 'feedbacks';
+import { withRedux, init, defineEffect, createFeedbacks } from 'feedbacks';
+import { createDevTools } from 'redux-devtools';
+import LogMonitor from 'redux-devtools-log-monitor';
+import DockMonitor from 'redux-devtools-dock-monitor';
 import * as fx from 'feedbacks/fx';
 import { forward, backward, showDetail, addNote, removeNote, changeTheme, changeThemeOk, updateNote } from './actions';
 import * as Rx from 'rxjs';
@@ -39,7 +43,6 @@ const blueprint = {
         .on(addNote(), (state, { payload }) => {
             const key = getKeyByDate(payload);
             return function* () {
-                const res = yield delay(400, () => {}); // simulate network delay
                 const current = yield fx.current();
                 const notes = current[key] || [];
                 return {
@@ -74,11 +77,11 @@ const blueprint = {
         }),
     themeDialog: init({visible: false})
         .on(changeTheme(), () => {
-            return fx.flow([
-                {visible: true},
-                fx.waitFor(changeThemeOk(), x => x),
-                {visible: false},
-            ]);
+            return function* () {
+                yield fx.next({visible: true});
+                yield fx.waitFor(changeThemeOk(), x => x);
+                yield fx.next({visible: false});
+            }
         }),
     theme: init({idx: 0, name: themes[0]})
         .on(changeThemeOk(), (state, action) => {
@@ -94,15 +97,32 @@ const delay = (t,v) => {
     })
 }
 
-export default function configureStore() {
+export const DevTools = createDevTools(<DockMonitor defaultIsVisible={true}>
+    <LogMonitor 
+        toggleVisibilityKey="ctrl-h"
+        theme="tomorrow"
+    />
+</DockMonitor>);
+
+export function configureStore() {
     
-    const store = withRedux(Redux).createEngine(blueprint)
-    .onEffect(doComputeNotes(), function* ({payload:date}) {
-        const notes = (yield fx.getState()).notesByDay[getKeyByDate(date)] || [{text: '???'}];
+    // const engine = withRedux(Redux).createEngine(blueprint).onEffect(doComputeNotes(), function* ({payload:date}) {
+    //     const notes = (yield fx.getState()).notesByDay[getKeyByDate(date)] || [{text: '???'}];
         
-        return notes;
-    })
-    .getStore();
-    store.dispatch({type: 'ask'});
+    //     return notes;
+    // });
+    const store = Redux.createStore(blueprint, Redux.compose(
+        createFeedbacks(),
+        DevTools.instrument(), 
+    ));
+    //const store  = engine.getStore();
+
+    store.engine.onEffect(doComputeNotes(), function* ({payload:date}) {
+            const notes = (yield fx.getState()).notesByDay[getKeyByDate(date)] || [{text: '???'}];
+            
+            return notes;
+        });
+
     return store;
-}
+};
+

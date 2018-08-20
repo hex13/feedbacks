@@ -6,14 +6,16 @@ import App from './components/App';
 import { Provider } from 'react-redux';
 import './index.css';
 
-import configureStore from './store';
+import { DevTools, configureStore } from './store';
 
 const store = configureStore();
 
 ReactDOM.render(
-    <Provider store={store}>
-        <App />
-    </Provider>,
+    <div>
+        <Provider store={store}>
+            <App />        
+        </Provider>
+    </div>,
     document.getElementById('root')
 );
 
