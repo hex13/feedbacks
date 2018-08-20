@@ -2,7 +2,7 @@ import React from 'react';
 import * as Redux from 'redux';
 import { withRedux, init, defineEffect, createFeedbacks } from 'feedbacks';
 import { createDevTools } from 'redux-devtools';
-import LogMonitor from 'redux-devtools-log-monitor';
+import LogMonitor from '@hex13/redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';
 import * as fx from 'feedbacks/fx';
 import { forward, backward, showDetail, addNote, removeNote, changeTheme, changeThemeOk, updateNote } from './actions';
