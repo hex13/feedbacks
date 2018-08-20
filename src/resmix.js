@@ -269,7 +269,7 @@ function createEngine(blueprint, { loader } = {} ) {
         
         const blueprintResult = effectRunner.run({[EffectRunner.RECURSIVE]: blueprint}, (result) => {
             //if (result.path.length)
-                update(result.path, result.value);
+                update(result.path, result.value, undefined, {cause:{ type:'initialization'}});
         });
         // console.log("A======", result1.value);
         // console.log("B======", initialState);

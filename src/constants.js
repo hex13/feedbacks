@@ -1,5 +1,5 @@
-const UPDATE_BLUEPRINT = '@@resmix/updateBlueprint';
-const UPDATE = '@@resmix/update';
+const UPDATE_BLUEPRINT = '@@feedbacks/updateBlueprint';
+const UPDATE = '@@feedbacks/update';
 
 module.exports = {
     UPDATE,
