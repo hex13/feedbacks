@@ -223,9 +223,9 @@ function createEngine(blueprint, { loader } = {} ) {
         let permanentEffects = [];
         let afterUpdatePerforming = 0;
         function performAfterUpdate() {
-                permanentEffects.forEach(({ effect, path}) => {
+                permanentEffects.forEach(({ effect, path, cause }) => {
                     effectRunner.run(effect, (result) => {
-                        update(result.path, result.value, false)
+                        update(result.path, result.value, false, {cause: {type: cause.type}})
                     }, { path, loader, customEffectHandlers });
                 });
         }
@@ -307,7 +307,7 @@ function createEngine(blueprint, { loader } = {} ) {
                         if (effect[EFFECT] && effect.permanent) {
                             permanentEffects = permanentEffects.filter(({path: ePath}) => path.join('.') != ePath.join('.') );
                             permanentEffects.push({
-                                path, effect: effect[EFFECT]
+                                path, effect: effect[EFFECT], cause: action
                             })
                             return;
                         }
@@ -386,14 +386,20 @@ exports.defineAction = creators.defineAction;
 exports.defineEffect = creators.defineEffect;
 
 
-exports.createFeedbacks = () => (createStore) => {
-    return (blueprint) => {
+exports.createFeedbacks = (params = {}) => (createStore) => {
+    function _createStore(blueprint) {
         const engine = createEngine(blueprint);
         const store = createStore(engine.reducer);
+        if (params.effects) {
+            params.effects.forEach(([pattern, handler]) => {
+                engine.onEffect(pattern, handler);
+            })
+        }
 
         return Object.assign({}, store, {
             dispatch: engine.middleware(store)(store.dispatch),
             engine,
         });
     };
+    return _createStore;
 }
