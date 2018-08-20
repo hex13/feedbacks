@@ -354,6 +354,21 @@ describe('EffectRunner', () => {
         });
     });
 
+    describe('[observables as effects - Rx.js subjects]', () => {
+        it('should subscribe to the Subject and invoke the callback for each value', () => {
+            const subject = new Subject;
+            er.run(subject, next);
+            subject.next('whatever');
+            subject.next('woo');
+
+            assert.deepStrictEqual(whatHappened, [
+                ['next', Result('whatever')],
+                ['next', Result('woo')],
+            ]);
+        });
+    });
+
+
     describe('[cancellation]', () => {
         it('should cancel Observable', () => {
             let publish;

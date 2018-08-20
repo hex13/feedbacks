@@ -16,7 +16,9 @@ const isPlainObject = v => (
     && !v[symbolObservable]
 )
 
-const isGenerator = v => v && typeof v.next == 'function';
+const isGenerator = v => {
+    return Object.prototype.toString.call(v) == '[object Generator]';
+}
 
 const isObservable = v => v && typeof v[symbolObservable] == 'function';
 
