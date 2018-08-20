@@ -19,7 +19,7 @@ Feedbacks:
 - allows for working on individual properties / slices of state
 - resolves promises and observables and feeds it back to given property in the state
 - enables to return declarative effects from reducers
-    - allows you to handle custom effects in services (`onEffect`)
+    - allows you to handle custom effects in effect handlers (`onEffect`)
     - provides you with some standard effects (like `fx.waitFor` for waiting for specific actions)
 
 Blueprints
