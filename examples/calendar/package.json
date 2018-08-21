@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@hex13/redux-devtools-log-monitor": "^1.4.0",
-    "feedbacks": "^0.6.1",
+    "feedbacks": "^0.7.0",
     "moment": "^2.22.2",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
