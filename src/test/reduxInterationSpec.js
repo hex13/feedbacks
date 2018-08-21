@@ -1328,6 +1328,43 @@ describe('[fx.current]', () => {
     });
 });
 
+
+
+describe('[fx.getState]', () => {
+    let store;
+    beforeEach(() => {
+        store = withRedux(Redux).createEngine({
+            counter: init(0)
+                .on('withoutArguments', () => {
+                    return function*() {
+                        const selected = yield fx.getState();
+                        yield fx.next(selected.someValue);
+                    }
+                })
+                .on('withPath', () => {
+                    return function*() {
+                        const selected = yield fx.getState(['someValue']);
+                        yield fx.next(selected);
+                    };
+                }),
+            someValue: 'selected value',
+        }).getStore();
+        assert.deepStrictEqual(store.getState(), { counter: 0, someValue: 'selected value' });
+    });
+    it('should return state root when called without arguments', () => {
+        store.dispatch({ type: 'withoutArguments' });
+        assert.deepStrictEqual(store.getState(), { counter: 'selected value', someValue: 'selected value' });
+
+    });
+
+    it('should return a property when called with a path', () => {
+        store.dispatch({ type: 'withPath' });
+        assert.deepStrictEqual(store.getState(), { counter: 'selected value', someValue: 'selected value' });
+
+    });
+
+});
+
 describe('[fx.next]', () => {
     it('should trigger next update', () => {
         const whatHappened = [];

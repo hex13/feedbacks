@@ -59,7 +59,8 @@ module.exports = {
         const range = max - min;
         return Math.random() * range + min;
     },
-    getState(dispatch, getState, selector) {
+    getState(dispatch, getState, path) {
+        if (path) return get(getState(), path);
         return getState();
     },
     delay(dispatch, getState, ms, value) {

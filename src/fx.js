@@ -19,8 +19,8 @@ const dispatch = (action) => {
     return createEffect({ [EffectRunner.CALL]: ['dispatch', action] });
 };
 
-const getState = () => {
-    return createEffect({ [EffectRunner.CALL]: ['getState'] });
+const getState = (path) => {
+    return createEffect({ [EffectRunner.CALL]: ['getState', path] });
 };
 
 const mount = (blueprint) => {
