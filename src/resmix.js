@@ -220,6 +220,17 @@ function createEngine(blueprint, { loader } = {} ) {
     let _store;
     let customEffectHandlers = [];
     let _effectRunner;
+
+    const createContext = (params) => {
+        const ctx = {
+            customEffectHandlers,
+            loader,
+        };
+        for (let k in params) {
+            ctx[k] = params[k];
+        }
+        return ctx;
+    };
     const middleware = store => next => {
         let permanentEffects = [];
         let afterUpdatePerforming = 0;
@@ -227,7 +238,7 @@ function createEngine(blueprint, { loader } = {} ) {
                 permanentEffects.forEach(({ effect, path, cause }) => {
                     effectRunner.run(effect, (result) => {
                         update(result.path, result.value, false, {cause: {type: cause.type}})
-                    }, { path, loader, customEffectHandlers });
+                    }, createContext({ path }));
                 });
         }
 
@@ -285,7 +296,7 @@ function createEngine(blueprint, { loader } = {} ) {
             effectRunner.notify(action);
 
             if (action.meta && action.meta.feedbacks && action.meta.feedbacks.isEffect) {
-                effectRunner.run(fx.effect(action), null, { loader, customEffectHandlers });
+                effectRunner.run(fx.effect(action), null, createContext());
                 return;
             }
             if (action.type == '@@feedbacks/store') {
@@ -329,7 +340,7 @@ function createEngine(blueprint, { loader } = {} ) {
                         }
                         const ongoingEffect = effectRunner.run(effect[EFFECT] || effect, (result) => {
                             update(result.path, result.value, undefined, meta)
-                        }, { path, loader, customEffectHandlers, update });
+                        }, createContext({ path, update }));
                         if (ongoingEffect) {
                             ongoingEffects.push(Object.assign({ id: Math.random(), path}, ongoingEffect));
                         }
