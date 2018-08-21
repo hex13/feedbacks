@@ -219,6 +219,7 @@ function createEngine(blueprint, { loader } = {} ) {
 
     let _store;
     let customEffectHandlers = [];
+    let _effectRunner;
     const middleware = store => next => {
         let permanentEffects = [];
         let afterUpdatePerforming = 0;
@@ -240,6 +241,7 @@ function createEngine(blueprint, { loader } = {} ) {
         }
 
         const effectRunner = new EffectRunner(finalEffectHandlers);
+        _effectRunner = effectRunner;
         if (!store || !store.getState) {
             throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);
         }
@@ -360,6 +362,9 @@ function createEngine(blueprint, { loader } = {} ) {
         },
         getOngoingEffects() {
             return ongoingEffects;
+        },
+        runEffect(...args) {
+            return _effectRunner.run(...args);
         }
     }
 };

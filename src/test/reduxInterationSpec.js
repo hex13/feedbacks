@@ -1331,36 +1331,32 @@ describe('[fx.current]', () => {
 
 
 describe('[fx.getState]', () => {
-    let store;
+    let engine;
+    let whatHappened;
     beforeEach(() => {
-        store = withRedux(Redux).createEngine({
-            counter: init(0)
-                .on('withoutArguments', () => {
-                    return function*() {
-                        const selected = yield fx.getState();
-                        yield fx.next(selected.someValue);
-                    }
-                })
-                .on('withPath', () => {
-                    return function*() {
-                        const selected = yield fx.getState(['someValue']);
-                        yield fx.next(selected);
-                    };
-                }),
-            someValue: 'selected value',
-        }).getStore();
-        assert.deepStrictEqual(store.getState(), { counter: 0, someValue: 'selected value' });
+        whatHappened = [];
+        engine = withRedux(Redux).createEngine({ someValue: 'selected value' });
+        assert.deepStrictEqual(engine.getStore().getState(), { someValue: 'selected value' });
     });
     it('should return state root when called without arguments', () => {
-        store.dispatch({ type: 'withoutArguments' });
-        assert.deepStrictEqual(store.getState(), { counter: 'selected value', someValue: 'selected value' });
-
+        engine.runEffect(function*() {
+            const state = yield fx.getState();
+            whatHappened.push(['received', state]);
+        });
+        assert.deepStrictEqual(whatHappened, [
+            ['received', { someValue: 'selected value'}]
+        ]);
     });
-
     it('should return a property when called with a path', () => {
-        store.dispatch({ type: 'withPath' });
-        assert.deepStrictEqual(store.getState(), { counter: 'selected value', someValue: 'selected value' });
-
+        engine.runEffect(() => {
+            return function*() {
+                const selected = yield fx.getState(['someValue']);
+                whatHappened.push(['received', selected]);
+            };
+        });
+        assert.deepStrictEqual(whatHappened, [
+            ['received', 'selected value']
+        ]);
     });
 
 });
