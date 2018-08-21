@@ -60,7 +60,11 @@ module.exports = {
         return Math.random() * range + min;
     },
     getState(dispatch, getState, path) {
-        if (path) return get(getState(), path);
+        if (path) {
+            if (!this.deps) this.deps = [];
+            this.deps.push(path);
+            return get(getState(), path);
+        }
         return getState();
     },
     delay(dispatch, getState, ms, value) {

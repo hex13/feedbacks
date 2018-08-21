@@ -1424,8 +1424,9 @@ describe('[time effects]', () => {
 });
 
 describe('[computed values - fx.compute]', () => {
-    it('should update property after each action', () => {
+    xit('should run computed only once if there are no dependencies', () => {
         let c = 0;
+        let whatHappened = [];
         const store = withRedux(Redux).createEngine({
             a: init('?')
                 .on('foo', () => {
@@ -1433,6 +1434,7 @@ describe('[computed values - fx.compute]', () => {
                 }),
         })
         .onEffect({type: 'plum'}, () => {
+            whatHappened.push(['gen'])
             return c++;
         })
         .getStore();
@@ -1442,10 +1444,50 @@ describe('[computed values - fx.compute]', () => {
         store.dispatch({type: 'foo'});
         assert.deepStrictEqual(store.getState(), {a: 0});
         store.dispatch({type: 'qwerty'});
-        assert.deepStrictEqual(store.getState(), {a: 1});
+        assert.deepStrictEqual(store.getState(), {a: 0});
         store.dispatch({type: 'asdfq'});
-        assert.deepStrictEqual(store.getState(), {a: 2});
+        assert.deepStrictEqual(store.getState(), {a: 0});
+        assert.deepStrictEqual(whatHappened, [['gen']]);
     });
+
+    it('should run computed effect only if dependencies change', () => {
+        let c = 0;
+        const whatHappened = [];
+        const store = withRedux(Redux).createEngine({
+            whatever: init(0).on('neutralAction', state => state + 1),
+            a: init('?')
+                .on('foo', () => {
+                    return fx.compute({type: 'plum'});
+                }),
+            b: init(24)
+                .on('incB', state => state + 1),
+            c: init(10)
+                .on('incC', state => state + 1),
+        })
+        .onEffect({type: 'plum'}, function* () {
+            whatHappened.push('gen');
+            const b = yield fx.getState('b');
+            const c = yield fx.getState('c');
+            yield fx.next(b + c);
+        })
+        .getStore();
+        assert.deepStrictEqual(store.getState(), {a: '?', b: 24, c: 10, whatever: 0});
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), {a: 34, b: 24, c: 10, whatever: 0});
+
+        store.dispatch({type: 'neutralAction'});
+        assert.deepStrictEqual(whatHappened, ['gen']);
+
+        store.dispatch({type: 'incB'});
+        assert.deepStrictEqual(whatHappened, ['gen', 'gen']);
+        assert.deepStrictEqual(store.getState(), {a: 35, b: 25, c: 10, whatever: 1});
+
+        store.dispatch({type: 'incC'});
+        assert.deepStrictEqual(whatHappened, ['gen', 'gen', 'gen']);
+        assert.deepStrictEqual(store.getState(), {a: 36, b: 25, c: 11, whatever: 1});
+
+    });
+
 
     it('should update computed property after each asynchronous change', (done) => {
         let c = 0;

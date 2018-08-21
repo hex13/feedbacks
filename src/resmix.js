@@ -233,13 +233,30 @@ function createEngine(blueprint, { loader } = {} ) {
     };
     const middleware = store => next => {
         let permanentEffects = [];
-        let afterUpdatePerforming = 0;
+        let afterUpdatePerforming = false;
+        let lastState;
         function performAfterUpdate() {
-                permanentEffects.forEach(({ effect, path, cause }) => {
+                const state = store.getState();
+                if (afterUpdatePerforming) return;
+                afterUpdatePerforming = true;
+                permanentEffects.forEach(({ effect, path, cause, context }) => {
+
+                    if (context.deps) {
+                        let isChange = false;
+                        for (let i = 0; i < context.deps.length; i++) {
+                            const depPath = context.deps[i];
+                            if (get(lastState, depPath) !== get(state, depPath)) {
+                                isChange = true;
+                                break;
+                            }
+                        }
+                        if (!isChange) return;
+                    }
                     effectRunner.run(effect, (result) => {
                         update(result.path, result.value, false, {cause: {type: cause.type}})
-                    }, createContext({ path }));
+                    }, context);
                 });
+                afterUpdatePerforming = false;
         }
 
         _store = store;
@@ -293,6 +310,7 @@ function createEngine(blueprint, { loader } = {} ) {
 
         
         return action => {
+            lastState = store.getState();
             effectRunner.notify(action);
 
             if (action.meta && action.meta.feedbacks && action.meta.feedbacks.isEffect) {
@@ -320,7 +338,7 @@ function createEngine(blueprint, { loader } = {} ) {
                         if (effect[EFFECT] && effect.permanent) {
                             permanentEffects = permanentEffects.filter(({path: ePath}) => path.join('.') != ePath.join('.') );
                             permanentEffects.push({
-                                path, effect: effect[EFFECT], cause: action
+                                path, effect: effect[EFFECT], cause: action, context: createContext({ path, update })
                             })
                             return;
                         }
