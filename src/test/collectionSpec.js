@@ -89,4 +89,26 @@ describe('Collection', () => {
         });    
     });
 
+    describe('finding items', () => {
+        it('findAll', () => {
+            const collection = new Collection()
+                .add({ kind: 'dress', color: 'blue'})
+                .add({ kind: 'dress', color: 'green'})
+                .add({ kind: 'jeans', color: 'blue'})
+                .add({ kind: 'shoes', color: 'white'})
+                .add({ kind: 'dress', color: 'white'})
+                .add({ kind: 'hat', color: 'white'})
+                .add({ kind: 't-shirt', color: 'black'});
+
+            expect(collection.findAll({ kind: 'dress'})).to.deep.equal([
+                { kind: 'dress', color: 'blue'},
+                { kind: 'dress', color: 'green'},
+                { kind: 'dress', color: 'white'},
+            ]);
+
+            expect(collection.findAll({ kind: 'not existing'})).to.deep.equal([]);
+
+        });
+    });
+
 })
