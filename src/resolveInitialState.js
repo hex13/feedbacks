@@ -26,7 +26,10 @@ module.exports = function resolveInitialState(blueprint) {
             return;
         }
         if (desc && typeof desc == 'object') {
-            if (Array.isArray(desc)) {
+            if (
+                Array.isArray(desc)
+                || desc.__raw
+            ) {
                 setValue(desc);
                 return
             }

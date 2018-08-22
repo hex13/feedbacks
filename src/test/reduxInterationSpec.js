@@ -11,7 +11,7 @@ const { Observable, interval, Subscription, of } = require('rxjs');
 const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
 const { UPDATE } = require('../constants');
-const { createEngine, withRedux, init, defineEffect, defineAction, createFeedbacks } = require('..');
+const { createEngine, withRedux, init, defineEffect, defineAction, createFeedbacks, Collection } = require('..');
 
 const fx = require('../fx');
 
@@ -1631,5 +1631,28 @@ describe('[inspection]', () => {
         }, 0);
 
 
+    });
+});
+
+
+describe('[collection]', () => {
+    it('should allows for keeping Collection instances', () => {
+        const originalCollection = new Collection;
+        const store = createStore({
+            a: originalCollection
+        }, createFeedbacks());
+        const collection = store.getState().a;
+        assert.strictEqual(collection, originalCollection);
+    });
+});
+
+
+describe('[bug from #3]', () => {
+    it('should not crash when function effect is replaced', () => {
+        const store = createStore({
+            a: init(0).on('foo', () => () => 1)
+        }, createFeedbacks());
+        store.dispatch({type: 'foo'});
+        store.dispatch({type: 'foo'});
     });
 });
