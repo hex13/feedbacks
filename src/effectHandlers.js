@@ -60,6 +60,9 @@ module.exports = {
         return Math.random() * range + min;
     },
     getState(dispatch, getState, path) {
+        throw new Error('Feedbacks: fx.getState was renamed to select. ');
+    },
+    select(dispatch, getState, path) {
         if (path) {
             if (!this.deps) this.deps = [];
             this.deps.push(path);

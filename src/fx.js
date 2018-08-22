@@ -74,6 +74,14 @@ const compute = (params) => {
     });
 };
 
+const select = (path) => {
+    if (typeof path == 'function') {
+        throw new TypeError('Feedbacks: You have to pass an array or string to fx.select. You passed a function or class')
+    }
+    return createEffect({ [EffectRunner.CALL]: ['select', path] });
+};
+
+
 module.exports = {
     createEffect, 
     EFFECT,
@@ -92,6 +100,7 @@ module.exports = {
     delay,
     current,
     next,
+    select
 };
 
 

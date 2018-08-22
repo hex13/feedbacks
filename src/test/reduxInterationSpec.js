@@ -871,7 +871,7 @@ describe('[resmix]', () => {
             .onEffect({type: 'abc'}, () => 'aaaaa')
             .onEffect({type: 'someEffect'}, function *(effect)  {
                 assert.deepStrictEqual(effect, {type: 'someEffect', params: 'blah'});
-                const state = yield fx.getState();
+                const state = yield fx.select();
                 assert.deepStrictEqual(state, {
                     a: {
                         b: 123,
@@ -906,7 +906,7 @@ describe('[resmix]', () => {
                 bar: init('').on({type: 'bar'}, state => state + 'good')
             })
                 .onEffect(doSomething(), function* (effect) {
-                    assert.deepStrictEqual(yield fx.getState(), {foo: 0, bar: ''});
+                    assert.deepStrictEqual(yield fx.select(), {foo: 0, bar: ''});
                     assert.deepStrictEqual(effect, doSomething());
                     yield fx.dispatch({type: 'bar'});
                     whatHappened.push('effect');
@@ -1330,7 +1330,7 @@ describe('[fx.current]', () => {
 
 
 
-describe('[fx.getState]', () => {
+describe('[fx.select]', () => {
     let engine;
     let whatHappened;
     beforeEach(() => {
@@ -1340,7 +1340,7 @@ describe('[fx.getState]', () => {
     });
     it('should return state root when called without arguments', () => {
         engine.runEffect(function*() {
-            const state = yield fx.getState();
+            const state = yield fx.select();
             whatHappened.push(['received', state]);
         });
         assert.deepStrictEqual(whatHappened, [
@@ -1350,7 +1350,7 @@ describe('[fx.getState]', () => {
     it('should return a property when called with a path', () => {
         engine.runEffect(() => {
             return function*() {
-                const selected = yield fx.getState(['someValue']);
+                const selected = yield fx.select(['someValue']);
                 whatHappened.push(['received', selected]);
             };
         });
@@ -1466,8 +1466,8 @@ describe('[computed values - fx.compute]', () => {
         })
         .onEffect({type: 'plum'}, function* () {
             whatHappened.push('gen');
-            const b = yield fx.getState('b');
-            const c = yield fx.getState('c');
+            const b = yield fx.select('b');
+            const c = yield fx.select('c');
             yield fx.next(b + c);
         })
         .getStore();
@@ -1504,7 +1504,7 @@ describe('[computed values - fx.compute]', () => {
         })
             .onEffect({type: 'doCompute'}, function* () {
                 whatHappened.push(['doCompute'])
-                return yield fx.getState('a');
+                return yield fx.select('a');
             })
             .getStore();
 
@@ -1529,7 +1529,7 @@ describe('[computed values - fx.compute]', () => {
                 .on({type: 'init'}, () => fx.compute({type: 'doCompute'}))
         })
             .onEffect({type: 'doCompute'}, function* () {
-                return (yield fx.getState()).a * 2;
+                return (yield fx.select()).a * 2;
             })
             .getStore();
 
