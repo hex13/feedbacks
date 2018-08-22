@@ -3,7 +3,7 @@
 const Collection = require('../collection');
 const { expect } = require('chai');
 
-describe.only('Collection', () => {
+describe('Collection', () => {
     describe('adding items', () => {
         let originalCollection;
         let latestCollection;
