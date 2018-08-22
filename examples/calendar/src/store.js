@@ -78,7 +78,7 @@ export function configureStore() {
     ));
 
     store.engine.onEffect(doComputeNotes(), function* ({payload:date}) {
-            const notesByDay = yield fx.getState('notesByDay');
+            const notesByDay = yield fx.select('notesByDay');
             return  notesByDay.findAll(date);
         });
 
