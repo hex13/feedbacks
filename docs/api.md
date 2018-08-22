@@ -45,7 +45,7 @@ const store = withRedux(Redux).createEngine(blueprint)
     })
     // you can yield effects to be resolved:
     .onEffect(someOtherEffect(), function* (effect) {
-        const state = yield fx.getState();
+        const state = yield fx.select();
         const answer = yield () => Promise.resolve(42);
         return state.foo.bar + state.baz + answer; // perform some calculations
     })
@@ -240,10 +240,6 @@ function reducer() {
 
 This effect can be then handled in effect handler (via `engine.onEffect`)
 
-fx.getState()
----
-Get the root state of store. 
-
 fx.next()
 ---
 Emit next value of current property (current property = property that triggered effect). Look also on to [fx.current()](#fxcurrent)
@@ -268,4 +264,25 @@ function reducer() {
 }
 ```
 
+fx.select(path)
+---
+Called without arguments provides the root state of the store. 
 
+```javascript
+yield fx.select(); 
+```
+
+You can think about this as "effect version" of `store.getState()`
+
+Called with an argument (string or array), provides property from store:
+
+```javascript
+yield fx.select('foo');
+yield fx.select(['foo', 'bar']);
+```
+
+You can think about this as "effect version" of:
+```javascript
+store.getState().foo;
+store.getState().foo.bar;
+```
