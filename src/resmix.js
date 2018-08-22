@@ -347,7 +347,7 @@ function createEngine(blueprint, { loader } = {} ) {
                             const eff = ongoingEffects[i];
 
                             if (samePaths(eff.path, path)) {
-                                eff.cancel();
+                                eff.cancel && eff.cancel();
                                 ongoingEffects.splice(i, 1);
                             }
                         }
@@ -436,4 +436,6 @@ exports.createFeedbacks = (params = {}) => (createStore) => {
         });
     };
     return _createStore;
-}
+};
+
+exports.Collection = require('./collection');
