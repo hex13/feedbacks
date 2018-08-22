@@ -1,23 +1,15 @@
 import React from 'react';
 import * as Redux from 'redux';
-import { withRedux, init, defineEffect, createFeedbacks } from 'feedbacks';
+import { init, defineEffect, createFeedbacks, Collection } from 'feedbacks';
 import { createDevTools } from 'redux-devtools';
 import LogMonitor from '@hex13/redux-devtools-log-monitor';
 import DockMonitor from 'redux-devtools-dock-monitor';
 import * as fx from 'feedbacks/fx';
 import { forward, backward, showDetail, addNote, removeNote, changeTheme, changeThemeOk, updateNote } from './actions';
-import * as Rx from 'rxjs';
-import { map, take } from 'rxjs/operators';
 
 const now = new Date;
 const currentDate = { day: now.getDate(), month: now.getMonth() + 1, year: now.getFullYear() }
 
-const getKeyByDate = (params) => {
-    if (!params) return;
-    return `${params.year}-${params.month}-${params.day}`;
-};
-
-const doAsk = defineEffect('ask');
 const doComputeNotes = defineEffect('load');
 const themes = ['theme-light', 'theme-dark'];
 
@@ -39,42 +31,16 @@ const blueprint = {
             .on(showDetail(), (_, { payload }) => fx.compute(doComputeNotes(payload)))
     },
 
-    notesByDay: init({})
-        .on(addNote(), (state, { payload }) => {
-            const key = getKeyByDate(payload);
-            return function* () {
-                const current = yield fx.current();
-                const notes = current[key] || [];
-                return {
-                    ...current,
-                    [key]: notes.concat({
-                        text: 'new item',
-                        id: Math.random()
-                    })
-                }
-            }
-        })
-        .on(removeNote(), (state, { payload }) => {      
-            const key = getKeyByDate(payload);  
-            const notes = state[key] || [];
-            return {
-                ...state,
-                [key]: notes.filter(note => note.id !== payload.id),
-            };
-        })
-        .on(updateNote(), (state, { payload}) => {
-            const key = getKeyByDate(payload);  
-            const notes = state[key] || [];
-            return {
-                ...state,
-                [key]: notes.map(note => {
-                    if (note.id == payload.id) {
-                        return { ...note, text: payload.text};
-                    }
-                    return note;
-                }),
-            };
-        }),
+    notesByDay: init(new Collection)
+        .on(addNote(), (state, { payload }) => 
+            // we wrap this is in effect because of Math.random() which is not pure
+            () => state.add({
+                ...payload,
+                text: 'kotki!',
+                id: Math.random()
+            }))
+        .on(removeNote(), (state, { payload }) => state.remove(payload))
+        .on(updateNote(), (state, { payload }) => state.update(payload, payload)),
     themeDialog: init({visible: false})
         .on(changeTheme(), () => {
             return function* () {
@@ -106,22 +72,14 @@ export const DevTools = createDevTools(<DockMonitor defaultIsVisible={true}>
 
 export function configureStore() {
     
-    // const engine = withRedux(Redux).createEngine(blueprint).onEffect(doComputeNotes(), function* ({payload:date}) {
-    //     const notes = (yield fx.getState()).notesByDay[getKeyByDate(date)] || [{text: '???'}];
-        
-    //     return notes;
-    // });
     const store = Redux.createStore(blueprint, Redux.compose(
         createFeedbacks(),
         DevTools.instrument(), 
     ));
-    //const store  = engine.getStore();
 
     store.engine.onEffect(doComputeNotes(), function* ({payload:date}) {
             const notesByDay = yield fx.getState('notesByDay');
-            const notes = notesByDay[getKeyByDate(date)] || [{text: '???'}];
-            
-            return notes;
+            return  notesByDay.findAll(date);
         });
 
     return store;
