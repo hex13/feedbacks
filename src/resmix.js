@@ -234,8 +234,10 @@ function createEngine(blueprint, { loader } = {} ) {
     const middleware = store => next => {
         let permanentEffects = [];
         let afterUpdatePerforming = false;
+        let effectProcessing = false;
         let lastState;
         function performAfterUpdate() {
+                if (effectProcessing) return;
                 const state = store.getState();
                 if (afterUpdatePerforming) return;
                 afterUpdatePerforming = true;
@@ -330,6 +332,7 @@ function createEngine(blueprint, { loader } = {} ) {
             const state = store.getState();
             const effects = state[EFFECTS];
 
+            effectProcessing = true;
             if (effects) {
                 const effectPatch = effects;
                 function visitNode(node, path) {
@@ -371,6 +374,7 @@ function createEngine(blueprint, { loader } = {} ) {
                 visitNode(effectPatch, []);
 
             }
+            effectProcessing = false;
             performAfterUpdate();
 
         }    

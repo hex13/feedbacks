@@ -1488,6 +1488,35 @@ describe('[computed values - fx.compute]', () => {
 
     });
 
+    // it fixes bug when sync-resolved recomputation was triggered twice in middleware:
+    // 1. when callback was fired
+    // 2. after middleware was processing an action
+    it('should compute only once if effect can be resolved synchronously', (done) => {
+        let c = 0;
+        const whatHappened = [];
+        const store = withRedux(Redux).createEngine({
+            a: init(0)
+                .on('foo', (state) => {
+                    return () => state + 1
+                }),
+            derived: init(0)
+                .on({type: 'init'}, () => fx.compute({type: 'doCompute'}))
+        })
+            .onEffect({type: 'doCompute'}, function* () {
+                whatHappened.push(['doCompute'])
+                return yield fx.getState('a');
+            })
+            .getStore();
+
+        store.dispatch({type: 'init'});
+        store.dispatch({type: 'foo'});
+
+        assert.deepStrictEqual(whatHappened, [
+            ['doCompute'],
+            ['doCompute']
+        ]);
+        done();
+    });
 
     it('should update computed property after each asynchronous change', (done) => {
         let c = 0;
