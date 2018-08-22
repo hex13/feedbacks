@@ -55,14 +55,6 @@ const blueprint = {
         }),
 }; 
 
-const delay = (t,v) => {
-    return () => new Promise(r => {
-        setTimeout(() => {
-            r(v);
-        }, t)
-    })
-}
-
 export const DevTools = createDevTools(<DockMonitor defaultIsVisible={true}>
     <LogMonitor 
         toggleVisibilityKey="ctrl-h"
