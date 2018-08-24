@@ -171,6 +171,11 @@ this way in one line of code you express:
 
 If you have a problem feel free to create an issue: https://github.com/hex13/feedbacks/issues 
 
+# Dev tools
+
+Same as Redux Dev Tools but use [@hex13/redux-devtools-log-monitor](https://www.npmjs.com/package/@hex13/redux-devtools-log-monitor) instead of default LogMonitor.
+Installation process: https://github.com/reduxjs/redux-devtools/blob/master/docs/Walkthrough.md
+
 # Tips & Tricks
 
 ## Changing more than one property during action:
