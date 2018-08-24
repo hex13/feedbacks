@@ -213,7 +213,7 @@ import:
 import * as fx from 'feedbacks/fx';
 ```
 
-fx.compute()
+fx.compute(effectObject)
 ---
 It runs a custom effect (custom effects are action-like objects) and this custom effect is automatically rerun when its dependencies has changed.
 
@@ -259,7 +259,7 @@ function reducer() {
 
 This effect can be then handled in effect handler (via `engine.onEffect`)
 
-fx.next()
+fx.next(value)
 ---
 Emit next value of current property (current property = property that triggered effect). Look also on to [fx.current()](#fxcurrent)
 
