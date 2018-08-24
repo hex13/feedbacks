@@ -225,7 +225,7 @@ function reducer() {
 
 //...
 engine.onEffect(function *() {
-   const p = select(['some', 'property']);
+   const p = yield fx.select(['some', 'property']);
    return p + 10;
 });
 
