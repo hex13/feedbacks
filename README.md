@@ -175,6 +175,10 @@ this way in one line of code you express:
 
 Same as Redux Dev Tools but use [@hex13/redux-devtools-log-monitor](https://www.npmjs.com/package/@hex13/redux-devtools-log-monitor) instead of default LogMonitor.
 Installation process: https://github.com/reduxjs/redux-devtools/blob/master/docs/Walkthrough.md
+Here you have practical example of wiring up Redux Dev Tools and Feedbacks:
+
+https://github.com/hex13/feedbacks/blob/8ae44414f3ecbb8cd0c75ac4f927c8f186159071/examples/calendar/src/store.js#L67
+
 
 # Tips & Tricks
 
