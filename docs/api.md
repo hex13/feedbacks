@@ -35,8 +35,8 @@ example:
 import { withRedux } from 'feedbacks';
 import * as fx from 'feedbacks/fx';
 
-const someEffect = createEffect('someEffect');
-const someOtherEffect = createEffect('someOtherEffect');
+const someEffect = defineEffect('someEffect');
+const someOtherEffect = defineEffect('someOtherEffect');
 
 const store = withRedux(Redux).createEngine(blueprint)
     // effect handlers are responsible for performing side-effects (e.g. AJAX calls)
@@ -213,6 +213,25 @@ import:
 import * as fx from 'feedbacks/fx';
 ```
 
+fx.compute()
+---
+It runs a custom effect (custom effects are action-like objects) and this custom effect is automatically rerun when its dependencies has changed.
+
+```javascript
+const doSomething = defineEffect('doSomething');
+function reducer() {
+    return fx.compute(doSomething());
+}
+
+//...
+engine.onEffect(function *() {
+   const p = select(['some', 'property']);
+   return p + 10;
+});
+
+```
+
+
 fx.current()
 ---
 Get the current value of current property (current property = property that triggered effect). Look also on to [fx.next()](#fxnext)
@@ -229,10 +248,10 @@ function* () {
 
 fx.effect(effectObject)
 ----
-It runs an effect.
+It runs a custom effect (custom effects are action-like objects.)
 
 ```javascript
-const doSomething = createEffect('doSomething');
+const doSomething = defineEffect('doSomething');
 function reducer() {
     return fx.effect(doSomething());
 }
