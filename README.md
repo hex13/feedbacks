@@ -118,6 +118,18 @@ Feedbacks allow you also for making some advanced pattern matching. You've seen 
 // ...
 ```
 
+# Online examples
+
+* Live example on Codesandbox: https://codesandbox.io/s/6zzrnwq63w
+
+* Calendar example
+    * on Github: https://github.com/hex13/feedbacks/tree/master/examples/calendar
+        * Especially this file which contains all store logic: https://github.com/hex13/feedbacks/blob/master/examples/calendar/src/store.js
+    * online demo version: http://hex13.github.io/apps/feedbacks
+
+
+If you have a problem feel free to create an issue: https://github.com/hex13/feedbacks/issues 
+
 # Philosophy of side-effects
 
 Feedbacks address the fact so called "side-effects" are often merely a way to get some data and put it back in some property of the Redux state. Consider this code, written traditionally:
@@ -158,18 +170,6 @@ this way in one line of code you express:
 1. what should be target property of state change (`todos`)
 2. which action you want to handle (`FETCH_TODOS` but you're not limited to just matching by type. Read more about [advanced pattern matching](#pattern-matching))
 3. how value will change including asynchronous changes via observables or function-wrapped promises. You could also spawn another action (and reducer of the next action could send values back to previous property by using `yield` statement). TODO: example
-
-# Online examples
-
-* Live example on Codesandbox: https://codesandbox.io/s/6zzrnwq63w
-
-* Calendar example
-    * on Github: https://github.com/hex13/feedbacks/tree/master/examples/calendar
-        * Especially this file which contains all store logic: https://github.com/hex13/feedbacks/blob/master/examples/calendar/src/store.js
-    * online demo version: http://hex13.github.io/apps/feedbacks
-
-
-If you have a problem feel free to create an issue: https://github.com/hex13/feedbacks/issues 
 
 # Dev tools
 
