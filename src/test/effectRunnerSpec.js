@@ -14,10 +14,11 @@ const deferChecking = (func) => {
     });
 };
 
-const Result = (v, path = []) => ({
+const Result = (v, opts = {}) => Object.assign({}, {
     value: v,
-    path
-});
+    path: [],
+    done: true
+}, opts);
 
 describe('EffectRunner', () => {
     let er, whatHappened;
@@ -178,15 +179,41 @@ describe('EffectRunner', () => {
     });
 
     describe('[returning result]', () => {
-        it('should return a result when a primitive is passed', () => {
-            assert.deepStrictEqual(er.run(0, next), Result(0));
+        it('should return a result when generator is passed', () => {
+            const res = er.run(function*() {
+                return 'some returned value';
+            }, next);
+            delete res.cancel;
+            assert.deepStrictEqual(res, Result('some returned value', {
+                kind: 'generator'
+            }));
+        });
+
+        it('should return a result when generator (with some async working) is passed', () => {
+            const res = er.run(function*() {
+                yield Promise.resolve(3);
+                return 'some returned value';
+            }, next);
+            delete res.cancel;
+
+            assert.deepStrictEqual(res, Result(undefined, {
+                kind: 'generator',
+                done: false
+            }));
+        });
+
+        it('should return a result when non-falsy primitive is passed', () => {
             assert.deepStrictEqual(er.run(3, next), Result(3));
-            assert.deepStrictEqual(er.run('', next), Result(''));
             assert.deepStrictEqual(er.run('kotek', next), Result('kotek'));
-            assert.deepStrictEqual(er.run(false, next), Result(false));
             assert.deepStrictEqual(er.run(true, next), Result(true));
-        });    
-       
+        });
+
+        it('should return a result when falsy primitive is passed', () => {
+            assert.deepStrictEqual(er.run(0, next), Result(0));
+            assert.deepStrictEqual(er.run('', next), Result(''));
+            assert.deepStrictEqual(er.run(false, next), Result(false));
+        });
+
         it('should return a result when an object is passed', () => {
             const Obj = () => ({a: 3, b: {c: 4}});
             assert.deepStrictEqual(er.run(Obj(), next), Result(Obj()));
@@ -277,7 +304,7 @@ describe('EffectRunner', () => {
             const obj = Obj();
             obj.a.b = Promise.resolve(10);
             obj.a.c.d = Promise.resolve(11);
-            assert.deepStrictEqual(er.run(Recursive(obj), next), Result(Obj()));
+            assert.deepStrictEqual(er.run(Recursive(obj), next), Result(Obj(), {done: false}));
         });
 
     });

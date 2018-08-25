@@ -31,15 +31,20 @@ class EffectRunner {
     }
     run(effect, cb, ctx = {path: []}, params = []) {
         // console.log("run", effect, params)
+        let done = false;
         let result;
-        const emitValue = (v, path = ctx.path) => {
+        const emitValue = (v, extra) => {
+            result = {value: v, path: ctx.path, done };
+            if (extra)
+                for (let k in extra)
+                    result[k] = extra[k];
 
-            result = {value: v, path };
             cb(result);
             return result;
         };
         if (!cb) cb = nop;
         if (!effect) {
+            done = true;
             // if (effect !== undefined)
             emitValue(effect);
         } else if (effect[EffectRunner.WAIT_FOR]) {
@@ -56,16 +61,18 @@ class EffectRunner {
                     this.run(iterResult.value, iterate, ctx, [lastResult && lastResult.value]);
                 } else {
                     if (!isVoidValue(iterResult.value))
-                        this.run(iterResult.value, cb, ctx)
+                        return this.run(iterResult.value, cb, ctx)
                 }
+                return {done: false, value: undefined}
             };
-            iterate();
-            return {
+            return Object.assign({}, {
                 cancel() {
                     cancelled = true;
                 },
-                kind: 'generator'
-            }
+                kind: 'generator',
+                path: ctx.path,
+            }, iterate());
+
         } else if (effect.$$iterator) {
             const iter = effect.$$iterator;
             const iterate = (lastResult) => {
@@ -121,10 +128,12 @@ class EffectRunner {
                 return this.run(obj, cb, ctx);  
 
                 const resultTree = {};
-
+            let pendingCount = 0;
             const visit = (effectNode, path) => {
                 let handled = false;
+                pendingCount++;
                 const resolvingResult = this.run(effectNode, v => {
+                    pendingCount--;
                     if (isObservable(effectNode)) {
                         setTimeout(() => {
                             cb(v);
@@ -143,7 +152,7 @@ class EffectRunner {
                 }
             };
             visit(obj, []);
-
+            if (pendingCount == 0) done = true;
             return emitValue(resultTree);
 
         } else if (effect instanceof Formula) {
@@ -151,6 +160,7 @@ class EffectRunner {
             const result = this.run({[EffectRunner.RECURSIVE]: effect.initialState}, cb);
             return result;            
         } else {
+            done = true;
             emitValue(effect)
         }
         return result;
