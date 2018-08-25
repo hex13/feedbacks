@@ -58,16 +58,17 @@ describe('Collection', () => {
         });    
     });
 
-    describe('updating items', () => {    
+    describe('updating items', () => {
         let originalCollection;
         let latestCollection;
+        let collections;
         beforeEach(() => {
             originalCollection = new Collection()
                 .add({ kind: 'dress', color: 'brown' })
                 .add({ kind: 'shoes', color: 'brown' })
                 .add({ kind: 'jeans', color: 'blue' });
             latestCollection = originalCollection.update({ kind: 'shoes'}, { color: 'black' });
-
+            collections = { originalCollection, latestCollection };
         });
         it('instanceof', () => {
             expect(originalCollection).instanceof(Collection);
@@ -77,7 +78,22 @@ describe('Collection', () => {
             expect(originalCollection.count).to.equal(3);
             expect(latestCollection.count).to.equal(3);
         });
-        it('shouldn\'t find updated item', () => {
+
+        ['originalCollection', 'latestCollection'].forEach(name => {
+            it(`should find not touched items in ${name} `, () => {
+                const collection = collections[name];
+                expect(collection.find({ kind: 'dress'})).to.deep.equal({
+                    kind: 'dress',
+                    color: 'brown'
+                });
+                expect(collection.find({ kind: 'jeans'})).to.deep.equal({
+                    kind: 'jeans',
+                    color: 'blue'
+                });
+            });
+        })
+
+        it('should find updated item', () => {
             expect(originalCollection.find({ kind: 'shoes'})).to.deep.equal({
                 kind: 'shoes',
                 color: 'brown'

@@ -34,7 +34,7 @@ class Collection {
 
             return new Collection(
                 firstSlice.concat(
-                    updates === null? lastSlice : [Object.assign({}, original, updates), lastSlice]
+                    ...(updates === null? [lastSlice] : [Object.assign({}, original, updates), lastSlice])
                 )
 
             );    
