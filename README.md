@@ -1,6 +1,16 @@
 Feedbacks - reactive blueprints for your Redux apps
 ===
 
+Feedbacks:
+---
+- matches actions automatically (powerful DSL with **pattern matching** capabilities)
+- allows for working on **individual properties** / slices of state
+- resolves **promises** and **observables** and feeds it back to given property in the state
+- enables to return **declarative effects** from reducers
+    - allows you to handle custom effects in effect handlers (`onEffect`)
+    - provides you with some standard effects (like `fx.waitFor` for waiting for specific actions)
+
+
 No more wiring manually your actions, reducers, thunks etc. 
 
 Just create a "blueprint" which will define a **shape of state** and define how it should **react on incoming actions** (pattern-matching: action -> reducer). 
@@ -12,15 +22,6 @@ You can hook into **individual properties** even deep in the state (and wire up 
 Observables and promises are **auto-resolved**, and owner property is auto-updated.
 
 ![feedbacks-resolving.png](feedbacks-resolving.png)
-
-Feedbacks:
----
-- matches actions automatically (powerful DSL with pattern matching capabilities)
-- allows for working on individual properties / slices of state
-- resolves promises and observables and feeds it back to given property in the state
-- enables to return declarative effects from reducers
-    - allows you to handle custom effects in effect handlers (`onEffect`)
-    - provides you with some standard effects (like `fx.waitFor` for waiting for specific actions)
 
 Blueprints
 ====
