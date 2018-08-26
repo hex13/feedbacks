@@ -1,4 +1,4 @@
-Feedbacks - reactive blueprints for your Redux apps
+Feedbacks - Redux extension for pattern-matching and side-effects
 ===
 
 Feedbacks:
