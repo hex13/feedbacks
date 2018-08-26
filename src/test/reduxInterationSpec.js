@@ -716,6 +716,51 @@ describe('[resmix]', () => {
 
     });
 
+    describe('[effects - functions]', () => {
+        it('function should receive `next` and `current` arguments', () => {
+            const store = createStore({
+                foo: init(10)
+                    .on('someAction', () => (next, current) => {
+                        next(current() + 15);
+                        assert.strictEqual(store.getState().foo, 25);
+                        assert.strictEqual(current(), 25);
+                        
+                        next(current() + 15);
+                        assert.strictEqual(store.getState().foo, 40);
+                        assert.strictEqual(current(), 40);
+                    })
+            }, createFeedbacks());
+            assert.deepStrictEqual(store.getState(), {foo: 10});
+            store.dispatch({type: 'someAction'});
+            assert.deepStrictEqual(store.getState(), {foo: 40});
+            
+        });
+
+        it('function should receive `fx` argument with effects API', (done) => {
+            const whatHappened = [];
+            const store = createStore({
+                foo: init(10)
+                    .on('someAction', () => async (next, current, fx) => {
+                        whatHappened.push(['func 1', fx && typeof fx == 'object' && 'ok' || fx]);
+                        const action = await fx.waitFor('otherAction');
+                        console.log("!!!!!!#")
+                        whatHappened.push(['func 2', action]);
+                    })
+            }, createFeedbacks());
+           assert.deepStrictEqual(store.getState(), {foo: 10});
+           store.dispatch({type: 'someAction'});
+           store.dispatch({type: 'aa'});
+           store.dispatch({type: 'otherAction'});
+           setTimeout(() => {
+                assert.deepStrictEqual(whatHappened, [
+                    ['func 1', 'ok'],
+                    ['func 2', {type: 'otherAction'}],
+                ]);
+                done();
+           }, 0);
+            
+        });
+    });
 
     describe('[effects - observables]', () => {
         let store;

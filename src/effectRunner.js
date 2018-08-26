@@ -29,7 +29,7 @@ class EffectRunner {
         this.api = api;
         this.waitingList = [];
     }
-    run(effect, cb, ctx = {path: []}, params = []) {
+    run(effect, cb, ctx = {path: []}, params = ctx.params || []) {
         // console.log("run", effect, params)
         let done = false;
         let result;

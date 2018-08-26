@@ -276,6 +276,7 @@ function createEngine(blueprint, { loader } = {} ) {
             throw new Error(`Resmix: middleware hasn't received a store. Ensure to use applyMiddleware during passing middleware to createStore`);
         }
         const update = (path, value, shouldPerformAfterUpdate = true, meta) => {
+            if (value === undefined) return;
             if (!(path instanceof Array)) {
                 path = [path];
             }
@@ -359,9 +360,30 @@ function createEngine(blueprint, { loader } = {} ) {
                                 type: action.type
                             }
                         }
+                        const updateAt = v => update(path, v, undefined, meta);
+
                         const ongoingEffect = effectRunner.run(effect[EFFECT] || effect, (result) => {
                             update(result.path, result.value, undefined, meta)
-                        }, createContext({ path, update }));
+                        }, createContext({ 
+                            path, 
+                            update, 
+                            next: updateAt,
+                            params: [
+                                updateAt, 
+                                () => get(store.getState(), path),
+                                {
+                                    waitFor(pattern) {
+                                        return new Promise(resolve => {
+
+                                            effectRunner.run(fx.waitFor(pattern,x=>x), (result) => {
+                                                resolve(result.value);
+                                            })    
+                                          
+                                        })
+                                    }
+                                }
+                            ]
+                        }));
                         if (ongoingEffect) {
                             ongoingEffects.push(Object.assign({ id: Math.random(), path}, ongoingEffect));
                         }
