@@ -1439,6 +1439,21 @@ describe('[fx.next]', () => {
 
         ]);
     });
+
+    it('should mount observable (not assigning it)', () => {
+        const whatHappened = [];
+        const store = createStore({
+            counter: init(100)
+                .on('foo', () => {
+                    return function* () {
+                        yield fx.next(of(10));
+                    }
+                })
+        }, createFeedbacks())
+        assert.deepStrictEqual(store.getState(), {counter: 100});
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), {counter: 10});
+    });
 });
     
 describe('[time effects]', () => {

@@ -4,7 +4,7 @@ const { isMatch } = require('./matching');
 const { get } = require('transmutable/lib/get-set');
 const { UPDATE, UPDATE_BLUEPRINT } = require('./constants');
 const resolveInitialState = require('./resolveInitialState');
-
+const symbolObservable = require('symbol-observable').default;
 
 module.exports = {
     spawn(dispatch, getState, action) {
@@ -82,7 +82,13 @@ module.exports = {
         return curr;
     },
     next(dispatch, getState, value) {
-        this.update(this.path, value, undefined);
-        return value;
+        if (value && typeof value[symbolObservable] == 'function') {
+            value[symbolObservable]().subscribe(valueFromObservable => {
+                this.update(this.path, valueFromObservable);
+            })
+        } else {
+            this.update(this.path, value);
+            return value;
+        }
     }
 };
