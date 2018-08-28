@@ -280,13 +280,16 @@ function createEngine(blueprint, { loader } = {} ) {
             if (!(path instanceof Array)) {
                 path = [path];
             }
-            const action = {type: UPDATE, 
-                payload: {
-                    name: path, value,
-                },
-            };
-            action.meta = meta;
-            next(action);
+
+            effectRunner.run(value, ({ value }) => {
+                const action = {type: UPDATE,
+                    payload: {
+                        name: path, value,
+                    },
+                };
+                action.meta = meta;
+                next(action);
+            });
 
             if (shouldPerformAfterUpdate) performAfterUpdate();
         };

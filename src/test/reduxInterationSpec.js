@@ -1340,6 +1340,28 @@ describe('[random effects]', () => {
     });
 });
 
+xdescribe('[fx.fork]', () => {
+    it('should fork', () => {
+        const whatHappened = [];
+        const store = createStore({
+            someProp: init(20)
+                .on('spoon', () => function*() {
+                    whatHappened.push(['gen entered']);
+                    yield fx.fork(of(25));
+                    whatHappened.push(['gen forked']);
+                })
+        }, createFeedbacks())
+        assert.deepStrictEqual(store.getState(), {someProp: 20});
+        store.dispatch({type: 'spoon'});
+
+        assert.deepStrictEqual(store.getState(), {someProp: 25});
+        assert.deepStrictEqual(whatHappened, [
+            ['gen entered'],
+            ['gen forked'],
+        ]);
+    });
+});
+
 describe('[fx.current]', () => {
     it('should resolve to current prop value', () => {
         const whatHappened = [];

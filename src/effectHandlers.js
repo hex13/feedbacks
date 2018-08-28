@@ -82,13 +82,7 @@ module.exports = {
         return curr;
     },
     next(dispatch, getState, value) {
-        if (value && typeof value[symbolObservable] == 'function') {
-            value[symbolObservable]().subscribe(valueFromObservable => {
-                this.update(this.path, valueFromObservable);
-            })
-        } else {
-            this.update(this.path, value);
-            return value;
-        }
+        this.update(this.path, value);
+        return value;
     }
 };

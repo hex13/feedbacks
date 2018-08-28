@@ -74,6 +74,13 @@ const compute = (params) => {
     });
 };
 
+const fork = (value) => {
+    return createEffect({
+        permanent: true, 
+        [EFFECT]: {[EffectRunner.CALL]: ['next', value]}
+    });
+};
+
 const select = (path) => {
     if (typeof path == 'function') {
         throw new TypeError('Feedbacks: You have to pass an array or string to fx.select. You passed a function or class')
@@ -96,11 +103,12 @@ module.exports = {
     random,
     compute,
     dispatch,
-    getState,
+    getState, 
     delay,
     current,
     next,
-    select
+    select,
+    fork,
 };
 
 
