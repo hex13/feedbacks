@@ -1467,7 +1467,7 @@ describe('[fx.next]', () => {
         ]);
     });
 
-    it('should mount observable (not assigning it)', () => {
+    xit('should mount observable (not assigning it) and cancel existing effect', (done) => {
         const whatHappened = [];
         const observable = new Observable(observer => {
             whatHappened.push(['observable subscribed']);
@@ -1477,19 +1477,51 @@ describe('[fx.next]', () => {
             counter: init(100)
                 .on('foo', () => {
                     return function* () {
+                        whatHappened.push(['generator entered']);
                         yield fx.next(observable);
+                        whatHappened.push(['should not gonna happen']);
+                        yield fx.next('some value from cancelled generator');
+                        return 'returned value from cancelled generator';
                     }
                 })
-        }, createFeedbacks())
+        }, createFeedbacks());
         assert.deepStrictEqual(store.getState(), {counter: 100});
         store.dispatch({type: 'foo'});
         assert.deepStrictEqual(store.getState(), {counter: 10});
-        assert.deepStrictEqual(whatHappened, [
-            ['observable subscribed']
-        ]);
+        setTimeout(() => {
+            assert.deepStrictEqual(whatHappened, [
+                ['generator entered'],
+                ['observable subscribed']
+            ]);
+        }, 0);
     });
 });
-    
+
+describe('[fx.cancel', () => {
+    it('should cancel a generator', (done) => {
+        const whatHappened = [];
+        const store = createStore({
+            counter: init(100)
+                .on('foo', () => {
+                    return function* () {
+                        whatHappened.push(['generator entered']);
+                        yield fx.cancel();
+                        whatHappened.push(['should not gonna happen']);
+                    }
+                })
+        }, createFeedbacks());
+        assert.deepStrictEqual(store.getState(), {counter: 100});
+        store.dispatch({type: 'foo'});
+        assert.deepStrictEqual(store.getState(), {counter: 100});
+        setTimeout(() => {
+            assert.deepStrictEqual(whatHappened, [
+                ['generator entered'],
+            ]);
+            done();
+        }, 0);
+    })
+});
+
 describe('[time effects]', () => {
     it('fx.delay should call setTimeout', (done) => {
         const sT = global.setTimeout;

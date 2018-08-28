@@ -74,6 +74,11 @@ const compute = (params) => {
     });
 };
 
+const cancel = (item) => {
+    return createEffect(EffectRunner.CANCEL);
+};
+
+
 const fork = (value) => {
     return createEffect({
         permanent: true, 
@@ -109,6 +114,7 @@ module.exports = {
     next,
     select,
     fork,
+    cancel,
 };
 
 

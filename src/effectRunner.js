@@ -30,7 +30,7 @@ class EffectRunner {
         this.waitingList = [];
     }
     run(effect, cb, ctx = {path: []}, params = ctx.params || []) {
-        // console.log("run", effect, params)
+        // console.log("run", effect)
         let done = false;
         let result;
         const emitValue = (v, extra) => {
@@ -50,11 +50,12 @@ class EffectRunner {
         } else if (effect[EffectRunner.WAIT_FOR]) {
             const { pattern, mapper } = effect[EffectRunner.WAIT_FOR];
             this.waitingList.push({ pattern, resolve: cb, mapper, path: ctx.path });
-        } else if (effect[EffectRunner.EFFECT]) {
+        } else if (typeof effect == 'object' && EffectRunner.EFFECT in effect) {
             this.run(effect[EffectRunner.EFFECT], cb, ctx, params);
         } else if (isGenerator(effect)) {
             let cancelled = false;
             const iterate = (lastResult) => {
+                if (lastResult && lastResult.value === EffectRunner.CANCEL) cancelled = true;
                 if (cancelled) return;
                 let iterResult = effect.next(lastResult && lastResult.value);
                 if (!iterResult.done) {
@@ -188,5 +189,6 @@ EffectRunner.FLOW = Symbol('EffectRunner/FLOW');
 EffectRunner.EFFECT = Symbol('effect');
 EffectRunner.RECURSIVE = Symbol('EffectRunner/RECURSIVE');
 EffectRunner.RAW = Symbol('EffectRunner/RAW');
+EffectRunner.CANCEL = Symbol('EffectRunner/CANCEL');
 
 module.exports = EffectRunner;
