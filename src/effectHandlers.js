@@ -5,6 +5,7 @@ const { get } = require('transmutable/lib/get-set');
 const { UPDATE, UPDATE_BLUEPRINT } = require('./constants');
 const resolveInitialState = require('./resolveInitialState');
 const symbolObservable = require('symbol-observable').default;
+const EffectRunner = require('./effectRunner');
 
 module.exports = {
     spawn(dispatch, getState, action) {
@@ -83,6 +84,6 @@ module.exports = {
     },
     next(dispatch, getState, value) {
         this.update(this.path, value);
-        return value;
+        return { [EffectRunner.RAW]: value} ;
     }
 };

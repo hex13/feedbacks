@@ -1440,6 +1440,9 @@ describe('[fx.next]', () => {
         .onEffect('foo', function* () {
             whatHappened.push(['generator entered']);
             let valueFromNext;
+            valueFromNext = yield fx.next(0);
+            whatHappened.push(['emitted', valueFromNext]);
+            whatHappened.push(['store', store.getState()]);
             valueFromNext = yield fx.next(200);
             whatHappened.push(['emitted', valueFromNext]);
             whatHappened.push(['store', store.getState()]);
@@ -1454,6 +1457,8 @@ describe('[fx.next]', () => {
         assert.deepStrictEqual(store.getState(), {counter: 300});
         assert.deepStrictEqual(whatHappened, [
             ['generator entered'],
+            ['emitted', 0],
+            ['store', {counter: 0}],
             ['emitted', 200],
             ['store', {counter: 200}],
             ['emitted', 300],
@@ -1464,17 +1469,24 @@ describe('[fx.next]', () => {
 
     it('should mount observable (not assigning it)', () => {
         const whatHappened = [];
+        const observable = new Observable(observer => {
+            whatHappened.push(['observable subscribed']);
+            observer.next(10);
+        });
         const store = createStore({
             counter: init(100)
                 .on('foo', () => {
                     return function* () {
-                        yield fx.next(of(10));
+                        yield fx.next(observable);
                     }
                 })
         }, createFeedbacks())
         assert.deepStrictEqual(store.getState(), {counter: 100});
         store.dispatch({type: 'foo'});
         assert.deepStrictEqual(store.getState(), {counter: 10});
+        assert.deepStrictEqual(whatHappened, [
+            ['observable subscribed']
+        ]);
     });
 });
     

@@ -159,6 +159,9 @@ class EffectRunner {
 
             const result = this.run({[EffectRunner.RECURSIVE]: effect.initialState}, cb);
             return result;            
+        } else if (typeof effect == 'object' && EffectRunner.RAW in effect) {
+            done = true;
+            emitValue(effect[EffectRunner.RAW])
         } else {
             done = true;
             emitValue(effect)
@@ -184,6 +187,6 @@ EffectRunner.WAIT_FOR = Symbol('EffectRunner/WAIT_FOR');
 EffectRunner.FLOW = Symbol('EffectRunner/FLOW');
 EffectRunner.EFFECT = Symbol('effect');
 EffectRunner.RECURSIVE = Symbol('EffectRunner/RECURSIVE');
-
+EffectRunner.RAW = Symbol('EffectRunner/RAW');
 
 module.exports = EffectRunner;
