@@ -7,6 +7,16 @@ const resolveInitialState = require('./resolveInitialState');
 const symbolObservable = require('symbol-observable').default;
 const EffectRunner = require('./effectRunner');
 
+const isPlainValue = (value) => {
+    console.log('is plain?' ,value)
+    if (!value) return true;
+    const stringTag = Object.prototype.toString.call(value);
+    if (stringTag == '[object Number]') return true;
+    if (stringTag == '[object String]') return true;
+    if (stringTag == '[object Boolean]') return true;
+    return false;
+};
+
 module.exports = {
     spawn(dispatch, getState, action) {
         action.meta = {owner: this.path};
@@ -84,6 +94,8 @@ module.exports = {
     },
     next(dispatch, getState, value) {
         this.update(this.path, value);
-        return { [EffectRunner.RAW]: value} ;
+        if (isPlainValue(value))
+            return { [EffectRunner.RAW]: value} ;
+        return EffectRunner.CANCEL;
     }
 };

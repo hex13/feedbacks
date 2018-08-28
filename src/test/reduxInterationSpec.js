@@ -1467,7 +1467,7 @@ describe('[fx.next]', () => {
         ]);
     });
 
-    xit('should mount observable (not assigning it) and cancel existing effect', (done) => {
+    it('should mount observable (not assigning it) and cancel running function', (done) => {
         const whatHappened = [];
         const observable = new Observable(observer => {
             whatHappened.push(['observable subscribed']);
@@ -1493,6 +1493,7 @@ describe('[fx.next]', () => {
                 ['generator entered'],
                 ['observable subscribed']
             ]);
+            done();
         }, 0);
     });
 });
