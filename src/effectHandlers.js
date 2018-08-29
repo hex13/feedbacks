@@ -9,7 +9,6 @@ const EffectRunner = require('./effectRunner');
 
 const isPlainValue = (value) => {
     // TODO use isPlainObject from effectRunner.js
-    console.log('is plain?' ,value)
     if (!value) return true;
     // if (typeof value == 'object') return true;
     const stringTag = Object.prototype.toString.call(value);
