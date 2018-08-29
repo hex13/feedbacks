@@ -5,7 +5,7 @@
   "description": "Feedbacks - reactive blueprints for your Redux apps",
   "main": "lib/resmix.js",
   "scripts": {
-    "test": "mocha src/test",
+    "test": "mocha --recursive src/test",
     "build": "babel src --out-dir lib"
   },
   "author": "Łukasz Lityński (hex13)",

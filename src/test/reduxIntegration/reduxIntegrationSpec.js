@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const Resmix = require('../resmix');
+const Resmix = require('../../resmix');
 
 require('symbol-observable');
 const { createStore, applyMiddleware, compose } = require('redux');
@@ -10,10 +10,10 @@ const Redux = require('redux');
 const { Observable, interval, Subscription, of } = require('rxjs');
 const { take } = require('rxjs/operators');
 const testing = require('rxjs/testing');
-const { UPDATE } = require('../constants');
-const { createEngine, withRedux, init, defineEffect, defineAction, createFeedbacks, Collection } = require('..');
+const { UPDATE } = require('../../constants');
+const { createEngine, withRedux, init, defineEffect, defineAction, createFeedbacks, Collection } = require('../..');
 
-const fx = require('../fx');
+const fx = require('../../fx');
 
 const prepareStore = (blueprint) => {
     return createStore(blueprint, createFeedbacks())
