@@ -6,6 +6,7 @@
   "main": "lib/resmix.js",
   "scripts": {
     "test": "nyc --reporter=html mocha --recursive src/test",
+    "test-inspect": "mocha --recursive src/test --inspect-brk",
     "build": "babel src --out-dir lib"
   },
   "author": "Łukasz Lityński (hex13)",
