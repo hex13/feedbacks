@@ -107,37 +107,6 @@ describe('[creating store via enhancer (smoke test)]', () => {
 
 
 describe('[resmix]', () => {
-    it('should allow for declare plain values', () => {
-        const someSymbol = Symbol();
-        const createBlueprint = () => ({
-            i: 10,
-            z: 0,
-            t: 'text',
-            ok: true,
-            notOk: false,
-            u: undefined,
-            n: null,
-            s: someSymbol,
-        });
-        const store = createStore(createBlueprint(), createFeedbacks());
-        assert.deepStrictEqual(store.getState(), createBlueprint());
-    });
-
-    it('should allow for create empty object as value of property', () => {
-        const store = createStore({
-            a: {}
-        }, createFeedbacks());
-        assert.deepStrictEqual(store.getState(), {a: {}})
-
-    });
-
-    it('should allow for create array as value of property', () => {
-        const store = createStore({
-            a: []
-        }, createFeedbacks());
-        assert.deepStrictEqual(store.getState(), {a: [] })
-
-    });
 
     // it('should allow for declare Recipe with primitive as initial state', () => {
     //     const someSymbol = Symbol();
@@ -180,21 +149,6 @@ describe('[resmix]', () => {
         });
     
 
-    });
-
-
-
-    it('should allow for declare plain objects', () => {
-        const someSymbol = Symbol();
-        const createBlueprint = () => ({
-            o: {
-                a: {
-                    b: 2
-                }
-            }
-        });
-        const store = prepareStore(createBlueprint());
-        assert.deepStrictEqual(store.getState(), createBlueprint());
     });
 
 
