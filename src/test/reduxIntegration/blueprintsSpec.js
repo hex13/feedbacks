@@ -71,8 +71,7 @@ describe('[blueprints', () => {
                     a: 'kotek', b: {c: 123}
                 });
             });    
-            // TODO make it work!
-            xit('should allow for pattern-matching actions via .on', () => {
+            it('should allow for pattern-matching actions via .on', () => {
                 store.dispatch({type: 'foo', payload: {a: 2}});
                 assert.deepStrictEqual(store.getState(), {
                     a: 2

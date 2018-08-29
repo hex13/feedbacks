@@ -25,7 +25,7 @@ class State {
         this._trees = {updates:{}, effects:{}};
     }
     getCursor() {
-        return new Cursor(this._trees, this._state, []);
+        return new Cursor(this, this._trees, this._state, []);
     }
     commit() {
         const newState = applyPatch(this._state || {}, this._trees.updates);
@@ -37,7 +37,10 @@ class State {
     }
     set(path, value) {
         if (!path.length) {
-            this._state = Object.assign({}, this._state, value);
+            this._state = Object.assign({}, {
+                [SMART_STATE]: this._state[SMART_STATE],
+                [BLUEPRINT]: this._state[BLUEPRINT]
+            }, value);
         } else 
             set(this._trees.updates, path, {
                 [MUTATION]: {
@@ -50,14 +53,15 @@ class State {
     }
 }
 
-function Cursor(metadata, state, path = []) {
+function Cursor(smartState, metadata, state, path = []) {
     return {
         get() {
             return get(state, path);
         },
-        // set(value) {
-        //     set(state, path, value);
-        // },
+        set(value) {
+            return smartState.set(path, value);
+        },
+
         // getMetadata(kind) {
         //     return get(metadata[kind], path);
         // },
@@ -65,7 +69,7 @@ function Cursor(metadata, state, path = []) {
             set(metadata[kind], path, value);
         },
         select(k) {
-            return new Cursor(metadata, state, path.concat(k));
+            return new Cursor(smartState, metadata, state, path.concat(k));
         },
     }
 }
@@ -134,14 +138,17 @@ const reducerFor = () => {
         const blueprint = state && state[BLUEPRINT]? state[BLUEPRINT] : {}; 
 
         const checkMatchAndHandleAction = (parent, k, cursor) => {
-            const field = parent[k];
+            const field = k? parent[k] : parent;
 
             if (field instanceof Formula) {
                 field.doMatch(action, (reducer) => {
 
                     const reducerResult = reducer(cursor.get(), action);
                     const output = mapReducerResultToEffectOrUpdate(reducerResult, action)
-                    cursor.setMetadata('updates', output.update);
+                    if (output.update) {
+                        cursor.set(output.update[MUTATION].value);
+                    }
+
                     if (output.effect) cursor.setMetadata('effects', output.effect);
                 });
                 if (field.itemBlueprint) {
@@ -170,8 +177,8 @@ const reducerFor = () => {
                 const path = action.meta.feedbacks.path;
                 const key = path[path.length - 1];
                 checkMatchAndHandleAction(get(blueprint, path.slice(0, -1)), key, cursor.select(path));
-            } else  if (state) for (let key in blueprint) {
-                checkMatchAndHandleAction(blueprint, key, cursor.select(key));
+            } else if (state) {
+                checkMatchAndHandleAction(blueprint, '', cursor);
             }
     
         }
