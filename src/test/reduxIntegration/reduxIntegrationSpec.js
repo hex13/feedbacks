@@ -119,22 +119,22 @@ describe('[resmix]', () => {
             n: null,
             s: someSymbol,
         });
-        const store = prepareStore(createBlueprint());
+        const store = createStore(createBlueprint(), createFeedbacks());
         assert.deepStrictEqual(store.getState(), createBlueprint());
     });
 
     it('should allow for create empty object as value of property', () => {
-        const store = prepareStore({
+        const store = createStore({
             a: {}
-        });
+        }, createFeedbacks());
         assert.deepStrictEqual(store.getState(), {a: {}})
 
     });
 
     it('should allow for create array as value of property', () => {
-        const store = prepareStore({
+        const store = createStore({
             a: []
-        });
+        }, createFeedbacks());
         assert.deepStrictEqual(store.getState(), {a: [] })
 
     });
