@@ -28,7 +28,7 @@ module.exports = {
         return true;
     },
 
-    mount(dispatch, getState, blueprint) {
+    blueprint(dispatch, getState, blueprint) {
         const { path } = this;
         dispatch({
             type: UPDATE_BLUEPRINT,

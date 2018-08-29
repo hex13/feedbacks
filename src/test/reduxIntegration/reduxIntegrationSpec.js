@@ -326,7 +326,7 @@ describe('[resmix]', () => {
             foo: {
                 counter: Resmix.init(0)
                     .on('foo', (value, action) => {
-                        return fx.mount(
+                        return fx.blueprint(
                             Resmix.on('inc', (value, action) => value + action.payload)
                         )
                     })
@@ -354,7 +354,7 @@ describe('[resmix]', () => {
             foo: {
                 counter: Resmix.init(0)
                     .on('foo', (value, action) => {
-                        return fx.mount(
+                        return fx.blueprint(
                             Resmix.init(100).on('inc', (value, action) => value + action.payload)
                         )
                     })
@@ -402,7 +402,7 @@ describe('[resmix]', () => {
             foo: {
                 counter: Resmix.init({value: 0})
                     .on('foo', (value, action) => {
-                        return fx.mount({
+                        return fx.blueprint({
                             value: Resmix.init(0).on('inc', (value, action) => value + action.payload)
                         })
                     })
@@ -429,7 +429,7 @@ describe('[resmix]', () => {
             foo: {
                 counter: Resmix.init({value: 0})
                     .on('foo', (value, action) => {
-                        return fx.mount({
+                        return fx.blueprint({
                             value: Resmix.init(100).on('inc', (value, action) => value + action.payload)
                         })
                     })

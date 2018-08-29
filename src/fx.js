@@ -23,8 +23,8 @@ const getState = (path) => {
     return createEffect({ [EffectRunner.CALL]: ['getState', path] });
 };
 
-const mount = (blueprint) => {
-    return createEffect({[EffectRunner.CALL]: ['mount', blueprint]});
+const blueprint = (blueprint) => {
+    return createEffect({[EffectRunner.CALL]: ['blueprint', blueprint]});
 };
 
 const effect = (params) => {
@@ -94,7 +94,7 @@ module.exports = {
     createEffect, 
     EFFECT,
     spawn, 
-    mount,
+    blueprint,
     effect,
     flow,
     waitFor,
