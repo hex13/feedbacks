@@ -199,12 +199,8 @@ const reducerFor = () => {
 };
 
 
-exports.match = (...args) => {
-    return new Formula().match(...args);
-};
-
 exports.on = (...args) => {
-    return new Formula().match(...args);
+    return new Formula().on(...args);
 };
 
 

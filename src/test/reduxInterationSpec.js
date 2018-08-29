@@ -241,8 +241,8 @@ describe('[resmix]', () => {
         const createBlueprint = () => (
             {
                 user: Resmix.init({name: '', city: '', planet: 'Earth'})
-                    .match('changeUser', (value, action) => Object.assign({}, value, action.payload))
-                    .match('clear', (value, action) => ({foo: true}))
+                    .on('changeUser', (value, action) => Object.assign({}, value, action.payload))
+                    .on('clear', (value, action) => ({foo: true}))
             }
         );
         const store = prepareStore(createBlueprint());
@@ -296,12 +296,12 @@ describe('[resmix]', () => {
     it('should allow for declare deep matchings', (done) => {
         const createBlueprint = () => ({
             user: {
-                season: Resmix.init(1).match('nextSeason', value => value + 1),
-                name: Resmix.init('Jack').match([
+                season: Resmix.init(1).on('nextSeason', value => value + 1),
+                name: Resmix.init('Jack').on([
                     ['changeName', (value, action) => action.name]
                 ]),
                 from: {
-                    city: Resmix.init('Los Angeles').match([
+                    city: Resmix.init('Los Angeles').on([
                         ['changeCity', (value, action) => () => Promise.resolve(action.name)],
                         ['fly', (value, action) => of('Island')]
                     ]),
@@ -372,7 +372,7 @@ describe('[resmix]', () => {
         const store = prepareStore({
             foo: {
                 counter: Resmix.init(0)
-                    .match('foo', (value, action) => {
+                    .on('foo', (value, action) => {
                         return fx.mount(
                             Resmix.on('inc', (value, action) => value + action.payload)
                         )
@@ -400,9 +400,9 @@ describe('[resmix]', () => {
         const store = prepareStore({
             foo: {
                 counter: Resmix.init(0)
-                    .match('foo', (value, action) => {
+                    .on('foo', (value, action) => {
                         return fx.mount(
-                            Resmix.init(100).match('inc', (value, action) => value + action.payload)
+                            Resmix.init(100).on('inc', (value, action) => value + action.payload)
                         )
                     })
             },
@@ -426,7 +426,7 @@ describe('[resmix]', () => {
 
     xit('should allow for change blueprint (mounting Promise) ', (done) => {    
         const store = prepareStore({
-            foo: init(0).match('foo', () => () => fx.mount(Promise.resolve(1234)))
+            foo: init(0).on('foo', () => () => fx.mount(Promise.resolve(1234)))
         });
         const initialState = {
             foo: 0
@@ -448,9 +448,9 @@ describe('[resmix]', () => {
         const store = prepareStore({
             foo: {
                 counter: Resmix.init({value: 0})
-                    .match('foo', (value, action) => {
+                    .on('foo', (value, action) => {
                         return fx.mount({
-                            value: Resmix.init(0).match('inc', (value, action) => value + action.payload)
+                            value: Resmix.init(0).on('inc', (value, action) => value + action.payload)
                         })
                     })
             },
@@ -475,9 +475,9 @@ describe('[resmix]', () => {
         const store = prepareStore({
             foo: {
                 counter: Resmix.init({value: 0})
-                    .match('foo', (value, action) => {
+                    .on('foo', (value, action) => {
                         return fx.mount({
-                            value: Resmix.init(100).match('inc', (value, action) => value + action.payload)
+                            value: Resmix.init(100).on('inc', (value, action) => value + action.payload)
                         })
                     })
             },
@@ -542,13 +542,11 @@ describe('[resmix]', () => {
 
     describe('init', () => {
 
-        it('should allow for use chaining: first init(), then match()', () => {
+        it('should allow for use chaining: first init(), then on()', () => {
             const store = prepareStore({
                 a: Resmix.init(10)
-                    .match([
-                        ['inc', a => a + 1],
-                        ['dec', a => a - 1],
-                    ])
+                    .on('inc', a => a + 1)
+                    .on('dec', a => a - 1)
             });
             assert.deepStrictEqual(store.getState(), {a:10});
             store.dispatch({type: 'inc'});
@@ -557,13 +555,11 @@ describe('[resmix]', () => {
             assert.deepStrictEqual(store.getState(), {a:10});
         });
 
-        it('should allow for use chaining: first match(), then init()', () => {
+        it('should allow for use chaining: first on(), then init()', () => {
             const store = prepareStore({
                 a: Resmix
-                    .match([
-                        ['inc', a => a + 1],
-                        ['dec', a => a - 1],
-                    ])
+                    .on('inc', a => a + 1)
+                    .on('dec', a => a - 1)
                     .init(10)
             });
             assert.deepStrictEqual(store.getState(), {a:10});
@@ -768,7 +764,7 @@ describe('[resmix]', () => {
         beforeEach(() => {
             const blueprint = {
                 animal: Resmix.init('cat')
-                    .match([
+                    .on([
                         ['changeAnimal', () => new Observable(observer => {
                             observer.next('dog')
                             subscriptionCount++;
@@ -1116,13 +1112,13 @@ describe('[resmix]', () => {
         let store, engine;
         beforeEach(() => {
             ({ store, engine } = prepareEngine({
-                someFoo: Resmix.init(0).match([
+                someFoo: Resmix.init(0).on([
                     ['foo', function (state, action) {
                         return fx.spawn({type: 'bar'});
                     }]
                 ]),
                 deep: {
-                    someBar: Resmix.init(100).match([
+                    someBar: Resmix.init(100).on([
                         ['bar', function* (state, action) {
                             yield 'something yielded';
                             return state + 10;
@@ -1223,12 +1219,12 @@ describe('[namespaced actions]', () => {
     it('should allow for dispatching namespaced actions', () => {
         const foo = {a: 123};
         const store = prepareStore({
-            foo: Resmix.init(0).match('inc', v => v + 1),
-            bar: Resmix.init(0).match('inc', v => v + 10),
+            foo: Resmix.init(0).on('inc', v => v + 1),
+            bar: Resmix.init(0).on('inc', v => v + 10),
             deep: {
                 deeper: {
-                    baz: Resmix.init(0).match('inc', v => v + 100),
-                    qux: Resmix.init(0).match('inc', v => v + 1000)
+                    baz: Resmix.init(0).on('inc', v => v + 100),
+                    qux: Resmix.init(0).on('inc', v => v + 1000)
                 }
             }
         });

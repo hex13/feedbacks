@@ -16,9 +16,6 @@ class Formula {
     }
     // return new Recipe object with given pattern and data
     on(...args) {
-        return this.match(...args);
-    }
-    match(...args) {
         const recipe = new Formula(this);
         recipe.hasMatchPairs = true;
 
