@@ -1,7 +1,7 @@
 'use strict';
 
 const { createStore, applyMiddleware, compose } = require('redux');
-const { createFeedbacks } = require('../..');
+const { createFeedbacks, init } = require('../..');
 
 
 describe('[blueprints', () => {
@@ -50,4 +50,30 @@ describe('[blueprints', () => {
         assert.deepStrictEqual(store.getState(), createBlueprint());
     });
         
+    describe('init',() => {
+        it('should treat first argument as a blueprint', () => {
+            const someSymbol = Symbol();
+            const store = createStore({
+                a: init({
+                    b: init(10).on('foo', () => 3)
+                })
+            }, createFeedbacks());
+
+            assert.deepStrictEqual(store.getState(), {a: {b: 10}})
+            
+            store.dispatch({type: 'foo'});
+
+            assert.deepStrictEqual(store.getState(), {a: {b: 3}})
+        });        
+
+        it('should allow for create empty object as value of property', () => {
+            const store = createStore({
+                a: init({})
+            }, createFeedbacks());
+            assert.deepStrictEqual(store.getState(), {a: {}})    
+        });
+    
+
+    });
+
 });
