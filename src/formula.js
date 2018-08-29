@@ -27,6 +27,10 @@ class Formula {
         }
         return recipe;
     }
+    service() {
+        const formula = new Formula(this);
+        return formula;
+    }
     // executes pattern-matching and runs callback
     doMatch(action, onMatch) {
         let matched = false;

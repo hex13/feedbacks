@@ -3,6 +3,10 @@
 const { createStore, applyMiddleware, compose } = require('redux');
 const { createFeedbacks, init } = require('../..');
 
+/*
+    Here are tests that check if a Redux state built from blueprints is correct 
+    and if blueprints allow for prescribing dynamic behavior (such as pattern-matching for actions)
+*/
 
 describe('[blueprints', () => {
     it('should allow for declare plain values', () => {
@@ -25,8 +29,7 @@ describe('[blueprints', () => {
         const store = createStore({
             a: {}
         }, createFeedbacks());
-        assert.deepStrictEqual(store.getState(), {a: {}})
-    
+        assert.deepStrictEqual(store.getState(), {a: {}})    
     });
     
     it('should allow for create empty array as value of property', () => {
@@ -34,7 +37,6 @@ describe('[blueprints', () => {
             a: []
         }, createFeedbacks());
         assert.deepStrictEqual(store.getState(), {a: [] })
-    
     });
     
     
@@ -49,8 +51,35 @@ describe('[blueprints', () => {
         const store = createStore(createBlueprint(), createFeedbacks());
         assert.deepStrictEqual(store.getState(), createBlueprint());
     });
+
+    describe('[init - various]',() => {
+        describe('[init the root state]', () => {
+            let store;
+            beforeEach(() => {
+                const blueprint = init({
+                    a: 'kotek',
+                    b: {
+                        c: 123
+                    }
+                }).on('foo', (state, action) => {
+                    return action.payload;
+                });
+                store = createStore(blueprint, createFeedbacks());                
+            });
+            it('should allow for init the root state', () => {
+                assert.deepStrictEqual(store.getState(), {
+                    a: 'kotek', b: {c: 123}
+                });
+            });    
+            // TODO make it work!
+            xit('should allow for pattern-matching actions via .on', () => {
+                store.dispatch({type: 'foo', payload: {a: 2}});
+                assert.deepStrictEqual(store.getState(), {
+                    a: 2
+                })       
+            });    
+        });
         
-    describe('init',() => {
         it('should treat first argument as a blueprint', () => {
             const someSymbol = Symbol();
             const store = createStore({
@@ -73,6 +102,18 @@ describe('[blueprints', () => {
             assert.deepStrictEqual(store.getState(), {a: {}})    
         });
     
+        xit('should allow for declaring services and it should preserve chaining', () => {
+            const blueprint = init({
+                    a: init(1).on('foo', () => ({bar: 123})), b: {c: 3}
+                })
+                .service({type: 'someService'}, () => {
+
+                })
+                .on('foo', () => ({bar: 123}));
+            const store = createStore(blueprint, createFeedbacks());
+            store.dispatch({type: 'foo'})
+            assert.deepStrictEqual(store.getState(), {a: 1, b: {c: 3}});
+        });
 
     });
 
