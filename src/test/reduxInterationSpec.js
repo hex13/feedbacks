@@ -872,36 +872,6 @@ describe('[resmix]', () => {
     })
 
     describe('[effect - load]', () => {
-        it('should load via provided loader', () => {
-            //const 
-
-            const store = withRedux(Redux).createEngine({ 
-                a: {
-                    b: init(123).on('loadThis', () => fx.load('someResource'))
-                }
-            }, {
-                loader: (params, state) => {
-                    whatHappened.push(['loader', params, state])
-                    return 456;
-                }
-            }).getStore();
-
-            const whatHappened = [];
-
-            assert.deepStrictEqual(store.getState(), {a: {b: 123}});
-
-            store.dispatch({ type: 'loadThis' });
-            assert.deepStrictEqual(store.getState(), {a: {b: 456}});
-            assert.deepStrictEqual(whatHappened, [
-               ['loader', 'someResource', {
-                   a: {
-                       b: 123
-                   }
-               }] 
-            ]);
-
-        });
-
         it('should run matching effect handler', () => {
             const store = withRedux(Redux).createEngine({ 
                 a: {

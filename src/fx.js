@@ -27,10 +27,6 @@ const mount = (blueprint) => {
     return createEffect({[EffectRunner.CALL]: ['mount', blueprint]});
 };
 
-const load = (params) => {
-    return createEffect({[EffectRunner.CALL]: ['load', params]});
-};
-
 const effect = (params) => {
     return createEffect({[EffectRunner.CALL]: ['effect', params]});
 };
@@ -99,7 +95,6 @@ module.exports = {
     EFFECT,
     spawn, 
     mount,
-    load,
     effect,
     flow,
     waitFor,

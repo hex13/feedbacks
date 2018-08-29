@@ -47,9 +47,6 @@ module.exports = {
             }
         })
     },
-    load(dispatch, getState, params) {
-        return this.loader(params, getState());
-    },
     effect(dispatch, getState, effect) {
         const pairs =  this.customEffectHandlers;
         for (let i = 0; i < pairs.length; i++) {

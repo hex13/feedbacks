@@ -209,7 +209,7 @@ exports.init = (value) => {
 };
 
 
-function createEngine(blueprint, { loader } = {} ) {
+function createEngine(blueprint, opts = {} ) {
     const channels = {};
     const ongoingEffects = [];
 
@@ -220,7 +220,6 @@ function createEngine(blueprint, { loader } = {} ) {
     const createContext = (params) => {
         const ctx = {
             customEffectHandlers,
-            loader,
         };
         for (let k in params) {
             ctx[k] = params[k];
@@ -404,9 +403,6 @@ function createEngine(blueprint, { loader } = {} ) {
         middleware,
         reducer: reducerFor(),
         channels,
-        loader(doLoad) {
-            loader = doLoad;
-        },
         getStore() {
             return _store;
         },
